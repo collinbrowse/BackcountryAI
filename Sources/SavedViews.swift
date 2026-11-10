@@ -5,9 +5,9 @@ struct SavedRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "bookmark.fill")
-                .foregroundStyle(Theme.gold)
+                .foregroundStyle(Theme.sun)
                 .frame(width: 36, height: 36)
-                .background(Theme.gold.opacity(0.15), in: .circle)
+                .background(Theme.sun.opacity(0.15), in: .circle)
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.question).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(2)
                 Text(item.date, format: .relative(presentation: .named)).font(.caption).foregroundStyle(Theme.inkSoft)
@@ -119,12 +119,12 @@ struct SOSSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Close") { dismiss() } }
         }
-        .tint(Theme.ember)
+        .tint(Theme.accent)
     }
 
     private func tip(_ symbol: String, _ title: String, _ text: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol).foregroundStyle(Theme.ember).frame(width: 24)
+            Image(systemName: symbol).foregroundStyle(Theme.accent).frame(width: 24)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
                 Text(text).font(.footnote).foregroundStyle(Theme.inkSoft)

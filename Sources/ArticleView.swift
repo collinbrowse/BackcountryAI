@@ -41,7 +41,7 @@ struct ArticleView: View {
                 withAnimation(.easeOut) { blocks = loaded.1 }
             }
         }
-        .tint(Theme.ember)
+        .tint(Theme.accent)
     }
 
     private var header: some View {
@@ -59,14 +59,14 @@ struct ArticleView: View {
     private var matched: some View {
         VStack(alignment: .leading, spacing: 6) {
             Label("Why this matched", systemImage: "text.magnifyingglass")
-                .font(.caption.weight(.bold)).foregroundStyle(Theme.emberDeep)
+                .font(.caption.weight(.bold)).foregroundStyle(Theme.accentDeep)
             Text(passage.text).font(.callout).foregroundStyle(Theme.ink)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.ember.opacity(0.09), in: .rect(cornerRadius: 16, style: .continuous))
+        .background(Theme.accent.opacity(0.09), in: .rect(cornerRadius: 16, style: .continuous))
         .overlay(alignment: .leading) {
-            UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16).fill(Theme.ember).frame(width: 4)
+            UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16).fill(Theme.accent).frame(width: 4)
         }
         .padding(.bottom, 6)
     }
@@ -79,12 +79,12 @@ struct ArticleView: View {
             Text(Inline.render(t, citations: false)).fixedSize(horizontal: false, vertical: true)
         case let .bullet(t):
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Circle().fill(Theme.ember).frame(width: 5, height: 5).offset(y: -2)
+                Circle().fill(Theme.accent).frame(width: 5, height: 5).offset(y: -2)
                 Text(Inline.render(t, citations: false)).fixedSize(horizontal: false, vertical: true)
             }
         case let .step(n, t):
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text("\(n).").font(.body.weight(.bold)).foregroundStyle(Theme.emberDeep)
+                Text("\(n).").font(.body.weight(.bold)).foregroundStyle(Theme.accentDeep)
                 Text(Inline.render(t, citations: false)).fixedSize(horizontal: false, vertical: true)
             }
         case .notFromLibrary:

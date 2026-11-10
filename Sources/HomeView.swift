@@ -83,7 +83,7 @@ struct HomeView: View {
             }
             .overlay { ConfettiBurst(trigger: confetti) }
         }
-        .tint(Theme.ember)
+        .tint(Theme.accent)
         .sheet(isPresented: $showLibrary) { LibraryView() }
         .sheet(isPresented: $showSOS) { SOSSheet { ask($0.question) } }
         .sheet(item: $openArticle) { ArticleView(passage: $0) }
@@ -198,7 +198,7 @@ struct HomeView: View {
             if !trimmed.isEmpty {
                 Button { ask(trimmed) } label: {
                     Image(systemName: "arrow.up").font(.subheadline.weight(.bold)).foregroundStyle(.white)
-                        .frame(width: 34, height: 34).background(Theme.emberGradient, in: .circle)
+                        .frame(width: 34, height: 34).background(Theme.accentGradient, in: .circle)
                 }
                 .buttonStyle(SquishyButtonStyle(scale: 0.85))
                 .transition(.scale.combined(with: .opacity))
@@ -211,7 +211,7 @@ struct HomeView: View {
         .background(Theme.card, in: .rect(cornerRadius: 27, style: .continuous))
         .shadow(color: .black.opacity(focused ? 0.16 : 0.1), radius: focused ? 18 : 12, y: 6)
         .overlay(RoundedRectangle(cornerRadius: 27, style: .continuous)
-            .strokeBorder(focused ? Theme.ember.opacity(0.6) : Theme.hairline, lineWidth: focused ? 1.5 : 1))
+            .strokeBorder(focused ? Theme.accent.opacity(0.6) : Theme.hairline, lineWidth: focused ? 1.5 : 1))
         .animation(.easeOut(duration: 0.2), value: focused)
     }
 
@@ -222,7 +222,7 @@ struct HomeView: View {
             Button { ask(trimmed) } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "sparkles").font(.title3).foregroundStyle(.white)
-                        .frame(width: 42, height: 42).background(Theme.emberGradient, in: .circle)
+                        .frame(width: 42, height: 42).background(Theme.accentGradient, in: .circle)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(aiReady ? "Ask Scout for step-by-step help" : "Ask Scout")
                             .font(.headline).foregroundStyle(Theme.ink)
@@ -456,7 +456,7 @@ struct SearchResultRow: View {
                 if passage.official { OfficialBadge() }
             }
             Text(passage.text).font(.caption).foregroundStyle(Theme.inkSoft).lineLimit(3)
-            Text(passage.source).font(.caption2.weight(.semibold)).foregroundStyle(Theme.ember)
+            Text(passage.source).font(.caption2.weight(.semibold)).foregroundStyle(Theme.accent)
         }
         .multilineTextAlignment(.leading)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -480,7 +480,7 @@ struct ReadinessCard: View {
                     ZStack {
                         Circle().stroke(Theme.hairline, lineWidth: 6)
                         Circle().trim(from: 0, to: CGFloat(done) / CGFloat(items.count))
-                            .stroke(Theme.emberGradient, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                            .stroke(Theme.accentGradient, style: StrokeStyle(lineWidth: 6, lineCap: .round))
                             .rotationEffect(.degrees(-90))
                         Text("\(done)/\(items.count)").font(.caption.weight(.heavy)).foregroundStyle(Theme.ink)
                             .contentTransition(.numericText())
@@ -518,7 +518,7 @@ struct ReadinessCard: View {
         HStack(spacing: 12) {
             Image(systemName: item.done ? "checkmark.circle.fill" : item.symbol)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(item.done ? Theme.moss : Theme.ember)
+                .foregroundStyle(item.done ? Theme.moss : Theme.accent)
                 .frame(width: 30)
                 .contentTransition(.symbolEffect(.replace))
             VStack(alignment: .leading, spacing: 1) {
@@ -542,7 +542,7 @@ struct ConfettiBurst: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let pieces: [(x: CGFloat, y: CGFloat, r: Double, c: Color)] = (0..<26).map { i in
         (CGFloat.random(in: -180...180), CGFloat.random(in: -420 ... -120), Double.random(in: -360...360),
-         [Theme.ember, Theme.gold, Theme.sky, Theme.moss, Theme.danger][i % 5])
+         [Theme.accent, Theme.sun, Theme.sky, Theme.moss, Theme.danger][i % 5])
     }
 
     var body: some View {

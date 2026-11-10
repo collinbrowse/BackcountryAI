@@ -37,7 +37,7 @@ struct LibraryView: View {
                 Text("You'll need Wi-Fi to download it again.")
             }
         }
-        .tint(Theme.ember)
+        .tint(Theme.accent)
     }
 
     private var isFailed: Bool { if case .failed = store.phase { true } else { false } }
@@ -86,9 +86,9 @@ struct PackCard: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(pack.title).font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Theme.ink)
                 if pack.id == "lite" && !installed {
-                    Text("Recommended").font(.caption2.weight(.bold)).foregroundStyle(Theme.emberDeep)
+                    Text("Recommended").font(.caption2.weight(.bold)).foregroundStyle(Theme.accentDeep)
                         .padding(.horizontal, 7).padding(.vertical, 3)
-                        .background(Theme.ember.opacity(0.14), in: .capsule)
+                        .background(Theme.accent.opacity(0.14), in: .capsule)
                 }
                 Spacer()
                 if installed {
@@ -154,7 +154,7 @@ struct DownloadProgressCard: View {
                 ZStack {
                     Circle().stroke(Theme.hairline, lineWidth: 7)
                     Circle().trim(from: 0, to: fraction ?? 0.08)
-                        .stroke(Theme.emberGradient, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                        .stroke(Theme.accentGradient, style: StrokeStyle(lineWidth: 7, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                         .animation(.easeOut, value: fraction)
                     if let fraction {

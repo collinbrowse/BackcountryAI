@@ -20,9 +20,9 @@ struct Scenery: View {
 
     private var palette: (top: Color, bottom: Color, back: Color, front: Color, sun: Color) {
         switch sky {
-        case .dawn: (Color(hex: 0xF4A98A), Color(hex: 0xFCE6CC), Color(hex: 0xB98A8F), Color(hex: 0x5E6F68), Color(hex: 0xFFE0A3))
+        case .dawn: (Color(hex: 0xA9B8DE), Color(hex: 0xEEE6F0), Color(hex: 0x8C93AE), Color(hex: 0x4F6763), Color(hex: 0xFFF1C9))
         case .day: (Color(hex: 0x7EC1E6), Color(hex: 0xE3F2F7), Color(hex: 0x8FB0B8), Color(hex: 0x3F6B57), Color(hex: 0xFFF3C4))
-        case .dusk: (Color(hex: 0xE7764F), Color(hex: 0xF8C99B), Color(hex: 0x9C6A70), Color(hex: 0x3D4A48), Color(hex: 0xFFD08A))
+        case .dusk: (Color(hex: 0x4E5D8F), Color(hex: 0xC9B3D3), Color(hex: 0x6E6A8E), Color(hex: 0x2F4441), Color(hex: 0xFFE9B8))
         case .night: (Color(hex: 0x0B1626), Color(hex: 0x1E3347), Color(hex: 0x2B4152), Color(hex: 0x15241F), Color(hex: 0xF3EBD2))
         }
     }

@@ -71,8 +71,8 @@ enum Inline {
             ?? AttributedString(s)
         for run in attr.runs {
             guard let url = run.link, url.scheme == "cite" else { continue }
-            attr[run.range].foregroundColor = Theme.emberDeep
-            attr[run.range].backgroundColor = Theme.ember.opacity(0.16)
+            attr[run.range].foregroundColor = Theme.accentDeep
+            attr[run.range].backgroundColor = Theme.accent.opacity(0.16)
             attr[run.range].font = .caption.weight(.heavy)
             attr[run.range].baselineOffset = 2
             attr[run.range].link = nil  // the whole block is the tap target; a 12pt chip is too small
@@ -104,7 +104,7 @@ struct AnswerBody: View {
         }
         .animation(.bouncy, value: blocks.count)
         .foregroundStyle(failed ? Theme.inkSoft : Theme.ink)
-        .tint(Theme.emberDeep)
+        .tint(Theme.accentDeep)
     }
 
     /// A block that cites a source opens it when tapped.
@@ -135,16 +135,16 @@ struct AnswerBody: View {
                     .font(.system(.subheadline, design: .rounded).weight(.heavy))
                     .foregroundStyle(.white)
                     .frame(width: 28, height: 28)
-                    .background(first ? AnyShapeStyle(Theme.emberGradient) : AnyShapeStyle(Theme.pine), in: .circle)
+                    .background(first ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.pine), in: .circle)
                 Text(Inline.render(t)).font(.body).fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 3)
             }
             .padding(12)
-            .background(first ? Theme.ember.opacity(0.10) : Theme.cardRaised, in: .rect(cornerRadius: 16, style: .continuous))
+            .background(first ? Theme.accent.opacity(0.10) : Theme.cardRaised, in: .rect(cornerRadius: 16, style: .continuous))
         case let .bullet(t):
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Circle().fill(Theme.ember).frame(width: 6, height: 6).offset(y: -2)
+                Circle().fill(Theme.accent).frame(width: 6, height: 6).offset(y: -2)
                 Text(Inline.render(t)).fixedSize(horizontal: false, vertical: true)
             }
             .padding(.leading, 6)
@@ -155,9 +155,9 @@ struct AnswerBody: View {
         case .notFromLibrary:
             Label("Not from the library: general guidance", systemImage: "exclamationmark.bubble.fill")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(Theme.gold)
+                .foregroundStyle(Theme.sun)
                 .padding(.horizontal, 10).padding(.vertical, 6)
-                .background(Theme.gold.opacity(0.14), in: .capsule)
+                .background(Theme.sun.opacity(0.14), in: .capsule)
                 .padding(.top, 4)
         }
     }

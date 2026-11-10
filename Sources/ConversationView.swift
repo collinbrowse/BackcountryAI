@@ -77,7 +77,7 @@ struct ConversationView: View {
             } else {
                 Button(action: send) {
                     Image(systemName: "arrow.up").font(.headline.weight(.bold)).foregroundStyle(.white)
-                        .frame(width: 46, height: 46).background(Theme.emberGradient, in: .circle)
+                        .frame(width: 46, height: 46).background(Theme.accentGradient, in: .circle)
                 }
                 .disabled(trimmed.isEmpty)
                 .opacity(trimmed.isEmpty ? 0.4 : 1)
@@ -265,9 +265,9 @@ struct SourceCard: View {
             HStack(spacing: 6) {
                 Text("\(number)")
                     .font(.caption.weight(.heavy))
-                    .foregroundStyle(Theme.emberDeep)
+                    .foregroundStyle(Theme.accentDeep)
                     .frame(width: 22, height: 22)
-                    .background(Theme.ember.opacity(0.16), in: .circle)
+                    .background(Theme.accent.opacity(0.16), in: .circle)
                 if passage.official { OfficialBadge() }
                 Spacer(minLength: 0)
             }

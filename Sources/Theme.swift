@@ -1,25 +1,26 @@
 import SwiftUI
 import UIKit
 
-/// The "Alpenglow" palette: warm ember on pine and glacier, with a paper-warm light mode and a
-/// deep-forest dark mode. Every color adapts to light and dark.
+/// The "Glacier & Spruce" palette: a cool alpine-lake teal as the one accent, on stone-neutral
+/// surfaces. Red is reserved for emergencies so it keeps its meaning. Every color adapts to dark mode.
 enum Theme {
-    static let ember = Color(light: 0xF2683A, dark: 0xFF7A4A)
-    static let emberDeep = Color(light: 0xD9481F, dark: 0xF2683A)
-    static let gold = Color(light: 0xF2A93B, dark: 0xF5B84F)
+    static let accent = Color(light: 0x13786A, dark: 0x4CC3AA)
+    /// Accent for text and small marks on a light accent tint.
+    static let accentDeep = Color(light: 0x0D5B51, dark: 0x8BDCC9)
+    static let sun = Color(light: 0xB8900F, dark: 0xE6C24D)
     static let pine = Color(light: 0x1E4636, dark: 0x7FC4A0)
     static let moss = Color(light: 0x4C7A5A, dark: 0x8FBF9A)
     static let sky = Color(light: 0x3E8FC2, dark: 0x6DB6E3)
     static let danger = Color(light: 0xD93A3F, dark: 0xFF5C61)
 
-    static let background = Color(light: 0xF6F2EA, dark: 0x0D1512)
+    static let background = Color(light: 0xF3F4F1, dark: 0x0D1512)
     static let card = Color(light: 0xFFFFFF, dark: 0x16211C)
-    static let cardRaised = Color(light: 0xFBF8F3, dark: 0x1D2A24)
+    static let cardRaised = Color(light: 0xF8F9F7, dark: 0x1D2A24)
     static let ink = Color(light: 0x1B2420, dark: 0xEEF2EE)
     static let inkSoft = Color(light: 0x5E6B64, dark: 0x9DABA3)
-    static let hairline = Color(light: 0xE6DFD3, dark: 0x26332D)
+    static let hairline = Color(light: 0xE1E5E0, dark: 0x26332D)
 
-    static let emberGradient = LinearGradient(colors: [gold, ember, emberDeep],
+    static let accentGradient = LinearGradient(colors: [Color(hex: 0x3FAE9A), Color(hex: 0x13786A), Color(hex: 0x0E5F55)],
                                               startPoint: .topLeading, endPoint: .bottomTrailing)
 }
 
@@ -78,7 +79,7 @@ struct SquishyButtonStyle: ButtonStyle {
 
 /// The main call to action: a warm gradient capsule.
 struct PrimaryButtonStyle: ButtonStyle {
-    var tint: AnyShapeStyle = AnyShapeStyle(Theme.emberGradient)
+    var tint: AnyShapeStyle = AnyShapeStyle(Theme.accentGradient)
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -88,7 +89,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.vertical, 16)
             .background(tint, in: .capsule)
             .opacity(isEnabled ? 1 : 0.45)
-            .shadow(color: Theme.ember.opacity(isEnabled ? 0.35 : 0), radius: 12, y: 6)
+            .shadow(color: Theme.accent.opacity(isEnabled ? 0.35 : 0), radius: 12, y: 6)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
     }

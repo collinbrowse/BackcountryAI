@@ -17,7 +17,7 @@ struct BackcountryApp: App {
                 .environment(store)
                 .environment(assistant)
                 .environment(saved)
-                .tint(Theme.ember)
+                .tint(Theme.accent)
                 .fullScreenCover(isPresented: .constant(needsOnboarding)) {
                     OnboardingView { completedOnboarding = true }
                         .environment(store)

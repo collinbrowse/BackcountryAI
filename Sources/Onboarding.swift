@@ -48,7 +48,7 @@ struct OnboardingView: View {
                 bottomBar
             }
         }
-        .tint(Theme.ember)
+        .tint(Theme.accent)
         .interactiveDismissDisabled(!isReplay)
     }
 
@@ -57,7 +57,7 @@ struct OnboardingView: View {
             HStack(spacing: 8) {
                 ForEach(OnboardingStep.allCases) { s in
                     Capsule()
-                        .fill(s == step ? Theme.ember : Theme.inkSoft.opacity(0.3))
+                        .fill(s == step ? Theme.accent : Theme.inkSoft.opacity(0.3))
                         .frame(width: s == step ? 22 : 7, height: 7)
                 }
             }
@@ -110,7 +110,7 @@ private struct MeetPage: View {
                 }
                 HStack(spacing: 10) {
                     feature("antenna.radiowaves.left.and.right.slash", "No signal\nneeded", Theme.sky)
-                    feature("text.quote", "Shows its\nsources", Theme.ember)
+                    feature("text.quote", "Shows its\nsources", Theme.accent)
                     feature("lock.fill", "Nothing leaves\nyour phone", Theme.moss)
                 }
                 .padding(.top, 6)
@@ -140,11 +140,11 @@ private struct MeetPage: View {
 private struct GoodToKnowPage: View {
     var body: some View {
         OnboardingPage(mood: .alert, title: "A few honest things") {
-            point("checkmark.shield.fill", Theme.ember, "I can be wrong",
+            point("checkmark.shield.fill", Theme.accent, "I can be wrong",
                   "Each step shows the article it came from, like [1]. Tap a step to read the source before you act.")
             point("sos", Theme.danger, "Emergencies: call 911 first",
                   "No signal? On iPhone 14 or later, calling 911 offers Emergency SOS via satellite. The red SOS button is always on the home screen.")
-            point("battery.25percent", Theme.gold, "Answers use real battery",
+            point("battery.25percent", Theme.sun, "Answers use real battery",
                   "I think on this iPhone's chip, which works hard while I write. Searching and reading the library is instant and nearly free, saved answers cost nothing, and you'll see what each answer used. Carry a battery pack.")
         }
     }
@@ -247,9 +247,9 @@ private struct PackPage: View {
     private func stepIcon(done: Bool, symbol: String) -> some View {
         Image(systemName: done ? "checkmark" : symbol)
             .font(.headline.weight(.bold))
-            .foregroundStyle(done ? .white : Theme.ember)
+            .foregroundStyle(done ? .white : Theme.accent)
             .frame(width: 38, height: 38)
-            .background(done ? AnyShapeStyle(Theme.moss) : AnyShapeStyle(Theme.ember.opacity(0.14)), in: .circle)
+            .background(done ? AnyShapeStyle(Theme.moss) : AnyShapeStyle(Theme.accent.opacity(0.14)), in: .circle)
             .contentTransition(.symbolEffect(.replace))
     }
 }

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Scout, the app's mascot: a pika (a small mountain cousin of the rabbit) in an ember bandana.
+/// Scout, the app's mascot: a pika (a small mountain cousin of the rabbit).
 /// Drawn entirely with SwiftUI shapes so it can react to what the app is doing.
 struct Scout: View {
     enum Mood: Equatable {
@@ -64,12 +64,11 @@ struct Scout: View {
                     .position(x: 87, y: 33 + earLift)
                 // Body.
                 Ellipse()
-                    .fill(LinearGradient(colors: [Color(hex: 0xDDA672), Color(hex: 0xB8764A)],
+                    .fill(LinearGradient(colors: [Color(hex: 0xBFA48C), Color(hex: 0x8E7462)],
                                          startPoint: .top, endPoint: .bottom))
                     .frame(width: 94, height: 86).position(x: 60, y: 66)
-                Ellipse().fill(Color(hex: 0xF4DEC4)).frame(width: 58, height: 40).position(x: 60, y: 84)
+                Ellipse().fill(Color(hex: 0xF1E8DD)).frame(width: 58, height: 40).position(x: 60, y: 84)
                 feet
-                bandana
                 face(t)
             }
             .scaleEffect(x: 1, y: breathe, anchor: .bottom)
@@ -83,38 +82,15 @@ struct Scout: View {
 
     private var ear: some View {
         ZStack {
-            Circle().fill(Color(hex: 0xC4834F)).frame(width: 32, height: 32)
+            Circle().fill(Color(hex: 0x9F8571)).frame(width: 32, height: 32)
             Circle().fill(Color(hex: 0xF0A796)).frame(width: 17, height: 17).offset(y: 2)
         }
     }
 
     private var feet: some View {
         ZStack {
-            Ellipse().fill(Color(hex: 0xA2643A)).frame(width: 20, height: 10).position(x: 43, y: 107)
-            Ellipse().fill(Color(hex: 0xA2643A)).frame(width: 20, height: 10).position(x: 77, y: 107)
-        }
-    }
-
-    private var bandana: some View {
-        ZStack {
-            Path { p in
-                p.move(to: CGPoint(x: 30, y: 83))
-                p.addQuadCurve(to: CGPoint(x: 90, y: 83), control: CGPoint(x: 60, y: 95))
-                p.addLine(to: CGPoint(x: 88, y: 89))
-                p.addQuadCurve(to: CGPoint(x: 32, y: 89), control: CGPoint(x: 60, y: 101))
-                p.closeSubpath()
-            }
-            .fill(Theme.emberDeep)
-            Path { p in
-                p.move(to: CGPoint(x: 44, y: 90))
-                p.addLine(to: CGPoint(x: 76, y: 90))
-                p.addQuadCurve(to: CGPoint(x: 60, y: 108), control: CGPoint(x: 66, y: 102))
-                p.addQuadCurve(to: CGPoint(x: 44, y: 90), control: CGPoint(x: 54, y: 102))
-            }
-            .fill(LinearGradient(colors: [Color(hex: 0xFF8A55), Color(hex: 0xE5532A)], startPoint: .top, endPoint: .bottom))
-            Circle().fill(.white.opacity(0.8)).frame(width: 3, height: 3).position(x: 55, y: 95)
-            Circle().fill(.white.opacity(0.8)).frame(width: 3, height: 3).position(x: 65, y: 96)
-            Circle().fill(.white.opacity(0.8)).frame(width: 3, height: 3).position(x: 60, y: 101)
+            Ellipse().fill(Color(hex: 0x7A6253)).frame(width: 20, height: 10).position(x: 43, y: 107)
+            Ellipse().fill(Color(hex: 0x7A6253)).frame(width: 20, height: 10).position(x: 77, y: 107)
         }
     }
 
@@ -176,7 +152,7 @@ struct Scout: View {
     private func thoughtDots(_ t: Double) -> some View {
         HStack(spacing: 4) {
             ForEach(0..<3) { i in
-                Circle().fill(Theme.ember)
+                Circle().fill(Theme.accent)
                     .frame(width: 6, height: 6)
                     .opacity(0.35 + 0.65 * max(0, sin(t * 4 - Double(i) * 0.9)))
             }
