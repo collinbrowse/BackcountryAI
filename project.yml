@@ -3,17 +3,24 @@ options:
   bundleIdPrefix: com.collinbrowse
   deploymentTarget:
     iOS: "27.0"
-packages:
-  ZIPFoundation:
-    url: https://github.com/weichsel/ZIPFoundation
-    from: "0.9.19"
 targets:
   BackcountryGuide:
     type: application
     platform: iOS
     sources: [Sources]
     dependencies:
-      - package: ZIPFoundation
+      - target: BackcountryDownloader
+    info:
+      path: Sources/Info.plist
+      properties:
+        # Apple-Hosted Background Assets: the library packs live on Apple's servers (App Store Connect).
+        BAAppGroupID: group.com.collinbrowse.backcountryguide
+        BAHasManagedAssetPacks: true
+        BAUsesAppleHosting: true
+    entitlements:
+      path: Sources/BackcountryGuide.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.collinbrowse.backcountryguide]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryguide
@@ -27,5 +34,29 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UIFileSharingEnabled: YES
         INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+  BackcountryDownloader:
+    type: extensionkit-extension
+    platform: iOS
+    sources: [DownloaderExtension]
+    info:
+      path: DownloaderExtension/Info.plist
+      properties:
+        CFBundleDisplayName: Backcountry Downloader
+        EXAppExtensionAttributes:
+          EXExtensionPointIdentifier: com.apple.background-asset-downloader-extension
+    entitlements:
+      path: DownloaderExtension/BackcountryDownloader.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.collinbrowse.backcountryguide]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryguide.downloader
+        DEVELOPMENT_TEAM: 84XX2W7G34
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"

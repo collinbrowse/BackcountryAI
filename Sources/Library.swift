@@ -23,7 +23,7 @@ struct Article: Sendable {
 /// Read-only search over a Survival LLM library folder: `index.sqlite` (SQLite FTS5 over ~1,500-character
 /// passages) plus `text/<source>/NNNN.md` shards. Same format and ranking as survival-llm's library/search.py.
 final class Library: @unchecked Sendable {
-    let folder: URL
+    private let locate: @Sendable (String) -> URL?
     private var db: OpaquePointer?
     private let lock = NSLock()
 
@@ -41,9 +41,16 @@ final class Library: @unchecked Sendable {
     will with would you your yours yourself yourselves
     """.split(separator: " ").map(String.init))
 
-    init(folder: URL) throws {
-        self.folder = folder
-        let path = folder.appendingPathComponent("index.sqlite").path
+    /// A library unpacked into a folder (for example one copied in with Finder).
+    convenience init(folder: URL) throws {
+        try self.init { folder.appending(path: $0) }
+    }
+
+    /// `locate` turns a path inside the library ("index.sqlite", "text/…") into a readable file URL,
+    /// so the same code reads a plain folder or Apple-hosted asset packs.
+    init(locate: @escaping @Sendable (String) -> URL?) throws {
+        self.locate = locate
+        guard let path = locate("index.sqlite")?.path else { throw LibraryError.cannotOpen }
         guard sqlite3_open_v2("file:\(path)?immutable=1", &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, nil) == SQLITE_OK
         else { throw LibraryError.cannotOpen }
         _ = try query("SELECT 1 FROM sources LIMIT 1") { _ in () }
@@ -155,8 +162,7 @@ final class Library: @unchecked Sendable {
             lock.lock(); filePaths[fileID] = p; lock.unlock()
             rel = p
         }
-        let url = folder.appendingPathComponent("text").appendingPathComponent(rel)
-        guard let h = try? FileHandle(forReadingFrom: url) else { return nil }
+        guard let url = locate("text/" + rel), let h = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? h.close() }
         try? h.seek(toOffset: UInt64(offset))
         guard let data = try? h.read(upToCount: Int(length)) else { return nil }

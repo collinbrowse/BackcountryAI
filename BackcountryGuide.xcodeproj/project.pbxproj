@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0CF0123D5D9746464D11C0AC /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = C441E747EDCACEA4C32A7E37 /* App.swift */; };
+		2AF20CC964E04E64EA6086C2 /* BackcountryDownloader.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 69A559113543F94C3B22D4FA /* BackcountryDownloader.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2B58D0C56A0137FCA37DFEC5 /* DownloaderExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED464DDC15C6D5A62B8300E7 /* DownloaderExtension.swift */; };
 		3A54E8D94E3487BEC69695FD /* OnboardingPages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B187FB83F2C3FBEF2FBB794 /* OnboardingPages.swift */; };
 		44968BF32BCBE520788870A1 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80E63A5B66D3A1E7EC9AF02 /* ChatView.swift */; };
 		593214E42DC337A1F2972A8F /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8489C197191008DB5D01E651 /* Onboarding.swift */; };
@@ -15,38 +17,57 @@
 		93D76144CD92E4FDCC24660A /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191C7C08C6C9572B7F613BFB /* LibraryView.swift */; };
 		B3075F36C3008E1B9F9E5AFB /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D7A3759C24A10B950B225A /* LibraryStore.swift */; };
 		BCD67BB2D9CFBD335A0F8661 /* BatteryMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E77376AD7B2DD2A7EB1C77E9 /* BatteryMeter.swift */; };
-		E0E5FC0A4130D27B00150423 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 660FDACC19C73B96AE88D664 /* ZIPFoundation */; };
 		E212E3917A386B76C0B7129A /* Assistant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36DF151C09CBDCEF5DBF318F /* Assistant.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3E99347A1C0BAFA7A39C6003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7129F65DEA934BBC981E3DFC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EB64BA4F65597FC24AD5CCA5;
+			remoteInfo = BackcountryDownloader;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		72BBC293C826730C44064E30 /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				2AF20CC964E04E64EA6086C2 /* BackcountryDownloader.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		191C7C08C6C9572B7F613BFB /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		2C36C8473527608FDB2EAAFF /* BackcountryGuide.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BackcountryGuide.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		36DF151C09CBDCEF5DBF318F /* Assistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assistant.swift; sourceTree = "<group>"; };
+		69A559113543F94C3B22D4FA /* BackcountryDownloader.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = BackcountryDownloader.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B187FB83F2C3FBEF2FBB794 /* OnboardingPages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPages.swift; sourceTree = "<group>"; };
 		7149DA695D73AED47B498C66 /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
 		77D7A3759C24A10B950B225A /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
+		80182E3EE165B76EFF26C4CE /* BackcountryGuide.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BackcountryGuide.entitlements; sourceTree = "<group>"; };
 		8489C197191008DB5D01E651 /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
+		9B56B8A6A7AB52EA13948E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B3C979EBD2D337FE1DD23FFB /* BackcountryDownloader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BackcountryDownloader.entitlements; sourceTree = "<group>"; };
 		C441E747EDCACEA4C32A7E37 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		C80E63A5B66D3A1E7EC9AF02 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		E77376AD7B2DD2A7EB1C77E9 /* BatteryMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryMeter.swift; sourceTree = "<group>"; };
+		ED464DDC15C6D5A62B8300E7 /* DownloaderExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderExtension.swift; sourceTree = "<group>"; };
+		F75D60F2F16EBCA3A199E425 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFrameworksBuildPhase section */
-		88862E7DF9D4F241BA9B9D97 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E0E5FC0A4130D27B00150423 /* ZIPFoundation in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		0D7A8E32F8E8A9E9FBAE815B /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				69A559113543F94C3B22D4FA /* BackcountryDownloader.appex */,
 				2C36C8473527608FDB2EAAFF /* BackcountryGuide.app */,
 			);
 			name = Products;
@@ -57,8 +78,10 @@
 			children = (
 				C441E747EDCACEA4C32A7E37 /* App.swift */,
 				36DF151C09CBDCEF5DBF318F /* Assistant.swift */,
+				80182E3EE165B76EFF26C4CE /* BackcountryGuide.entitlements */,
 				E77376AD7B2DD2A7EB1C77E9 /* BatteryMeter.swift */,
 				C80E63A5B66D3A1E7EC9AF02 /* ChatView.swift */,
+				F75D60F2F16EBCA3A199E425 /* Info.plist */,
 				7149DA695D73AED47B498C66 /* Library.swift */,
 				77D7A3759C24A10B950B225A /* LibraryStore.swift */,
 				191C7C08C6C9572B7F613BFB /* LibraryView.swift */,
@@ -71,9 +94,20 @@
 		883EACCF9EF7A5EAE753869A = {
 			isa = PBXGroup;
 			children = (
+				98CB9D56B39BA1CB4CE53A2A /* DownloaderExtension */,
 				355D144BC96758E3FDC1ED85 /* Sources */,
 				0D7A8E32F8E8A9E9FBAE815B /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		98CB9D56B39BA1CB4CE53A2A /* DownloaderExtension */ = {
+			isa = PBXGroup;
+			children = (
+				B3C979EBD2D337FE1DD23FFB /* BackcountryDownloader.entitlements */,
+				ED464DDC15C6D5A62B8300E7 /* DownloaderExtension.swift */,
+				9B56B8A6A7AB52EA13948E9C /* Info.plist */,
+			);
+			path = DownloaderExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -84,19 +118,36 @@
 			buildConfigurationList = D31F8DCB2B9DD1E548ED52A5 /* Build configuration list for PBXNativeTarget "BackcountryGuide" */;
 			buildPhases = (
 				B421452ED3D60F7F036AAB8C /* Sources */,
-				88862E7DF9D4F241BA9B9D97 /* Frameworks */,
+				72BBC293C826730C44064E30 /* Embed ExtensionKit Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				95B30F63A3CD8BD47DEC6B55 /* PBXTargetDependency */,
+			);
+			name = BackcountryGuide;
+			packageProductDependencies = (
+			);
+			productName = BackcountryGuide;
+			productReference = 2C36C8473527608FDB2EAAFF /* BackcountryGuide.app */;
+			productType = "com.apple.product-type.application";
+		};
+		EB64BA4F65597FC24AD5CCA5 /* BackcountryDownloader */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D9F08E7AC49885FCFC23BD98 /* Build configuration list for PBXNativeTarget "BackcountryDownloader" */;
+			buildPhases = (
+				EFF4937EC1DDE9C877612782 /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = BackcountryGuide;
+			name = BackcountryDownloader;
 			packageProductDependencies = (
-				660FDACC19C73B96AE88D664 /* ZIPFoundation */,
 			);
-			productName = BackcountryGuide;
-			productReference = 2C36C8473527608FDB2EAAFF /* BackcountryGuide.app */;
-			productType = "com.apple.product-type.application";
+			productName = BackcountryDownloader;
+			productReference = 69A559113543F94C3B22D4FA /* BackcountryDownloader.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -111,6 +162,10 @@
 						DevelopmentTeam = 84XX2W7G34;
 						ProvisioningStyle = Automatic;
 					};
+					EB64BA4F65597FC24AD5CCA5 = {
+						DevelopmentTeam = 84XX2W7G34;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 06FE506657D360EB4616BCCF /* Build configuration list for PBXProject "BackcountryGuide" */;
@@ -122,15 +177,13 @@
 			);
 			mainGroup = 883EACCF9EF7A5EAE753869A;
 			minimizedProjectReferenceProxies = 1;
-			packageReferences = (
-				71F2FA6735CF7C43C3E0CEE3 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
-			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0D7A8E32F8E8A9E9FBAE815B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				C5C95CEF20E23481FA41C045 /* BackcountryGuide */,
+				EB64BA4F65597FC24AD5CCA5 /* BackcountryDownloader */,
 			);
 		};
 /* End PBXProject section */
@@ -152,7 +205,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EFF4937EC1DDE9C877612782 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B58D0C56A0137FCA37DFEC5 /* DownloaderExtension.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		95B30F63A3CD8BD47DEC6B55 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EB64BA4F65597FC24AD5CCA5 /* BackcountryDownloader */;
+			targetProxy = 3E99347A1C0BAFA7A39C6003 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		32F0F2CAB0C5D21018DD2DB5 /* Release */ = {
@@ -215,11 +284,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/BackcountryGuide.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 84XX2W7G34;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Sources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Backcountry;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
@@ -241,11 +312,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/BackcountryGuide.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 84XX2W7G34;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Sources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Backcountry;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
@@ -257,6 +330,27 @@
 				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryguide;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		98BEC6B76AC774E48A256775 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = DownloaderExtension/BackcountryDownloader.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 84XX2W7G34;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DownloaderExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryguide.downloader;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -326,6 +420,27 @@
 			};
 			name = Debug;
 		};
+		F5271FBF5881ACDFDA1CEECD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = DownloaderExtension/BackcountryDownloader.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 84XX2W7G34;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DownloaderExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryguide.downloader;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -347,26 +462,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		D9F08E7AC49885FCFC23BD98 /* Build configuration list for PBXNativeTarget "BackcountryDownloader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F5271FBF5881ACDFDA1CEECD /* Debug */,
+				98BEC6B76AC774E48A256775 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		71F2FA6735CF7C43C3E0CEE3 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/weichsel/ZIPFoundation";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.19;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		660FDACC19C73B96AE88D664 /* ZIPFoundation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 71F2FA6735CF7C43C3E0CEE3 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
-			productName = ZIPFoundation;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7129F65DEA934BBC981E3DFC /* Project object */;
 }

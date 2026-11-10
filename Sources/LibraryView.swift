@@ -32,19 +32,13 @@ struct LibraryView: View {
                             Text("\(pack.articles.formatted()) articles · \(Self.gb(pack.downloadBytes)) download, "
                                  + "about \(Self.gb(pack.unpackedBytes)) on the phone once unpacked")
                                 .font(.caption).foregroundStyle(.secondary)
-                            if isInstalled(pack) {
-                                Menu("Options") {
-                                    Button("Re-download (repairs a damaged library)") { store.install(pack) }
-                                }
-                                .font(.caption)
-                                .disabled(store.isWorking)
-                            } else {
+                            if !isInstalled(pack) {
                                 Button(store.library == nil ? "Download" : "Switch to \(pack.title)") {
                                     store.install(pack)
                                 }
                                 .buttonStyle(.borderedProminent)
                                 .disabled(store.isWorking)
-                                Text("Needs about \(Self.gb(pack.install_bytes)) free while it installs.")
+                                Text("Needs about \(Self.gb(pack.installBytes)) free while it installs.")
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
                         }
@@ -53,8 +47,8 @@ struct LibraryView: View {
                 } header: {
                     Text("Libraries")
                 } footer: {
-                    Text("From the open-source Survival LLM project. Use Wi-Fi and keep the app open while it "
-                         + "downloads; the screen stays on, and it resumes if the connection drops.")
+                    Text("Downloads from the App Store. Use Wi-Fi; it keeps going if you leave the app, and iOS "
+                         + "keeps the library up to date.")
                 }
 
                 if store.isWorking || isFailed {
@@ -77,7 +71,7 @@ struct LibraryView: View {
             .navigationTitle("Offline library")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { dismiss() } }
-            .task { await store.refreshCatalog() }
+            .task { await store.refreshSizes() }
             .confirmationDialog("Delete the library from this phone?", isPresented: $confirmDelete,
                                 titleVisibility: .visible) {
                 Button("Delete", role: .destructive) { store.deleteLibrary() }
@@ -101,20 +95,16 @@ struct LibraryView: View {
 
     @ViewBuilder private var progress: some View {
         switch store.phase {
-        case let .downloading(part, of, fraction, detail):
+        case let .downloading(fraction, detail):
             VStack(alignment: .leading, spacing: 6) {
-                Text(of > 1 ? "Downloading part \(part) of \(of)" : "Downloading")
+                Text("Downloading")
                 ProgressView(value: fraction)
                 Text(detail).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
             }
             Button("Cancel", role: .cancel) { store.cancel() }
-        case .verifying:
-            HStack { ProgressView(); Text("Checking the download…") }
-        case let .unpacking(fraction):
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Unpacking")
-                ProgressView(value: fraction)
-            }
+        case .preparing:
+            HStack { ProgressView(); Text("Starting…") }
+            Button("Cancel", role: .cancel) { store.cancel() }
         case let .failed(message):
             Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.red)
         case .idle:

@@ -146,7 +146,7 @@ struct LibraryPage: View {
             card
             OnboardingPoint(symbol: "wifi",
                             title: "Use Wi-Fi, before your trip",
-                            text: "It's a large download. Keep the app open while it downloads; it picks up "
+                            text: "It's a large download. It keeps going if you leave the app, and picks up "
                                 + "again if the connection drops.")
             OnboardingPoint(symbol: "airplane",
                             title: "Then test it offline",
@@ -197,17 +197,12 @@ struct LibraryPage: View {
 
     @ViewBuilder private var progress: some View {
         switch store.phase {
-        case let .downloading(part, of, fraction, detail):
-            Text(of > 1 ? "Downloading part \(part) of \(of)" : "Downloading").font(.headline)
+        case let .downloading(fraction, detail):
+            Text("Downloading").font(.headline)
             ProgressView(value: fraction)
             Text(detail).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
             Button("Cancel", role: .cancel) { store.cancel() }
-        case .verifying:
-            HStack(spacing: 10) { ProgressView(); Text("Checking the download…") }
-        case let .unpacking(fraction):
-            Text("Unpacking").font(.headline)
-            ProgressView(value: fraction)
-        case .idle, .failed:
+        case .preparing, .idle, .failed:
             HStack(spacing: 10) { ProgressView(); Text("Starting…") }
         }
     }
