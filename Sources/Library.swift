@@ -73,6 +73,32 @@ final class Library: @unchecked Sendable {
         (try? query("SELECT label FROM sources WHERE done=1 ORDER BY docs DESC") { Self.text($0, 0) }) ?? []
     }
 
+    struct SourceInfo: Identifiable, Hashable, Sendable {
+        let key: String
+        let label: String
+        let docs: Int
+        var id: String { key }
+        var official: Bool { Library.officialLabel.contains(key) }
+    }
+
+    func sources() -> [SourceInfo] {
+        (try? query("SELECT key, label, docs FROM sources WHERE done=1 AND docs>0 ORDER BY docs DESC") { s in
+            SourceInfo(key: Self.text(s, 0), label: Self.text(s, 1), docs: Int(sqlite3_column_int64(s, 2)))
+        }) ?? []
+    }
+
+    /// Article titles from one source, alphabetical, for browsing. Returned as text-less passages so
+    /// they open in the same article view as search hits.
+    func titles(sourceKey: String, offset: Int, limit: Int) -> [Passage] {
+        (try? query("""
+            SELECT d.id, d.title, s.label FROM docs d JOIN sources s ON s.id = d.source_id
+            WHERE s.key = ? ORDER BY d.title COLLATE NOCASE LIMIT ? OFFSET ?
+            """, [sourceKey, limit, offset]) { s in
+            Passage(id: -sqlite3_column_int64(s, 0), docID: sqlite3_column_int64(s, 0), title: Self.text(s, 1),
+                    source: Self.text(s, 2), sourceKey: sourceKey, official: Self.officialLabel.contains(sourceKey), text: "")
+        }) ?? []
+    }
+
     static func queryWords(_ q: String) -> [String] {
         let lower = q.lowercased()
         let regex = /[\w']+/
@@ -82,7 +108,7 @@ final class Library: @unchecked Sendable {
     }
 
     /// Best passages for a question, one per article, official sources ranked up.
-    func search(_ question: String, limit: Int = 5, maxChars: Int = 900) -> [Passage] {
+    func search(_ question: String, limit: Int = 5, maxChars: Int = 900, only keys: Set<String>? = nil) -> [Passage] {
         let words = Self.queryWords(question)
         guard !words.isEmpty else { return [] }
         let terms = words.map { "\"" + $0.replacingOccurrences(of: "\"", with: "") + "\"" }
@@ -112,6 +138,7 @@ final class Library: @unchecked Sendable {
         let ordered = rows.sorted { (rank[$0.pid] ?? 0) * weight($0.key) < (rank[$1.pid] ?? 0) * weight($1.key) }
         var out: [Passage] = [], seenDocs = Set<Int64>(), seenText = Set<String>()
         for r in ordered {
+            if let keys, !keys.contains(r.key) { continue }
             guard !seenDocs.contains(r.doc) else { continue }
             seenDocs.insert(r.doc)
             guard let raw = readText(fileID: r.file, offset: r.off, length: r.len) else { continue }

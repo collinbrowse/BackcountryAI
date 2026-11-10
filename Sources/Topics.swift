@@ -8,6 +8,9 @@ struct Topic: Identifiable, Hashable {
     let symbol: String
     let tint: Color
     let question: String
+    /// Library search words for browsing this topic in the Guide. Defaults to the title.
+    var terms: String? = nil
+    var searchTerms: String { terms ?? title }
 
     static let urgent: [Topic] = [
         Topic(id: "bleeding", title: "Heavy bleeding", symbol: "drop.fill", tint: Theme.danger,

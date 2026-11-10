@@ -13,7 +13,7 @@ struct BackcountryApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            RootView()
                 .environment(store)
                 .environment(assistant)
                 .environment(saved)

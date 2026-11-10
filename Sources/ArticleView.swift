@@ -14,7 +14,7 @@ struct ArticleView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 14) {
                     header
-                    matched
+                    if !passage.text.isEmpty { matched }
                     if let blocks {
                         ForEach(Array(blocks.enumerated()), id: \.offset) { _, b in block(b) }
                         footer
