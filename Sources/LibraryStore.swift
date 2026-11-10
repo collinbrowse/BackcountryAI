@@ -94,7 +94,10 @@ final class LibraryStore {
         for folder in [Self.documentsFolder, Self.legacyFolder]
         where FileManager.default.fileExists(atPath: folder.appending(path: "index.sqlite").path) {
             if let lib = try? Library(folder: folder) {
-                use(lib, packID: nil)
+                // Older GitHub downloads left a pack-id file naming which library they were.
+                let packID = (try? String(contentsOf: folder.appending(path: "pack-id"), encoding: .utf8))?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                use(lib, packID: packID)
                 return
             }
         }

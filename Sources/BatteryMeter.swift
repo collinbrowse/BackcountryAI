@@ -14,14 +14,22 @@ struct BatteryReport: Hashable, Sendable {
         return max(0, s - e)
     }
 
+    /// Compact label for the answer footer, e.g. "<1% · 9s".
+    var short: String {
+        let time = String(format: "%.0fs", seconds)
+        if wasCharging { return "Charging · \(time)" }
+        guard let used = usedPercent else { return time }
+        return (used == 0 ? "<1%" : "\(used)%") + " · " + time
+    }
+
     var summary: String {
         let time = String(format: "%.0f s", seconds)
-        if wasCharging { return "🔋 Charging, so battery use can't be measured · \(time)" }
+        if wasCharging { return "Charging, so battery use can't be measured · \(time)" }
         guard let s = startLevel, let e = endLevel, let used = usedPercent else {
-            return "🔋 Battery level unavailable on this device · \(time)"
+            return "Battery level unavailable on this device · \(time)"
         }
         let amount = used == 0 ? "under 1%" : "about \(used)%"
-        return "🔋 Used \(amount) of battery (\(s)% → \(e)%) · \(time)"
+        return "Used \(amount) of battery (\(s)% → \(e)%) · \(time)"
     }
 }
 

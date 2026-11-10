@@ -4,6 +4,8 @@ import SwiftUI
 struct BackcountryApp: App {
     @State private var store = LibraryStore()
     @State private var assistant = Assistant()
+    @State private var saved = SavedStore()
+    @State private var field = FieldStore()
     @AppStorage(Onboarding.completedKey) private var completedOnboarding = false
     @AppStorage(Onboarding.legacyBatteryNoticeKey) private var seenBatteryNotice = false
 
@@ -12,10 +14,12 @@ struct BackcountryApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ChatView()
+            RootView()
                 .environment(store)
                 .environment(assistant)
-                .tint(.orange)
+                .environment(saved)
+                .environment(field)
+                .tint(Theme.accent)
                 .fullScreenCover(isPresented: .constant(needsOnboarding)) {
                     OnboardingView { completedOnboarding = true }
                         .environment(store)

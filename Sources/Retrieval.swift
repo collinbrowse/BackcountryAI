@@ -52,7 +52,7 @@ enum Retrieval {
         for q in [question] + searches {
             for (i, p) in library.search(q, limit: 6, maxChars: 700).enumerated() {
                 score[p.docID, default: 0] += 1 / Double(8 + i)
-                if (byDoc[p.docID]?.coverage ?? -1) < p.coverage { byDoc[p.docID] = p }
+                if (byDoc[p.docID]?.coverage ?? -1) < (p.coverage ?? 0) { byDoc[p.docID] = p }
             }
         }
         return byDoc.values.sorted { score[$0.docID]! > score[$1.docID]! }.prefix(limit).map { $0 }

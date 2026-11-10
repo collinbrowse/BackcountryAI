@@ -15,6 +15,10 @@ struct ChatMessage: Identifiable {
     var battery: BatteryReport? = nil
     var batterySession: String? = nil
     var failed = false
+    var question = ""                  // for assistant messages: what they answer
+    var urgent = false                 // the question sounds like an emergency
+
+    var isFinished: Bool { role == .assistant && status == nil && !text.isEmpty }
 }
 
 @MainActor
@@ -42,22 +46,14 @@ final class Assistant {
         }
     }
 
-    static let instructions = """
-    You are a backcountry and survival field guide running offline on a phone. The person may be far from help, \
-    cold, injured or with a broken vehicle or piece of gear. Answer from the numbered library excerpts you are given \
-    and cite them inline like [1] or [2]. Lead with what to do right now, as short numbered steps. Be concrete and \
-    brief. Only if the excerpts don't cover the question, say so plainly, then give careful general guidance under \
-    the heading "Not from the library:". Never end with that heading alone. For a life-threatening emergency, start with the most urgent actions and say to call or \
-    text 911 or use an SOS/satellite messenger if there is any way to.
-    """
-
     func ask(_ question: String, library: Library?) {
         let q = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty, !isBusy else { return }
         let previous = messages.last(where: { $0.role == .user })?.text
         let previousAnswer = messages.last(where: { $0.role == .assistant && !$0.failed })?.text
         messages.append(ChatMessage(role: .user, text: q))
-        messages.append(ChatMessage(role: .assistant, text: "", status: "Searching the library…"))
+        messages.append(ChatMessage(role: .assistant, text: "", status: "Searching the library…",
+                                    question: q, urgent: Urgency.isUrgent(q)))
         let index = messages.count - 1
         isBusy = true
 
@@ -71,38 +67,51 @@ final class Assistant {
                 isBusy = false
             }
 
-            // 1. Search the library (off the main thread).
+            // 1. Find passages. With the model: it rewrites the question into searches, then keeps only the
+            //    candidates that help (see Retrieval). Without it: plain keyword search.
             var sources: [Passage] = []
+            let problem = availabilityProblem
             if let library {
-                sources = await Task.detached(priority: .userInitiated) {
-                    var hits = library.search(q, limit: 5)
-                    if hits.count < 2, let previous {  // a short follow-up like "what about kids?"
-                        hits = library.search(previous + " " + q, limit: 5)
-                    }
-                    return hits
-                }.value
+                if problem == nil {
+                    let searches = await Retrieval.searches(for: q, previous: previous, model: model)
+                    log.notice("searches: \(searches.joined(separator: " | "))")
+                    let candidates = await Task.detached(priority: .userInitiated) {
+                        Retrieval.candidates(question: q, searches: searches, library: library)
+                    }.value
+                    messages[index].status = "Reading what it found…"
+                    sources = await Retrieval.pick(question: q, from: candidates, model: model)
+                } else {
+                    sources = await Task.detached(priority: .userInitiated) {
+                        var hits = library.search(q, limit: 5)
+                        if hits.count < 2, let previous {  // a short follow-up like "what about kids?"
+                            hits = library.search(previous + " " + q, limit: 5)
+                        }
+                        return hits
+                    }.value
+                }
             }
             messages[index].sources = sources
-            log.notice("search found \(sources.count) passages")
+            log.notice("using \(sources.count) passages")
 
             // 2. Ask the on-device model.
-            if let problem = availabilityProblem {
+            if let problem {
                 messages[index].text = problem + (sources.isEmpty ? "" : "\n\nThe best library matches are below.")
                 messages[index].failed = true
                 return
             }
-            messages[index].status = "Thinking (on this phone, no internet)…"
+            messages[index].status = "Writing an answer on this phone…"
             do {
                 let prompt = try await fittingPrompt(question: q, sources: &sources,
                                                      previous: previous, previousAnswer: previousAnswer)
                 messages[index].sources = sources
-                let session = LanguageModelSession(model: model, instructions: Self.instructions)
+                let session = LanguageModelSession(model: model, instructions: Retrieval.instructions)
                 let options = GenerationOptions(temperature: 0.3, maximumResponseTokens: 700)
                 for try await snapshot in session.streamResponse(to: prompt, options: options) {
                     try Task.checkCancellation()
                     messages[index].status = nil
                     messages[index].text = snapshot.content
                 }
+                if !messages[index].text.isEmpty { Readiness.recordAnswer() }
             } catch is CancellationError {
                 if messages[index].text.isEmpty { messages[index].text = "Stopped." }
             } catch {
@@ -114,6 +123,13 @@ final class Assistant {
     }
 
     func stop() { task?.cancel() }
+
+    /// Starts a fresh conversation with this question.
+    func startNew(_ question: String, library: Library?) {
+        guard !isBusy else { return }
+        messages.removeAll()
+        ask(question, library: library)
+    }
 
     func clear() {
         guard !isBusy else { return }
@@ -127,9 +143,9 @@ final class Assistant {
         let reserve = 900  // tokens for the answer plus overhead
         // Guard against a not-yet-loaded model reporting a tiny window, which would drop every source.
         let window = max(model.contextSize, 4096)
-        let instructionTokens = (try? await model.tokenCount(for: Instructions(Self.instructions))) ?? 250
+        let instructionTokens = (try? await model.tokenCount(for: Instructions(Retrieval.instructions))) ?? 250
         while true {
-            let prompt = Self.prompt(question: question, sources: sources, previous: previous,
+            let prompt = Retrieval.prompt(question: question, sources: sources, previous: previous,
                                      previousAnswer: previousAnswer)
             let counted = try? await model.tokenCount(for: prompt)
             let n = sources.count
@@ -138,23 +154,5 @@ final class Assistant {
             if instructionTokens + tokens + reserve <= window || sources.count <= 2 { return prompt }
             sources.removeLast()
         }
-    }
-
-    static func prompt(question: String, sources: [Passage], previous: String?, previousAnswer: String?) -> String {
-        var p = ""
-        if let previous, let previousAnswer, !previousAnswer.isEmpty {
-            p += "Earlier in this conversation they asked: \(previous)\n"
-            p += "You answered (shortened): \(previousAnswer.prefix(500))\n\n"
-        }
-        if sources.isEmpty {
-            p += "No library excerpts matched this question.\n\n"
-        } else {
-            p += "Library excerpts:\n"
-            for (i, s) in sources.enumerated() {
-                p += "[\(i + 1)] \(s.title) (\(s.source))\n\(s.text)\n\n"
-            }
-        }
-        p += "Question: \(question)"
-        return p
     }
 }
