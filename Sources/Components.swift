@@ -77,42 +77,32 @@ struct SearchResultRow: View {
     }
 }
 
-/// Compact readiness: a ring and the next step, expanding to the full checklist.
-struct ReadinessCard: View {
+/// The trail-ready checklist, opened from Scout's menu: a progress ring and the four steps.
+struct ReadinessSheet: View {
     let items: [Readiness.Item]
     var act: (Readiness.Item) -> Void
-    @State private var expanded = false
+    @Environment(\.dismiss) private var dismiss
 
     private var done: Int { items.filter(\.done).count }
-    private var next: Readiness.Item? { items.first { !$0.done } }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button { withAnimation(.bouncy) { expanded.toggle() } } label: {
-                HStack(spacing: 14) {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(spacing: 16) {
                     ZStack {
-                        Circle().stroke(Theme.hairline, lineWidth: 6)
-                        Circle().trim(from: 0, to: CGFloat(done) / CGFloat(items.count))
-                            .stroke(Theme.accentGradient, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        Circle().stroke(Theme.hairline, lineWidth: 7)
+                        Circle().trim(from: 0, to: CGFloat(done) / CGFloat(max(items.count, 1)))
+                            .stroke(Theme.accentGradient, style: StrokeStyle(lineWidth: 7, lineCap: .round))
                             .rotationEffect(.degrees(-90))
-                        Text("\(done)/\(items.count)").font(.caption.weight(.heavy)).foregroundStyle(Theme.ink)
-                            .contentTransition(.numericText())
+                        Text("\(done)/\(items.count)").font(.subheadline.weight(.heavy)).foregroundStyle(Theme.ink)
                     }
-                    .frame(width: 48, height: 48)
-                    .animation(.bouncy, value: done)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Get trail ready").font(.headline).foregroundStyle(Theme.ink)
-                        if let next {
-                            Text("Next: \(next.title)").font(.subheadline).foregroundStyle(Theme.inkSoft)
-                        }
+                    .frame(width: 60, height: 60)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(done == items.count ? "You're trail ready" : "Get trail ready")
+                            .font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Theme.ink)
+                        Text("Do these before you lose signal.").font(.subheadline).foregroundStyle(Theme.inkSoft)
                     }
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.down").font(.footnote.weight(.bold)).foregroundStyle(Theme.inkSoft)
-                        .rotationEffect(.degrees(expanded ? 180 : 0))
                 }
-            }
-            .buttonStyle(.plain)
-            if expanded {
                 VStack(spacing: 4) {
                     ForEach(items) { item in
                         Button { if !item.done { act(item) } } label: { row(item) }
@@ -120,11 +110,15 @@ struct ReadinessCard: View {
                             .disabled(item.done)
                     }
                 }
-                .transition(.opacity.combined(with: .offset(y: -6)))
+                .card(padding: 12)
+                Spacer(minLength: 0)
             }
+            .padding(20)
+            .background(Theme.background)
+            .toolbar { Button("Done") { dismiss() }.fontWeight(.semibold) }
         }
-        .card(padding: 14)
-        .padding(.horizontal, 16)
+        .presentationDetents([.medium, .large])
+        .tint(Theme.accent)
     }
 
     private func row(_ item: Readiness.Item) -> some View {
@@ -133,7 +127,6 @@ struct ReadinessCard: View {
                 .font(.body.weight(.semibold))
                 .foregroundStyle(item.done ? Theme.moss : Theme.accent)
                 .frame(width: 30)
-                .contentTransition(.symbolEffect(.replace))
             VStack(alignment: .leading, spacing: 1) {
                 Text(item.title).font(.subheadline.weight(.semibold))
                     .foregroundStyle(item.done ? Theme.inkSoft : Theme.ink)

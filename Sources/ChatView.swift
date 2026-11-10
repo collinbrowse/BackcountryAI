@@ -18,6 +18,7 @@ struct ChatView: View {
     @State private var showSOS = false
     @State private var showHowItWorks = false
     @State private var showOfflineTip = false
+    @State private var showReadiness = false
     @State private var aiProblem: String?? = nil
     @State private var confetti = 0
     @State private var sent = 0
@@ -77,6 +78,12 @@ struct ChatView: View {
             .overlay { ConfettiBurst(trigger: confetti) }
         }
         .sheet(isPresented: $showLibrary) { LibraryView() }
+        .sheet(isPresented: $showReadiness) {
+            ReadinessSheet(items: readiness) { item in
+                showReadiness = false
+                act(item)
+            }
+        }
         .sheet(isPresented: $showSOS) { SOSSheet { showSOS = false; send($0.question) } }
         .sheet(item: $openArticle) { ArticleView(passage: $0) }
         .fullScreenCover(isPresented: $showHowItWorks) { OnboardingView(isReplay: true) { showHowItWorks = false } }
@@ -122,20 +129,23 @@ struct ChatView: View {
         }
         .sharedBackgroundVisibility(.hidden)
         ToolbarItem(placement: .topBarTrailing) {
-            Menu {
-                if !isEmpty {
-                    Button { newChat() } label: { Label("New chat", systemImage: "square.and.pencil") }
-                        .disabled(assistant.isBusy)
-                }
-                Button { showLibrary = true } label: { Label("Offline library", systemImage: "books.vertical") }
-                Button { showHowItWorks = true } label: { Label("How Scout works", systemImage: "questionmark.circle") }
-            } label: {
-                Image(systemName: isEmpty ? "ellipsis" : "square.and.pencil")
-            } primaryAction: {
-                if isEmpty { showLibrary = true } else { newChat() }
+            if isEmpty {
+                Menu { menuItems } label: { Image(systemName: "ellipsis") }
+                    .accessibilityLabel("More")
+            } else {
+                Menu { menuItems } label: { Image(systemName: "square.and.pencil") } primaryAction: { newChat() }
+                    .disabled(assistant.isBusy)
+                    .accessibilityLabel("New chat")
             }
-            .accessibilityLabel(isEmpty ? "More" : "New chat")
         }
+    }
+
+    @ViewBuilder private var menuItems: some View {
+        Button { showReadiness = true } label: {
+            Label("Trail-ready checklist · \(readyCount)/\(readiness.count)", systemImage: "checklist")
+        }
+        Button { showLibrary = true } label: { Label("Offline library", systemImage: "books.vertical") }
+        Button { showHowItWorks = true } label: { Label("How Scout works", systemImage: "questionmark.circle") }
     }
 
     private var statusPill: some View {
@@ -177,60 +187,37 @@ struct ChatView: View {
         return .idle
     }
 
-    private static let quickReplies: [Topic] = [
-        Topic.urgent[0], Topic.camp[0], Topic.urgent[1], Topic.camp[1], Topic.urgent[4],
-        Topic.camp[3], Topic.camp[7], Topic.urgent[7], Topic.camp[2], Topic.camp[4],
-    ]
-
     private var welcome: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            VStack(spacing: 6) {
-                Scout(mood: welcomeMood, size: 132)
-                Text(greeting)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                    .foregroundStyle(heroInk.opacity(0.8))
-                Text("What's going on?")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundStyle(heroInk)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.top, 40)
-
-            ScoutSays(text: introText).riseIn(1)
-                .padding(.horizontal, 16)
-                .padding(.top, 4)
-
+        VStack(spacing: 6) {
+            Scout(mood: welcomeMood, size: 132)
+                .padding(.top, 40)
+            Text(greeting)
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .foregroundStyle(heroInk.opacity(0.8))
+            Text("What's going on?")
+                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .foregroundStyle(heroInk)
+            Spacer(minLength: 24)
+            Text(introText)
+                .font(.callout)
+                .foregroundStyle(Theme.inkSoft)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 36)
+                .padding(.top, 8)
+                .riseIn(1)
             if store.library == nil {
                 Button { showLibrary = true } label: {
                     Label("Get the library", systemImage: "arrow.down.circle.fill")
                 }
                 .buttonStyle(PrimaryButtonStyle())
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 40)
+                .padding(.top, 16)
                 .riseIn(2)
-            } else if readyCount < readiness.count {
-                ReadinessCard(items: readiness, act: act).riseIn(2)
             }
-
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Tap to ask").sectionLabel()
-                FlowLayout(spacing: 8, lineSpacing: 8) {
-                    ForEach(Array(Self.quickReplies.enumerated()), id: \.element.id) { i, t in
-                        Button { send(t.question) } label: {
-                            SuggestionChip(title: t.title, symbol: t.symbol, tint: t.tint)
-                        }
-                        .buttonStyle(SquishyButtonStyle(scale: 0.92))
-                        .riseIn(3 + i)
-                    }
-                }
-                Button { router.tab = .guide } label: {
-                    Label("Browse everything in the Guide", systemImage: "book.pages")
-                        .font(.footnote.weight(.semibold))
-                }
-                .padding(.top, 4)
-            }
-            .padding(.horizontal, 16)
+            Spacer(minLength: 0)
         }
-        .padding(.bottom, 24)
+        .frame(maxWidth: .infinity)
+        .containerRelativeFrame(.vertical)
     }
 
     private var introText: String {
@@ -388,10 +375,10 @@ struct ChatView: View {
 
     private func act(_ item: Readiness.Item) {
         switch item.id {
-        case "library": showLibrary = true
+        case "library": Task { try? await Task.sleep(for: .milliseconds(400)); showLibrary = true }
         case "ai": if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
         case "asked": send(Topic.camp[1].question)
-        default: showOfflineTip = true
+        default: Task { try? await Task.sleep(for: .milliseconds(400)); showOfflineTip = true }
         }
     }
 
@@ -404,24 +391,5 @@ struct ChatView: View {
             if p == nil { return }
             try? await Task.sleep(for: .seconds(3))
         }
-    }
-}
-
-/// Scout speaking in the chat, before any question: a speech bubble under the big Scout.
-struct ScoutSays: View {
-    let text: String
-    var body: some View {
-        Text(text)
-                .font(.callout)
-                .foregroundStyle(Theme.ink)
-                .padding(.horizontal, 15).padding(.vertical, 12)
-                .background(Theme.card, in: UnevenRoundedRectangle(topLeadingRadius: 6, bottomLeadingRadius: 20,
-                                                                  bottomTrailingRadius: 20, topTrailingRadius: 20,
-                                                                  style: .continuous))
-                .overlay(UnevenRoundedRectangle(topLeadingRadius: 6, bottomLeadingRadius: 20, bottomTrailingRadius: 20,
-                                                topTrailingRadius: 20, style: .continuous).strokeBorder(Theme.hairline))
-                .shadow(color: .black.opacity(0.06), radius: 8, y: 3)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
