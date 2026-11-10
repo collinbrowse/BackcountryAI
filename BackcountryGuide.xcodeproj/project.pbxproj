@@ -8,7 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		0CF0123D5D9746464D11C0AC /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = C441E747EDCACEA4C32A7E37 /* App.swift */; };
+		3A54E8D94E3487BEC69695FD /* OnboardingPages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B187FB83F2C3FBEF2FBB794 /* OnboardingPages.swift */; };
 		44968BF32BCBE520788870A1 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80E63A5B66D3A1E7EC9AF02 /* ChatView.swift */; };
+		593214E42DC337A1F2972A8F /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8489C197191008DB5D01E651 /* Onboarding.swift */; };
 		74E51C8377B17200A3914585 /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7149DA695D73AED47B498C66 /* Library.swift */; };
 		93D76144CD92E4FDCC24660A /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191C7C08C6C9572B7F613BFB /* LibraryView.swift */; };
 		B3075F36C3008E1B9F9E5AFB /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D7A3759C24A10B950B225A /* LibraryStore.swift */; };
@@ -21,8 +23,10 @@
 		191C7C08C6C9572B7F613BFB /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		2C36C8473527608FDB2EAAFF /* BackcountryGuide.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BackcountryGuide.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		36DF151C09CBDCEF5DBF318F /* Assistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assistant.swift; sourceTree = "<group>"; };
+		6B187FB83F2C3FBEF2FBB794 /* OnboardingPages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPages.swift; sourceTree = "<group>"; };
 		7149DA695D73AED47B498C66 /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
 		77D7A3759C24A10B950B225A /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
+		8489C197191008DB5D01E651 /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
 		C441E747EDCACEA4C32A7E37 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		C80E63A5B66D3A1E7EC9AF02 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		E77376AD7B2DD2A7EB1C77E9 /* BatteryMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryMeter.swift; sourceTree = "<group>"; };
@@ -58,6 +62,8 @@
 				7149DA695D73AED47B498C66 /* Library.swift */,
 				77D7A3759C24A10B950B225A /* LibraryStore.swift */,
 				191C7C08C6C9572B7F613BFB /* LibraryView.swift */,
+				8489C197191008DB5D01E651 /* Onboarding.swift */,
+				6B187FB83F2C3FBEF2FBB794 /* OnboardingPages.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -141,6 +147,8 @@
 				74E51C8377B17200A3914585 /* Library.swift in Sources */,
 				B3075F36C3008E1B9F9E5AFB /* LibraryStore.swift in Sources */,
 				93D76144CD92E4FDCC24660A /* LibraryView.swift in Sources */,
+				593214E42DC337A1F2972A8F /* Onboarding.swift in Sources */,
+				3A54E8D94E3487BEC69695FD /* OnboardingPages.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
