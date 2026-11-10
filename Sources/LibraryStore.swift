@@ -15,6 +15,9 @@ struct LibraryPack: Codable, Identifiable, Hashable, Sendable {
     let parts: [Part]
 
     var downloadBytes: Int64 { parts.reduce(0) { $0 + $1.bytes } }
+    /// install_bytes is the peak while installing (the zip plus the unpacked files); once the zip is
+    /// deleted, what stays on the phone is the difference.
+    var unpackedBytes: Int64 { max(install_bytes - downloadBytes, 0) }
     var title: String { id == "lite" ? "Essentials" : id == "full" ? "Everything" : id.capitalized }
     var blurb: String {
         switch id {

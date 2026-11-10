@@ -23,18 +23,30 @@ struct LibraryView: View {
                             HStack {
                                 Text(pack.title).font(.headline)
                                 Spacer()
-                                Text(String(format: "%.1f GB download", Double(pack.downloadBytes) / 1e9))
-                                    .font(.caption).foregroundStyle(.secondary)
+                                if isInstalled(pack) {
+                                    Label("Installed", systemImage: "checkmark.circle.fill")
+                                        .font(.subheadline.weight(.semibold)).foregroundStyle(.green)
+                                }
                             }
                             Text(pack.blurb).font(.callout).foregroundStyle(.secondary)
-                            Text("\(pack.articles.formatted()) articles · "
-                                 + String(format: "%.1f GB on the phone", Double(pack.install_bytes) / 1e9))
+                            Text("\(pack.articles.formatted()) articles · \(Self.gb(pack.downloadBytes)) download, "
+                                 + "about \(Self.gb(pack.unpackedBytes)) on the phone once unpacked")
                                 .font(.caption).foregroundStyle(.secondary)
-                            Button(store.installedPackID == pack.id ? "Download again" : "Download") {
-                                store.install(pack)
+                            if isInstalled(pack) {
+                                Menu("Options") {
+                                    Button("Re-download (repairs a damaged library)") { store.install(pack) }
+                                }
+                                .font(.caption)
+                                .disabled(store.isWorking)
+                            } else {
+                                Button(store.library == nil ? "Download" : "Switch to \(pack.title)") {
+                                    store.install(pack)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .disabled(store.isWorking)
+                                Text("Needs about \(Self.gb(pack.install_bytes)) free while it installs.")
+                                    .font(.caption2).foregroundStyle(.secondary)
                             }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(store.isWorking)
                         }
                         .padding(.vertical, 4)
                     }
@@ -74,6 +86,12 @@ struct LibraryView: View {
             }
         }
     }
+
+    private func isInstalled(_ pack: LibraryPack) -> Bool {
+        store.library != nil && store.installedPackID == pack.id
+    }
+
+    static func gb(_ bytes: Int64) -> String { String(format: "%.1f GB", Double(bytes) / 1e9) }
 
     private var installedName: String {
         store.packs.first { $0.id == store.installedPackID }?.title ?? "Custom"
