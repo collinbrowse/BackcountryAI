@@ -84,6 +84,7 @@ struct SavedAnswerView: View {
 /// Emergency help, one tap from the home screen.
 struct SOSSheet: View {
     var ask: (Topic) -> Void
+    var openField: () -> Void = {}
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -106,6 +107,7 @@ struct SOSSheet: View {
                             "Rescuers find people faster when they stop moving.")
                     }
                     .card()
+                    FieldStartCard(title: "Treating someone?", button: "Open Field mode", action: openField)
                     Text("Walk me through it").sectionLabel()
                     ForEach(Topic.urgent) { t in
                         Button { ask(t) } label: { TopicTile(topic: t) }

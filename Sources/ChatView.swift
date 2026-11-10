@@ -84,7 +84,8 @@ struct ChatView: View {
                 act(item)
             }
         }
-        .sheet(isPresented: $showSOS) { SOSSheet { showSOS = false; send($0.question) } }
+        .sheet(isPresented: $showSOS) { SOSSheet(ask: { showSOS = false; send($0.question) },
+                                                      openField: { showSOS = false; router.showField() }) }
         .sheet(item: $openArticle) { ArticleView(passage: $0) }
         .fullScreenCover(isPresented: $showHowItWorks) { OnboardingView(isReplay: true) { showHowItWorks = false } }
         .alert("Test it in Airplane Mode", isPresented: $showOfflineTip) {
@@ -214,6 +215,9 @@ struct ChatView: View {
                 .padding(.top, 16)
                 .riseIn(2)
             }
+            // Three spacers below, one above: the text sits halfway between the title and dead center.
+            Spacer(minLength: 0)
+            Spacer(minLength: 0)
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity)

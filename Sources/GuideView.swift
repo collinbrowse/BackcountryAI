@@ -18,6 +18,7 @@ enum GuideFilter {
 struct GuideView: View {
     @Environment(LibraryStore.self) private var store
     @Environment(Router.self) private var router
+    @Environment(FieldStore.self) private var field
     @AppStorage(GuideFilter.key) private var filter = ""
     @State private var query = ""
     @State private var results: [Passage] = []
@@ -38,8 +39,8 @@ struct GuideView: View {
                         FilterBar(sources: sources, filter: $filter)
                         searchResults
                     } else {
-                        featured.riseIn(0)
-                        ForEach(Array(GuideCollection.all.dropFirst().enumerated()), id: \.element.id) { i, c in
+                        fieldCard.riseIn(0)
+                        ForEach(Array(GuideCollection.all.enumerated()), id: \.element.id) { i, c in
                             shelf(c).riseIn(i + 1)
                         }
                         bySource.riseIn(6)
@@ -55,6 +56,9 @@ struct GuideView: View {
             .navigationDestination(for: Topic.self) { TopicView(topic: $0) }
             .navigationDestination(for: Library.SourceInfo.self) { SourceView(info: $0) }
             .navigationDestination(for: GuideCollection.self) { CollectionView(collection: $0) }
+            .navigationDestination(isPresented: Binding(get: { router.openField }, set: { router.openField = $0 })) {
+                FieldView()
+            }
         }
         .sheet(item: $openArticle) { ArticleView(passage: $0) }
         .sheet(isPresented: $showLibrary) { LibraryView() }
@@ -64,18 +68,21 @@ struct GuideView: View {
 
     // MARK: Shelves
 
-    private var featured: some View {
-        let c = GuideCollection.firstAid
-        return VStack(alignment: .leading, spacing: 14) {
-            NavigationLink(value: c) {
+    /// Field mode up front: start or continue a patient assessment, plus the quick cards.
+    private var fieldCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Button { router.openField = true } label: {
                 HStack(spacing: 14) {
-                    Image(systemName: c.symbol)
+                    Image(systemName: field.patient == nil ? "cross.case.fill" : "stethoscope")
                         .font(.title2.weight(.semibold)).foregroundStyle(.white)
                         .frame(width: 52, height: 52)
                         .background(.white.opacity(0.18), in: .rect(cornerRadius: 16, style: .continuous))
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(c.title).font(.system(.title3, design: .rounded).weight(.bold))
-                        Text(c.subtitle).font(.footnote).opacity(0.85)
+                        Text(field.patient?.title ?? "Field mode")
+                            .font(.system(.title3, design: .rounded).weight(.bold)).lineLimit(2)
+                        Text(field.patient == nil ? "Patient assessment, vitals, SOAP note. No AI needed."
+                             : "Continue assessment · \(field.patient!.vitals.count) vital sets")
+                            .font(.footnote).opacity(0.85)
                     }
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.right").font(.footnote.weight(.bold)).opacity(0.7)
@@ -84,8 +91,8 @@ struct GuideView: View {
             }
             .buttonStyle(.plain)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-                ForEach(c.topics) { t in
-                    NavigationLink(value: t) { MiniTopicTile(topic: t) }
+                ForEach(FieldCard.all.prefix(6)) { c in
+                    NavigationLink(value: c) { MiniTile(title: c.title, symbol: c.icon) }
                         .buttonStyle(SquishyButtonStyle(scale: 0.94))
                 }
             }
@@ -94,6 +101,9 @@ struct GuideView: View {
         .background(LinearGradient(colors: [Theme.pine, Color(hex: 0x13786A)], startPoint: .topLeading,
                                    endPoint: .bottomTrailing), in: .rect(cornerRadius: 26, style: .continuous))
         .padding(.horizontal, 16)
+        .navigationDestination(for: FieldCard.self) { card in
+            FieldCardView(card: card) { q in query = q }
+        }
     }
 
     private func shelf(_ c: GuideCollection) -> some View {
@@ -243,12 +253,13 @@ struct FilterBar: View {
     }
 }
 
-struct MiniTopicTile: View {
-    let topic: Topic
+struct MiniTile: View {
+    let title: String
+    let symbol: String
     var body: some View {
         VStack(spacing: 7) {
-            Image(systemName: topic.symbol).font(.system(size: 18, weight: .semibold)).foregroundStyle(.white)
-            Text(topic.title).font(.caption.weight(.semibold)).foregroundStyle(.white)
+            Image(systemName: symbol).font(.system(size: 18, weight: .semibold)).foregroundStyle(.white)
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(.white)
                 .lineLimit(2, reservesSpace: true).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -299,6 +310,18 @@ struct TopicView: View {
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(.horizontal, 16)
+
+                if let card = FieldCard.forTopic(topic.id) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text("Quick card").sectionLabel()
+                            Spacer()
+                            Text("No AI · instant").font(.caption).foregroundStyle(Theme.inkSoft)
+                        }
+                        FieldCardBody(card: card)
+                    }
+                    .padding(.horizontal, 16)
+                }
 
                 VStack(alignment: .leading, spacing: 10) {
                     Text("In the library").sectionLabel().padding(.horizontal, 16)

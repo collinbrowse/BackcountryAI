@@ -5,6 +5,7 @@ struct BackcountryApp: App {
     @State private var store = LibraryStore()
     @State private var assistant = Assistant()
     @State private var saved = SavedStore()
+    @State private var field = FieldStore()
     @AppStorage(Onboarding.completedKey) private var completedOnboarding = false
     @AppStorage(Onboarding.legacyBatteryNoticeKey) private var seenBatteryNotice = false
 
@@ -17,6 +18,7 @@ struct BackcountryApp: App {
                 .environment(store)
                 .environment(assistant)
                 .environment(saved)
+                .environment(field)
                 .tint(Theme.accent)
                 .fullScreenCover(isPresented: .constant(needsOnboarding)) {
                     OnboardingView { completedOnboarding = true }

@@ -8,10 +8,17 @@ enum AppTab: Hashable { case scout, guide, saved }
     var tab: AppTab = .scout
     /// A question waiting for the chat tab to send it.
     var pending: String?
+    /// Set to open Field mode in the Guide tab (from the SOS sheet).
+    var openField = false
 
     func ask(_ question: String) {
         pending = question
         withAnimation(.bouncy) { tab = .scout }
+    }
+
+    func showField() {
+        tab = .guide
+        openField = true
     }
 }
 

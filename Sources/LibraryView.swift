@@ -99,7 +99,7 @@ struct PackCard: View {
             Text(pack.blurb).font(.subheadline).foregroundStyle(Theme.inkSoft)
             HStack(spacing: 8) {
                 stat("doc.text", "\(pack.articles.formatted(.number.notation(.compactName))) articles")
-                stat("arrow.down.circle", "\(gb(pack.downloadBytes)) download")
+                if !installed { stat("arrow.down.circle", "\(gb(pack.downloadBytes)) download") }
                 stat("iphone", "\(gb(pack.unpackedBytes)) on phone")
             }
             if installed {
