@@ -5,6 +5,7 @@ Usage: .venv/bin/python library/check_search.py <library-folder> [--verbose]
 Exits non-zero if fewer than 90% of the questions find a relevant article.
 The first 22 questions come from Survival LLM's evals/retrieval_eval.py (MIT); the rest are backcountry ones.
 """
+import math
 import re
 import sqlite3
 import sys
@@ -67,16 +68,29 @@ def query_words(q):
     return [w for w in re.findall(r"[\w']+", q.lower()) if len(w) > 1 and w not in STOPWORDS][:12]
 
 
+TRANSLATED = re.compile(r"/[a-z]{2,3}(-[a-z]+)?$")  # wiki translations ("Solar cooker/ru") in older builds
+TRANSLATED_SOURCES = {"appropedia", "energypedia"}
+
+
 def search(db, question, limit=5):
-    """The app's search: all words first, any word if that finds too little; BM25 with official sources up."""
-    words = query_words(question)
-    terms = ['"' + w.replace('"', "") + '"' for w in words]
-    hits = []
-    for joiner in (" ", " OR "):
+    """The app's search (Sources/Library.swift). A passage's coverage is the share of the question's words it
+    contains. Ranking is BM25 times coverage, so when nothing has every word, a passage with most of them beats one
+    that only repeats the rarest word. (Weighting rare words more let incidental ones like "treeline" win.)
+    Returns (title, source key, coverage)."""
+    terms = ['"' + w.replace('"', "") + '"' for w in query_words(question)]
+    if not terms:
+        return []
+    hits = db.execute("SELECT rowid, rank FROM fts WHERE fts MATCH ? AND rank MATCH 'bm25(4.0, 1.0)' "
+                      "ORDER BY rank LIMIT 300", (" ".join(terms),)).fetchall()
+    cover = {h[0]: 1.0 for h in hits}
+    if len(hits) < 3 and len(terms) > 1:  # nothing has every word: take any word, then score coverage
         hits = db.execute("SELECT rowid, rank FROM fts WHERE fts MATCH ? AND rank MATCH 'bm25(4.0, 1.0)' "
-                          "ORDER BY rank LIMIT 300", (joiner.join(terms),)).fetchall()
-        if len(hits) >= 3 or len(words) == 1:
-            break
+                          "ORDER BY rank LIMIT 1000", (" OR ".join(terms),)).fetchall()
+        ids = ",".join(str(h[0]) for h in hits)
+        cover = {h[0]: 0.0 for h in hits}
+        for t in terms:
+            for (rid,) in db.execute(f"SELECT rowid FROM fts WHERE fts MATCH ? AND rowid IN ({ids})", (t,)):
+                cover[rid] += 1 / len(terms)
     if not hits:
         return []
     rank = dict(hits)
@@ -86,12 +100,13 @@ def search(db, question, limit=5):
     def weight(k):
         return 1.3 if k in OFFICIAL else 1.15 if k in ("wikipedia", "wikimed") else 1
 
-    rows.sort(key=lambda r: rank[r[0]] * weight(r[3]))
+    rows.sort(key=lambda r: rank[r[0]] * weight(r[3]) * cover[r[0]])
     out, seen = [], set()
-    for _, doc, title, key in rows:
-        if doc not in seen:
-            seen.add(doc)
-            out.append((title, key))
+    for pid, doc, title, key in rows:
+        if doc in seen or (key in TRANSLATED_SOURCES and TRANSLATED.search(title)):
+            continue
+        seen.add(doc)
+        out.append((title, key, cover[pid]))
         if len(out) >= limit:
             break
     return out
@@ -104,12 +119,12 @@ def main():
     passed = 0
     for q, about in QUESTIONS:
         results = search(db, q)
-        ok = any(re.search(about, t, re.I) for t, _ in results)
+        ok = any(re.search(about, t, re.I) for t, _, c in results)
         passed += ok
         print(("PASS " if ok else "MISS ") + q)
         if verbose or not ok:
-            for t, k in results:
-                print(f"       [{k}] {t}")
+            for t, k, c in results:
+                print(f"       [{k}] {t}  ({c:.0%} of the question)")
     share = passed / len(QUESTIONS)
     print(f"\n{passed}/{len(QUESTIONS)} questions found a relevant article in the top 5 ({share:.0%})")
     sys.exit(0 if share >= 0.9 else 1)

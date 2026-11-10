@@ -10,6 +10,7 @@ struct Passage: Identifiable, Hashable, Sendable {
     let sourceKey: String
     let official: Bool
     let text: String       // passage text, trimmed for the model
+    var coverage = 1.0     // share of the search's words this passage contains
 }
 
 struct Article: Sendable {
@@ -88,18 +89,31 @@ final class Library: @unchecked Sendable {
             .prefix(12).map { $0 }
     }
 
-    /// Best passages for a question, one per article, official sources ranked up.
+    /// Best passages for a question, one per article, official sources ranked up. Each passage's coverage is
+    /// the share of the question's words it contains. Ranking is BM25 times coverage, so when nothing has every
+    /// word, a passage with most of them beats one that only repeats the rarest word.
     func search(_ question: String, limit: Int = 5, maxChars: Int = 900) -> [Passage] {
         let words = Self.queryWords(question)
         guard !words.isEmpty else { return [] }
         let terms = words.map { "\"" + $0.replacingOccurrences(of: "\"", with: "") + "\"" }
-        var hits: [(Int64, Double)] = []
-        for joiner in [" ", " OR "] {  // all words first; any word if that finds too little
-            hits = (try? query("SELECT rowid, rank FROM fts WHERE fts MATCH ? AND rank MATCH 'bm25(4.0, 1.0)' "
-                               + "ORDER BY rank LIMIT 300", [terms.joined(separator: joiner)]) { s in
+        func ranked(_ match: String, limit: Int) -> [(Int64, Double)] {
+            (try? query("SELECT rowid, rank FROM fts WHERE fts MATCH ? AND rank MATCH 'bm25(4.0, 1.0)' "
+                        + "ORDER BY rank LIMIT \(limit)", [match]) { s in
                 (sqlite3_column_int64(s, 0), sqlite3_column_double(s, 1))
             }) ?? []
-            if hits.count >= 3 || words.count == 1 { break }
+        }
+        var hits = ranked(terms.joined(separator: " "), limit: 300)
+        var cover = Dictionary(hits.map { ($0.0, 1.0) }, uniquingKeysWith: { a, _ in a })
+        if hits.count < 3 && terms.count > 1 {  // nothing has every word: take any word, then count matches
+            hits = ranked(terms.joined(separator: " OR "), limit: 1000)
+            let ids = hits.map { String($0.0) }.joined(separator: ",")
+            cover = Dictionary(hits.map { ($0.0, 0.0) }, uniquingKeysWith: { a, _ in a })
+            for t in terms {
+                let matched = (try? query("SELECT rowid FROM fts WHERE fts MATCH ? AND rowid IN (\(ids))", [t]) {
+                    sqlite3_column_int64($0, 0)
+                }) ?? []
+                for id in matched { cover[id, default: 0] += 1 / Double(terms.count) }
+            }
         }
         guard !hits.isEmpty else { return [] }
         let rank = Dictionary(hits, uniquingKeysWith: { a, _ in a })
@@ -116,10 +130,11 @@ final class Library: @unchecked Sendable {
         }) ?? []
         // BM25 ranks are negative (lower is better), so a weight above 1 moves a source up.
         func weight(_ k: String) -> Double { Self.official.contains(k) ? 1.3 : (k == "wikipedia" || k == "wikimed") ? 1.15 : 1 }
-        let ordered = rows.sorted { (rank[$0.pid] ?? 0) * weight($0.key) < (rank[$1.pid] ?? 0) * weight($1.key) }
+        func score(_ r: Row) -> Double { (rank[r.pid] ?? 0) * weight(r.key) * (cover[r.pid] ?? 0) }
+        let ordered = rows.sorted { score($0) < score($1) }
         var out: [Passage] = [], seenDocs = Set<Int64>(), seenText = Set<String>()
         for r in ordered {
-            guard !seenDocs.contains(r.doc) else { continue }
+            guard !seenDocs.contains(r.doc), !Self.isTranslation(r.title, key: r.key) else { continue }
             seenDocs.insert(r.doc)
             guard let raw = readText(fileID: r.file, offset: r.off, length: r.len) else { continue }
             let flat = Self.flatten(raw)
@@ -127,10 +142,16 @@ final class Library: @unchecked Sendable {
             seenText.insert(flat)
             out.append(Passage(id: r.pid, docID: r.doc, title: r.title, source: r.label, sourceKey: r.key,
                                official: Self.officialLabel.contains(r.key),
-                               text: Self.window(flat, words: words, width: maxChars)))
+                               text: Self.window(flat, words: words, width: maxChars),
+                               coverage: cover[r.pid] ?? 0))
             if out.count >= limit { break }
         }
         return out
+    }
+
+    /// Libraries built before the translation filter hold wiki translations such as "Solar cooker/ru".
+    static func isTranslation(_ title: String, key: String) -> Bool {
+        (key == "appropedia" || key == "energypedia") && title.contains(/\/[a-z]{2,3}(-[a-z]+)?$/)
     }
 
     func article(docID: Int64) -> Article? {

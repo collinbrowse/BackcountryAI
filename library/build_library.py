@@ -142,11 +142,13 @@ PDF_TITLES = {
 # Sources whose files carry no usable web address: every article links to where the source is published.
 FIXED_URLS = {"usda-canning": "https://nchfp.uga.edu/resources/category/usda-guide"}
 
-# Page paths to leave out: WikEM's translated copies ("Page/tr") and sites' non-English sections, including
+# Page paths to leave out: wikis' translated copies ("Page/tr", "Page/zh-hans") and sites' non-English sections, including
 # language-code sections at the top of a site ("www.ready.gov/fr/..."), which often hold untranslated English copies.
 FOREIGN_SECTIONS = r"^[^/]+/[a-z]{2}(-[a-z]+)?/|/(es|spanish|espanol|languages|translations)(/|$)"
 SKIP_PATHS = {
     "wikem": r"/[a-z]{2}(-[a-z]+)?$",
+    "appropedia": r"/[a-z]{2,3}(-[a-z]+)?$",
+    "energypedia": r"/[a-z]{2,3}(-[a-z]+)?$",
     "medlineplus": FOREIGN_SECTIONS,
     "ready-gov": FOREIGN_SECTIONS,
     "cdc-travel": FOREIGN_SECTIONS,

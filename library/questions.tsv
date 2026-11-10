@@ -1,0 +1,89 @@
+area	question	a relevant title matches
+home	The power just went out. How long will the food in my fridge and freezer stay safe?	food|outage|refrigerat|freez
+home	Can I run my gas generator in the garage if I leave the big door open?	generator|carbon monoxide
+water	The tap water might be contaminated. How many drops of household bleach per gallon make it safe?	water|bleach|disinfect|purif
+water	How long do I need to boil water to make it safe to drink?	water|boil|purif
+home	What are the signs of carbon monoxide poisoning and what should I do?	carbon monoxide
+medical	Someone is shivering hard and acting confused after being out in the cold. What do I do?	hypotherm|cold
+medical	Someone cut their arm badly and it is bleeding a lot. What do I do?	bleed|wound|first aid|hemorrh|tourniquet|casualty
+medical	I burned my hand on the stove. How should I treat it?	burn
+medical	The power is out. How long can my insulin stay unrefrigerated?	insulin|diabet
+home	Is it safe to use candles for light during a blackout?	candle|outage|fire
+home	My phone is at 15% and the power is out. How do I make the battery last?	phone|battery|outage
+home	Can I charge my phone in my car with the engine running inside the garage?	carbon monoxide|car|garage
+home	A power line is down in my front yard. What should I do?	power line|downed|electric
+home	The water is off and the toilet won't flush. What can I do for a toilet?	toilet|sanitation|waste
+home	How do I keep warm in my house in winter if the power and heat are out?	cold|winter|warm|heat
+disaster	There has been a nuclear explosion nearby. What should I do?	nuclear|radiation|fallout
+food	Is canned food still safe to eat after it sat in floodwater?	flood|canned|food
+medical	Is it safe to take ibuprofen that expired two years ago?	expir|ibuprofen|medic
+medical	How do I make oral rehydration solution at home?	rehydrat|diarrh|dehydrat
+medical	Someone working in the heat is confused, very hot and has stopped sweating. What do I do?	heat
+food	How can I tell if home-canned food might have botulism?	botul|canning|canned
+disaster	How much water should I store per person for an emergency?	water|emergency|supply|kit
+medical	How do I treat early frostbite on my toes?	frostbite|cold
+vehicle	My truck won't start and just clicks. What do I check?	start|battery|starter|click
+survival	How do I start a fire with wet wood?	fire|wood|kindling
+medical	A rattlesnake bit my friend's ankle on the trail. What should we do?	snake|bite|envenom
+medical	My head is pounding and I feel sick after climbing to 11,000 feet. What is happening?	altitude|mountain
+wildlife	What should I do if I meet a grizzly bear on the trail?	bear
+weather	How do I know if a slope is likely to avalanche?	avalanche|snow
+weather	A thunderstorm is coming and we are above treeline. What do we do?	lightning|thunder|storm
+water	Is stream water safe to drink if it looks clear, or do I need to filter it?	water|giardia|filter|purif
+medical	I think I sprained my ankle hiking. How do I tell if it is broken and how do I splint it?	sprain|ankle|fracture|splint
+medical	How do I treat a blister on my heel so I can keep hiking?	blister|foot
+bike	How do I patch a flat bike tire on the trail?	tire|tyre|puncture|flat|tube
+survival	I am lost in the woods. Should I stay put or try to walk out?	lost|survival|navigation|rescue
+survival	How do I build an emergency shelter for one night in the snow?	shelter|snow|cold
+vehicle	How do I add oil on my snowmobile?	snowmobile|two-stroke|2.stroke|oil
+vehicle	How do I replace the spark plug on my chainsaw?	spark plug|chainsaw
+vehicle	How do I jump start a car with jumper cables?	jump|battery|booster
+vehicle	My truck is stuck in deep snow. How do I get it out?	stuck|snow|traction|recover
+vehicle	How do I change a flat tire on my truck?	tire|tyre|flat|wheel|jack
+vehicle	My diesel truck won't start in the cold. Could the fuel have gelled?	diesel|gel|cold|fuel
+vehicle	My ATV won't start. What should I check?	atv|start|engine|spark|fuel
+vehicle	My boat's outboard motor won't start. What should I check?	outboard|motor|engine|start
+gear	My camp stove won't light. How do I fix it?	stove|burner|canister|white gas
+gear	How do I repair a broken tent pole in the field?	tent|pole
+gear	How do I fix a leak in my inflatable sleeping pad?	pad|leak|mattress|patch
+gear	My generator won't start. What should I check?	generator|start|engine
+home	How do I thaw a frozen water pipe safely?	pipe|frozen|freez
+medical	Someone is having a severe allergic reaction to a bee sting. What do I do?	anaphyla|allerg|sting|epinephrine
+medical	How do I do CPR on an adult?	cpr|cardiopulmonary|resuscitat
+medical	Someone is choking and can't breathe. What do I do?	chok|heimlich|airway
+medical	How do I splint a broken leg in the backcountry?	splint|fracture|leg
+medical	I think my friend dislocated his shoulder. What should we do?	dislocat|shoulder
+medical	My friend hit his head skiing and seems confused. What should I watch for?	concussion|head injur|brain
+medical	How do I remove a tick and when should I worry about Lyme disease?	tick|lyme
+medical	I have an itchy rash after walking through plants. Is it poison ivy and how do I treat it?	poison ivy|urushiol|dermatitis|rash
+medical	A diabetic hiker is shaky and confused. What do I do?	hypoglyc|blood sugar|diabet|glucose
+medical	Someone is having an asthma attack and has no inhaler. What can we do?	asthma
+medical	I have diarrhea a week after drinking from a stream. Could it be giardia?	giardia|diarrh
+medical	Is it safe to run a stove inside my tent?	carbon monoxide|tent|stove
+medical	I got something in my eye and it won't come out. What do I do?	eye|foreign body|cornea
+medical	A tooth got knocked out in a fall. Can it be saved?	tooth|dental|avuls
+medical	A woman is going into labor and we can't get to a hospital. What do I do?	childbirth|labor|labour|deliver|birth
+medical	What are the signs of a stroke?	stroke
+medical	What are the signs of a heart attack and what should I do?	heart attack|myocardial|cardiac|chest pain
+medical	Someone is having a seizure. What do I do?	seizure|epilep
+medical	A dog bit me. Do I need to worry about rabies?	rabies|bite
+survival	How do I find north without a compass?	north|navigat|compass|star|sun
+survival	How do I signal a rescue helicopter?	signal|rescue|helicopter|mirror
+water	How can I purify water if I don't have a filter?	water|purif|disinfect|boil
+survival	How do I start a fire with a ferro rod?	ferro|fire|spark|ignit
+survival	How do I build a snow cave?	snow cave|quinzhee|snow shelter|igloo|shelter
+survival	What do I do if I fall through ice on a lake?	ice|cold water|immersion|drown
+survival	How do I cross a river safely on foot?	river|ford|crossing|stream
+weather	What should I do if a flash flood comes while I'm in a canyon?	flash flood|flood
+disaster	A wildfire is getting close to our campsite. What should we do?	wildfire|fire|evacuat
+disaster	What should I do if a tornado hits while I'm camping?	tornado
+wildlife	How do I use bear spray?	bear spray|pepper spray|bear
+wildlife	What should I do if a mountain lion follows me?	cougar|mountain lion|puma
+wildlife	How do I store food so bears can't get it?	bear|food storage|canister|hang
+food	Which wild plants are safe to eat in North America?	edible|plant|forag
+food	How do I tell if a wild mushroom is poisonous?	mushroom|fung|amanita|poison
+food	How do I set a snare to catch small game?	snare|trap
+weather	How can I tell from the clouds that a storm is coming?	cloud|storm|weather|thunder
+radio	What frequency should I use to call for help on a ham radio?	frequency|emergency|ham|amateur|radio|repeater
+radio	What is the difference between GMRS and FRS radios?	gmrs|frs|radio
+pets	My dog cut his paw pad on the trail. How do I treat it?	dog|paw|pad
