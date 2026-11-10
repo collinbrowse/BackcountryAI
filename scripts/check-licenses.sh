@@ -13,7 +13,8 @@ sqlite3 -separator ' | ' "file:$DB?immutable=1" \
 BAD=$(sqlite3 "file:$DB?immutable=1" "SELECT key || ' (' || COALESCE(license,'no license recorded') || ')' FROM sources
   WHERE done=1 AND (license IS NULL OR license = ''
     OR license GLOB '*-NC*' OR license GLOB '*-ND*' OR license GLOB '* NC *' OR license GLOB '* ND *'
-    OR license LIKE '%non-commercial%' OR license LIKE '%noncommercial%' OR license LIKE '%noderivative%')")
+    OR license LIKE '%non-commercial%' OR license LIKE '%noncommercial%' OR license LIKE '%noderivative%'
+    OR license LIKE '%not for resale%')")
 if [ -n "$BAD" ]; then
   echo >&2
   echo "Not allowed in a paid app (non-commercial, no-derivatives or unknown license):" >&2

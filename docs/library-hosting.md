@@ -13,6 +13,21 @@ Both use the `onDemand` policy: nothing downloads until someone picks a library.
 pack up to date in the background. The `BackcountryDownloader` extension and the
 `group.com.collinbrowse.backcountryguide` app group make that work.
 
+## Build the libraries
+
+The data comes only from sources listed in `SOURCES.md`. One script downloads everything (about 29 GB,
+resumable) and builds both libraries:
+
+```bash
+/opt/homebrew/bin/python3.12 -m venv .venv && .venv/bin/pip install libzim lxml trafilatura
+brew install poppler
+BACKCOUNTRY_DATA=~/BackcountryLibraryData scripts/build-library.sh
+```
+
+This produces `$BACKCOUNTRY_DATA/library-full` (Everything) and `library-lite` (Essentials). It runs the
+license check and `library/check_search.py` on each one. The search check runs 36 real questions through
+the app's ranking.
+
 ## Release a library
 
 1. Check the licenses. This fails on any NC or ND source:

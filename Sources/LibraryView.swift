@@ -63,8 +63,9 @@ struct LibraryView: View {
                 }
 
                 Section("Sources and licenses") {
-                    Text("Each article shows its source and license. Medical, FEMA, CDC and military sources "
-                         + "are public domain; wikiHow, iFixit and WHO material is for non-commercial use only.")
+                    Text("Each article shows its source and license. FEMA, CDC, NIH and U.S. military sources are "
+                         + "public domain. Wikipedia, Stack Exchange and the other wikis are CC BY-SA: their text "
+                         + "is shared under the same license.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }

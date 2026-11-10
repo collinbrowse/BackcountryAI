@@ -20,10 +20,10 @@ struct LibraryPack: Identifiable, Hashable, Sendable {
     var title: String { label }
     var blurb: String {
         switch id {
-        case "lite": "First aid and medicine, FEMA, U.S. Army survival and cold-weather manuals, wikiHow, "
-            + "outdoors, vehicle repair and home-repair Q&A."
+        case "lite": "First aid and medicine, FEMA and CDC guidance, U.S. Army survival and cold-weather manuals, "
+            + "plus outdoors, vehicle, bike and home-repair Q&A."
         case "full": "Essentials plus about 930,000 Wikipedia articles (skiing, avalanches, weather, wildlife, "
-            + "plants) and iFixit repair guides."
+            + "plants) and the Wikivoyage travel guide."
         default: label
         }
     }
@@ -33,10 +33,10 @@ struct LibraryPack: Identifiable, Hashable, Sendable {
 /// uploaded to App Store Connect, which hosts them.
 enum PackCatalog {
     static let all: [LibraryPack] = [
-        LibraryPack(id: "lite", label: "Essentials", articles: 494_574, assetPackIDs: ["lite"],
-                    downloadBytes: 1_275_477_229, unpackedBytes: 3_234_164_481),
-        LibraryPack(id: "full", label: "Everything", articles: 1_507_306, assetPackIDs: ["full"],
-                    downloadBytes: 8_656_720_766, unpackedBytes: 13_675_816_308),
+        LibraryPack(id: "lite", label: "Essentials", articles: 308_875, assetPackIDs: ["lite"],
+                    downloadBytes: 926_728_121, unpackedBytes: 2_205_425_664),
+        LibraryPack(id: "full", label: "Everything", articles: 1_272_789, assetPackIDs: ["full"],
+                    downloadBytes: 8_656_795_917, unpackedBytes: 20_147_707_904),
     ]
 }
 

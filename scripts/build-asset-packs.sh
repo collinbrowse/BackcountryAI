@@ -34,5 +34,6 @@ JSON
 
 cd "$(dirname "$LIB")"
 xcrun ba-package evaluate "$MANIFEST" >/dev/null 2>&1 || true
+rm -f "$OUT/$ID.aar"   # ba-package will not overwrite an existing archive
 xcrun ba-package package "$MANIFEST" --output-path "$OUT/$ID.aar"
 echo "Built $OUT/$ID.aar ($(du -h "$OUT/$ID.aar" | cut -f1))"
