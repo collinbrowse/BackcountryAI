@@ -100,7 +100,8 @@ final class LibraryStore {
             if let lib = try? Library(folder: folder) {
                 library = lib
                 articleCount = lib.stats().articles
-                installedPackID = try? String(contentsOf: folder.appending(path: "pack-id"), encoding: .utf8)
+                installedPackID = (try? String(contentsOf: folder.appending(path: "pack-id"), encoding: .utf8))?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
                 return
             }
         }

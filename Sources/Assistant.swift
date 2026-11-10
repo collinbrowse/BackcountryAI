@@ -15,6 +15,10 @@ struct ChatMessage: Identifiable {
     var battery: BatteryReport? = nil
     var batterySession: String? = nil
     var failed = false
+    var question = ""                  // for assistant messages: what they answer
+    var urgent = false                 // the question sounds like an emergency
+
+    var isFinished: Bool { role == .assistant && status == nil && !text.isEmpty }
 }
 
 @MainActor
@@ -57,7 +61,8 @@ final class Assistant {
         let previous = messages.last(where: { $0.role == .user })?.text
         let previousAnswer = messages.last(where: { $0.role == .assistant && !$0.failed })?.text
         messages.append(ChatMessage(role: .user, text: q))
-        messages.append(ChatMessage(role: .assistant, text: "", status: "Searching the library…"))
+        messages.append(ChatMessage(role: .assistant, text: "", status: "Searching the library…",
+                                    question: q, urgent: Urgency.isUrgent(q)))
         let index = messages.count - 1
         isBusy = true
 
@@ -91,7 +96,7 @@ final class Assistant {
                 messages[index].failed = true
                 return
             }
-            messages[index].status = "Thinking (on this phone, no internet)…"
+            messages[index].status = "Writing an answer on this phone…"
             do {
                 let prompt = try await fittingPrompt(question: q, sources: &sources,
                                                      previous: previous, previousAnswer: previousAnswer)
@@ -103,6 +108,7 @@ final class Assistant {
                     messages[index].status = nil
                     messages[index].text = snapshot.content
                 }
+                if !messages[index].text.isEmpty { Readiness.recordAnswer() }
             } catch is CancellationError {
                 if messages[index].text.isEmpty { messages[index].text = "Stopped." }
             } catch {
@@ -114,6 +120,13 @@ final class Assistant {
     }
 
     func stop() { task?.cancel() }
+
+    /// Starts a fresh conversation with this question.
+    func startNew(_ question: String, library: Library?) {
+        guard !isBusy else { return }
+        messages.removeAll()
+        ask(question, library: library)
+    }
 
     func clear() {
         guard !isBusy else { return }

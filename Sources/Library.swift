@@ -2,7 +2,7 @@ import Foundation
 import SQLite3
 
 /// One search hit: the best passage of one article.
-struct Passage: Identifiable, Hashable, Sendable {
+struct Passage: Identifiable, Hashable, Codable, Sendable {
     let id: Int64          // passage id
     let docID: Int64
     let title: String
