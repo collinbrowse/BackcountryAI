@@ -5,6 +5,7 @@ struct ChatView: View {
     @Environment(Assistant.self) private var assistant
     @State private var draft = ""
     @State private var showLibrary = false
+    @State private var showGuide = false
     @State private var openArticle: Passage?
     @State private var searchOnly = false
     @FocusState private var focused: Bool
@@ -47,11 +48,22 @@ struct ChatView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button { showGuide = true } label: { Label("How to use Backcountry", systemImage: "questionmark.circle") }
+                        Button { showLibrary = true } label: { Label("Offline library", systemImage: "books.vertical") }
+                    } label: {
+                        Label("More", systemImage: "ellipsis.circle")
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { assistant.clear() } label: { Label("New chat", systemImage: "square.and.pencil") }
                         .disabled(assistant.messages.isEmpty || assistant.isBusy)
                 }
             }
             .sheet(isPresented: $showLibrary) { LibraryView() }
+            .fullScreenCover(isPresented: $showGuide) {
+                OnboardingView(isReplay: true) { showGuide = false }
+            }
             .sheet(item: $openArticle) { p in ArticleView(passage: p) }
         }
     }
