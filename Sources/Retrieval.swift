@@ -6,32 +6,22 @@ import FoundationModels
 /// 1. it rewrites the question into searches phrased the way a manual or Q&A site would be, and
 /// 2. it reads the best candidates and keeps only the ones that help answer this question.
 enum Retrieval {
-    @Generable
-    struct SearchPlan {
-        @Guide(description: "Two or three short keyword searches, 2 to 5 words each, about this question only.",
-            .count(2...3))
-        var searches: [String]
-    }
-
-    @Generable
-    struct Picks {
-        @Guide(description: "The numbers of the excerpts about the question's subject, most useful first. "
-            + "Empty if none are.")
-        var useful: [Int]
-    }
+    // Both steps ask for plain text: Apple's guardrails reject guided generation (@Generable) for many medical
+    // questions ("May contain sensitive content") but allow plain answers with permissive transformations.
 
     static let planInstructions = """
-    You turn a person's question into keyword searches for an offline library of first-aid and survival manuals, \
-    government safety guides, repair and outdoors Q&A, and Wikipedia. Each search names the main subject of the \
-    question (the injury, machine, animal, weather or task) plus the words an article about it would use: the \
-    medical or technical name, and a common synonym. Leave out filler like "guide", "tips", "manual" or "Q&A". \
-    Example: "My buddy's leg is bent wrong after a fall" -> "leg fracture splint", "broken leg first aid".
+    You write keyword searches for an offline library of first-aid and survival manuals, government safety guides, \
+    repair and outdoors Q&A, and Wikipedia. Reply with 2 or 3 searches, one per line, 2 to 5 words each, and \
+    nothing else. Each search names the main subject of the question (the injury, machine, animal, weather or \
+    task) plus words an article about it would use: the medical or technical name, or a common synonym.
     """
 
     static let pickInstructions = """
-    You choose which library excerpts to give a field guide answering a question. Keep every excerpt about the \
-    question's subject, even if it only partly answers it. Leave out excerpts about a different subject that only \
-    share a word (a football "line" for a power line, an injury for an oil change). It's fine to keep none.
+    You check library excerpts for a field guide. For each excerpt write one line: its number, a few words on what \
+    it is about, then YES if it helps with the task or question the person asked, or NO if it doesn't. Sharing a \
+    word is not enough: an excerpt about 3D-printing a snowmobile part doesn't help someone add oil to a \
+    snowmobile, and a football "line" doesn't help with a downed power line. An excerpt that answers part of the \
+    question does help.
     """
 
     /// The model's searches for a question. Empty if the model fails, so search falls back to the question alone.
@@ -40,9 +30,15 @@ enum Retrieval {
         if let previous { prompt += "Their previous question, for context: \(previous)\n" }
         prompt += "Question: \(question)"
         let session = LanguageModelSession(model: model, instructions: planInstructions)
-        let plan = try? await session.respond(to: prompt, generating: SearchPlan.self,
-                                              options: GenerationOptions(temperature: 0))
-        return plan?.content.searches.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty } ?? []
+        guard let reply = try? await session.respond(to: prompt, options: GenerationOptions(temperature: 0,
+                                                                                            maximumResponseTokens: 80))
+        else { return [] }
+        return reply.content.split(whereSeparator: \.isNewline).compactMap { line in
+            // Tolerate "1. ", "- ", quotes and trailing periods.
+            let s = line.replacing(/^\s*(\d+[.)]|[-*•])\s*/, with: "")
+                .trimmingCharacters(in: CharacterSet(charactersIn: "\"'“”. ").union(.whitespaces))
+            return s.isEmpty || s.count > 60 ? nil : s
+        }.prefix(3).map { $0 }
     }
 
     /// Up to `limit` passages from the question and the model's searches, merged by reciprocal rank fusion:
@@ -59,7 +55,8 @@ enum Retrieval {
         return byDoc.values.sorted { score[$0.docID]! > score[$1.docID]! }.prefix(limit).map { $0 }
     }
 
-    /// The candidates the model judges useful, best first. If the model fails, the top candidates unfiltered.
+    /// The candidates the model says help, in search order. If the model fails, only candidates that matched
+    /// every word of a search, since an unchecked partial match is how off-topic articles got through.
     static func pick(question: String, from candidates: [Passage], model: SystemLanguageModel,
                      limit: Int = 4) async -> [Passage] {
         guard !candidates.isEmpty else { return [] }
@@ -67,17 +64,19 @@ enum Retrieval {
         for (i, p) in candidates.enumerated() {
             prompt += "[\(i + 1)] \(p.title) (\(p.source)): \(p.text.prefix(320))\n\n"
         }
-        prompt += "Which excerpts are about the question's subject?"
+        prompt += "One line per excerpt: number, what it's about, YES or NO."
         let session = LanguageModelSession(model: model, instructions: pickInstructions)
-        guard let picks = try? await session.respond(to: prompt, generating: Picks.self,
-                                                     options: GenerationOptions(temperature: 0))
-        else { return Array(candidates.prefix(limit)) }
-        var out: [Passage] = []
-        for n in picks.content.useful where (1...candidates.count).contains(n) {
-            let p = candidates[n - 1]
-            if !out.contains(where: { $0.docID == p.docID }) { out.append(p) }
+        guard let reply = try? await session.respond(to: prompt, options: GenerationOptions(temperature: 0,
+                                                                                            maximumResponseTokens: 300))
+        else { return Array(candidates.filter { ($0.coverage ?? 0) >= 0.99 }.prefix(3)) }
+        var helps = Set<Int>()
+        for line in reply.content.split(whereSeparator: \.isNewline) {
+            guard let m = line.firstMatch(of: /^\W*(\d+)/), let n = Int(m.1), (1...candidates.count).contains(n)
+            else { continue }
+            let words = line.uppercased().split(whereSeparator: { !$0.isLetter })
+            if words.last(where: { $0 == "YES" || $0 == "NO" }) == "YES" { helps.insert(n) }
         }
-        return Array(out.prefix(limit))
+        return Array(candidates.enumerated().filter { helps.contains($0.offset + 1) }.map(\.element).prefix(limit))
     }
 
     // MARK: - Answer
