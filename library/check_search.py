@@ -83,9 +83,17 @@ def search(db, question, limit=5):
     hits = db.execute("SELECT rowid, rank FROM fts WHERE fts MATCH ? AND rank MATCH 'bm25(4.0, 1.0)' "
                       "ORDER BY rank LIMIT 300", (" ".join(terms),)).fetchall()
     cover = {h[0]: 1.0 for h in hits}
-    if len(hits) < 3 and len(terms) > 1:  # nothing has every word: take any word, then score coverage
+    if len(hits) < 3 and len(terms) > 2:  # nothing has every word: try every word but one (fast)
+        for skip in range(len(terms)):
+            rest = terms[:skip] + terms[skip + 1:]
+            for h in db.execute("SELECT rowid, rank FROM fts WHERE fts MATCH ? AND rank MATCH 'bm25(4.0, 1.0)' "
+                                "ORDER BY rank LIMIT 100", (" ".join(rest),)).fetchall():
+                if h[0] not in cover:
+                    hits.append(h)
+                    cover[h[0]] = len(rest) / len(terms)
+    if len(hits) < 3 and len(terms) > 1:  # still too little: take any word, then score coverage
         hits = db.execute("SELECT rowid, rank FROM fts WHERE fts MATCH ? AND rank MATCH 'bm25(4.0, 1.0)' "
-                          "ORDER BY rank LIMIT 1000", (" OR ".join(terms),)).fetchall()
+                          "ORDER BY rank LIMIT 200", (" OR ".join(terms),)).fetchall()
         ids = ",".join(str(h[0]) for h in hits)
         cover = {h[0]: 0.0 for h in hits}
         for t in terms:

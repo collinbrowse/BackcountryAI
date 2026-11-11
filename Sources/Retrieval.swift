@@ -8,29 +8,30 @@ import FoundationModels
 enum Retrieval {
     @Generable
     struct SearchPlan {
-        @Guide(description: "Two or three short keyword searches, 2 to 6 words each, in the words a first-aid "
-            + "manual, repair guide, Q&A site or encyclopedia would use. Keep the specific thing named (snowmobile, "
-            + "chainsaw, insulin) and add the technical term or synonym (bleeding: hemorrhage, tourniquet).",
+        @Guide(description: "Two or three short keyword searches, 2 to 5 words each, about this question only.",
             .count(2...3))
         var searches: [String]
     }
 
     @Generable
     struct Picks {
-        @Guide(description: "The numbers of the excerpts that contain information that helps answer the question, "
-            + "most useful first. Empty if none do.")
+        @Guide(description: "The numbers of the excerpts about the question's subject, most useful first. "
+            + "Empty if none are.")
         var useful: [Int]
     }
 
     static let planInstructions = """
     You turn a person's question into keyword searches for an offline library of first-aid and survival manuals, \
-    government safety guides, repair and outdoors Q&A, and Wikipedia.
+    government safety guides, repair and outdoors Q&A, and Wikipedia. Each search names the main subject of the \
+    question (the injury, machine, animal, weather or task) plus the words an article about it would use: the \
+    medical or technical name, and a common synonym. Leave out filler like "guide", "tips", "manual" or "Q&A". \
+    Example: "My buddy's leg is bent wrong after a fall" -> "leg fracture splint", "broken leg first aid".
     """
 
     static let pickInstructions = """
-    You choose which library excerpts help answer a question. Pick an excerpt only if it contains information that \
-    helps answer this exact question. An excerpt that shares a word but is about a different machine, place, \
-    activity or topic does not help. It's fine to pick none.
+    You choose which library excerpts to give a field guide answering a question. Keep every excerpt about the \
+    question's subject, even if it only partly answers it. Leave out excerpts about a different subject that only \
+    share a word (a football "line" for a power line, an injury for an oil change). It's fine to keep none.
     """
 
     /// The model's searches for a question. Empty if the model fails, so search falls back to the question alone.
@@ -66,7 +67,7 @@ enum Retrieval {
         for (i, p) in candidates.enumerated() {
             prompt += "[\(i + 1)] \(p.title) (\(p.source)): \(p.text.prefix(320))\n\n"
         }
-        prompt += "Which excerpts help answer the question?"
+        prompt += "Which excerpts are about the question's subject?"
         let session = LanguageModelSession(model: model, instructions: pickInstructions)
         guard let picks = try? await session.respond(to: prompt, generating: Picks.self,
                                                      options: GenerationOptions(temperature: 0))

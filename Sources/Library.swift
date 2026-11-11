@@ -130,8 +130,17 @@ final class Library: @unchecked Sendable {
         }
         var hits = ranked(terms.joined(separator: " "), limit: 300)
         var cover = Dictionary(hits.map { ($0.0, 1.0) }, uniquingKeysWith: { a, _ in a })
-        if hits.count < 3 && terms.count > 1 {  // nothing has every word: take any word, then count matches
-            hits = ranked(terms.joined(separator: " OR "), limit: 1000)
+        if hits.count < 3 && terms.count > 2 {  // nothing has every word: try every word but one (fast)
+            for skip in terms.indices {
+                let rest = terms.enumerated().filter { $0.offset != skip }.map(\.element)
+                for h in ranked(rest.joined(separator: " "), limit: 100) where cover[h.0] == nil {
+                    hits.append(h)
+                    cover[h.0] = Double(rest.count) / Double(terms.count)
+                }
+            }
+        }
+        if hits.count < 3 && terms.count > 1 {  // still too little: take any word, then count matches
+            hits = ranked(terms.joined(separator: " OR "), limit: 200)
             let ids = hits.map { String($0.0) }.joined(separator: ",")
             cover = Dictionary(hits.map { ($0.0, 0.0) }, uniquingKeysWith: { a, _ in a })
             for t in terms {

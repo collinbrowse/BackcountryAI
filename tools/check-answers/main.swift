@@ -30,6 +30,7 @@ struct CheckAnswers {
             let searches = await Retrieval.searches(for: q, previous: nil, model: model)
             let planned = Date()
             let candidates = Retrieval.candidates(question: q, searches: searches, library: library)
+            let searched = Date()
             let picked = await Retrieval.pick(question: q, from: candidates, model: model)
             let done = Date()
             let kOK = plain.contains { $0.title.contains(about) }
@@ -39,7 +40,8 @@ struct CheckAnswers {
             print("\(ok ? "PASS" : (picked.isEmpty ? "NONE" : "MISS"))\t\(area)\t\(q)")
             print(String(format: "    searches (%.1fs): %@", planned.timeIntervalSince(start),
                          searches.joined(separator: " | ")))
-            print(String(format: "    picked (%.1fs):", done.timeIntervalSince(planned)))
+            print(String(format: "    library search %.1fs; picked (%.1fs):", searched.timeIntervalSince(planned),
+                         done.timeIntervalSince(searched)))
             for p in picked { print("      [\(p.sourceKey)] \(p.title)") }
             let dropped = candidates.filter { c in !picked.contains { $0.docID == c.docID } }
             if !dropped.isEmpty { print("    dropped: " + dropped.map(\.title).joined(separator: " · ")) }
