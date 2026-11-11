@@ -66,6 +66,8 @@ ZIM_SOURCES = {
 PDF_SOURCES = {
     "survival-manuals": ("U.S. government survival and first-aid manuals", "emergency", "manuals/us-gov"),
     "risk": ("Risk and micromort references", "medical", "risk"),  # from library/fetch_risk.py
+    "gov-guides": ("U.S. government safety guides (NPS, NWS, Coast Guard, Forest Service, CDC, OSHA, USDA)",
+                   "emergency", "guides"),  # from library/fetch_guides.py
 }
 SE_SITES = {
     "diy": ("Home Improvement Q&A", "repair"),
@@ -105,6 +107,7 @@ LICENSES = {
     "usda-canning": f"{US_GOV}, USDA",
     "wikivoyage": f"CC BY-SA 4.0, Wikivoyage contributors {CC_BY_SA}",
     "survival-manuals": US_GOV,
+    "gov-guides": US_GOV,
     "risk": f"U.S. government statistics (SSA, CDC, NHTSA, NWS): public domain. Wikipedia articles: {CC_BY_SA}",
     **{f"se-{site}": "CC BY-SA 2.5, 3.0 or 4.0 by post date, the authors named with each post "
                      "https://stackoverflow.com/help/licensing" for site in SE_SITES},
@@ -145,16 +148,19 @@ FIXED_URLS = {"usda-canning": "https://nchfp.uga.edu/resources/category/usda-gui
 # Page paths to leave out: wikis' translated copies ("Page/tr", "Page/zh-hans") and sites' non-English sections, including
 # language-code sections at the top of a site ("www.ready.gov/fr/..."), which often hold untranslated English copies.
 FOREIGN_SECTIONS = r"^[^/]+/[a-z]{2}(-[a-z]+)?/|/(es|spanish|espanol|languages|translations)(/|$)"
+# MedlinePlus pages about the site itself ("RSS Feeds", "Guidelines for Links"), which search kept picking.
+MEDLINEPLUS_UTILITY = (r"^medlineplus\.gov/(about|medlineplus-connect|connect|webeval|directories|download)/|"
+                       r"^medlineplus\.gov/[a-z]*(rss|disclaimer)\.html$")
 SKIP_PATHS = {
     "wikem": r"/[a-z]{2}(-[a-z]+)?$",
     "appropedia": r"/[a-z]{2,3}(-[a-z]+)?$",
     "energypedia": r"/[a-z]{2,3}(-[a-z]+)?$",
-    "medlineplus": FOREIGN_SECTIONS,
+    "medlineplus": MEDLINEPLUS_UTILITY + "|" + FOREIGN_SECTIONS,
     "ready-gov": FOREIGN_SECTIONS,
     "cdc-travel": FOREIGN_SECTIONS,
 }
 if PUBLIC or LITE:  # MedlinePlus sections that third parties license to NLM (A.D.A.M., ASHP, Natural Medicines)
-    SKIP_PATHS["medlineplus"] = r"/(ency|druginfo)/|" + FOREIGN_SECTIONS
+    SKIP_PATHS["medlineplus"] = r"/(ency|druginfo)/|" + MEDLINEPLUS_UTILITY + "|" + FOREIGN_SECTIONS
     # Military volumes that reprint copyrighted figures and text ("certain parts ... copyright restrictions").
     SKIP_PATHS["military-medicine"] = r"/(milderm|warpsychiatry|soldiers)\.pdf$"
 
@@ -305,14 +311,122 @@ def se_author(post, question=False):
     return f" by {name}" if name else ""
 
 
-def pdf_to_text(data):
+CAPS_HEADING = re.compile(r"^(SECTION [IVX0-9]+[:.—-] *)?[A-Z][A-Z0-9 ,'’&/()—-]{4,68}[A-Z)]$")
+CALLOUTS = {"CAUTION", "WARNING", "DANGER", "NOTE", "NOTES"}
+TOC_LEADER = re.compile(r"\.{8,}|(\. ){6,}")
+
+
+def _pdf_pages(data):
+    """pdftotext output, one string per page."""
     with tempfile.NamedTemporaryFile(suffix=".pdf") as f:
         f.write(data)
         f.flush()
         r = subprocess.run(["pdftotext", "-q", "-enc", "UTF-8", f.name, "-"], capture_output=True, timeout=600)
-    text = r.stdout.decode("utf-8", "replace").replace("\f", "\n\n")
-    paras = [" ".join(p.split()) for p in re.split(r"\n\s*\n", text)]
-    return "\n\n".join(p for p in paras if p)
+    return r.stdout.decode("utf-8", "replace").split("\f")
+
+
+def _pages_to_text(pages, running):
+    """Paragraphs from pdftotext pages. Lines in capitals on their own ("TRAPS AND SNARES") become headings, so
+    passages are titled by section instead of only by the manual's name; contents pages and running headers go."""
+    out = []
+    for page in pages:
+        for para in re.split(r"\n\s*\n", page):
+            buf = []
+            for line in para.split("\n"):
+                s = " ".join(line.split())
+                if not s or s in running:
+                    continue
+                if CAPS_HEADING.match(s) and sum(c.isalpha() for c in s) >= 5 and s not in CALLOUTS:
+                    if buf:
+                        out.append(" ".join(buf))
+                        buf = []
+                    out.append("## " + s.title().replace("’S", "’s").replace("'S", "'s"))
+                else:
+                    buf.append(s)
+            p = " ".join(buf)
+            if p and not TOC_LEADER.search(p):
+                out.append(p)
+    return "\n\n".join(out)
+
+
+def _running_lines(pages):
+    """Short lines repeated on many pages: running headers and footers."""
+    from collections import Counter
+    counts = Counter(s for page in pages for s in {" ".join(l.split()) for l in page.split("\n")} if 0 < len(s) < 70)
+    return {s for s, n in counts.items() if n >= max(5, len(pages) // 10)}
+
+
+def pdf_to_text(data):
+    pages = _pdf_pages(data)
+    return _pages_to_text(pages, _running_lines(pages))
+
+
+JUNK_BOOKMARK = re.compile(r"(?i)^(figure|table|new_terms|modified_terms)|^(cover|contents|table of contents|figures|"
+                           r"tables|preface|glossary|references|index|legend of tables and figures|"
+                           r"source notes|introduction|.*table of contents)$")
+
+
+MANUAL_SHORT = {"FEMA": "FEMA Are You Ready?", "Joint Trauma System": "JTS Prolonged Casualty Care",
+                "FEMA CERT Basic Training Participant Manual": "FEMA CERT Basic Training"}
+
+
+def pdf_sections(path, title, url):
+    """A manual split into its bookmarked sections, titled "Section (manual)": a passage about snares is then found
+    as "Traps and Snares (US Army ATP 3-50.21)", not as one more piece of a 228-page "Survival". Manuals without
+    useful bookmarks come back whole."""
+    import pypdf
+    data = open(path, "rb").read()
+    pages = _pdf_pages(data)
+    running = _running_lines(pages)
+    marks = []  # (page, depth, title)
+    try:
+        reader = pypdf.PdfReader(path)
+
+        def walk(items, depth):
+            for x in items:
+                if isinstance(x, list):
+                    walk(x, depth + 1)
+                    continue
+                try:
+                    page = reader.get_destination_page_number(x)
+                except Exception:
+                    continue
+                t = " ".join(str(x.title).split())
+                if page is not None and t and not JUNK_BOOKMARK.search(t):
+                    marks.append((page, depth, t))
+        walk(reader.outline, 0)
+    except Exception as exc:
+        print(f"    no bookmarks in {title}: {exc}", flush=True)
+    short = MANUAL_SHORT.get(title.split(":")[0].strip(), title.split(":")[0].strip())
+    if sum(1 for _, d, _ in marks if d == 0) == 1:  # one bookmark wrapping the whole manual: not a chapter
+        marks = [(p, d - 1, t) for p, d, t in marks if d > 0]
+    if len(marks) < 8:
+        yield title, url, _pages_to_text(pages, running)
+        return
+    # One section per page where a bookmark starts, labelled by its chapter and its most specific bookmark.
+    chain, starts = {}, {}
+    for page, depth, t in marks:
+        chain = {d: v for d, v in chain.items() if d < depth}
+        chain[depth] = t
+        names = [chain[d] for d in sorted(chain)]
+        if re.fullmatch(r"(?i)chapter \d+|appendix [a-z]", names[0]) and len(names) > 1:  # "Chapter 7" + "Survival"
+            names = [f"{names[0]}: {names[1]}"] + names[2:]
+        label = names[0] if len(names) == 1 else f"{names[-1]} ({names[0]})"
+        starts[page] = label
+    cut = sorted(starts)
+    if cut[0] > 0:
+        cut.insert(0, 0)
+        starts[0] = title
+    pending = ""
+    for i, start in enumerate(cut):
+        end = cut[i + 1] if i + 1 < len(cut) else len(pages)
+        text = (pending + "\n\n" if pending else "") + _pages_to_text(pages[start:end], running)
+        if len(text) < MIN_CHARS and end < len(pages):
+            pending = text  # too short alone: carry into the next section
+            continue
+        pending = ""
+        label = starts[start]
+        yield (label if label == title else f"{label} — {short}"), f"{url}#page={start + 1}", text
 
 
 # ---------- ZIM workers ----------
@@ -351,6 +465,13 @@ def _convert_range(bounds):
                 title = e.title if e.title and e.title != e.path else os.path.basename(e.path)
                 title = re.sub(r"\.pdf$", "", title.replace("_", " "), flags=re.I)
                 title = PDF_TITLES.get(e.path, title)
+                if title == title.lower() and "-" in title:  # a file name: "fema how-to-prepare-for-hurricane 0"
+                    words = re.sub(r"(?: \d+)+$", "", title.replace("-", " ")).split()
+                    if words and words[0] in ("fema", "ready"):
+                        words = words[1:]
+                    if words:
+                        title = " ".join(words)
+                        title = title[0].upper() + title[1:]
                 if re.search(r"\(\d+\)$", title):  # zimgit names files "Water (7)"; lead with the PDF's first line
                     first = next((p for p in text.split("\n\n") if len(p) >= 12), "")
                     if first:
@@ -421,11 +542,14 @@ def manual_docs(folder):
     for item in items:
         if item.get("wikipedia") and wanted("wikipedia"):
             continue
+        if item["file"].endswith(".pdf"):
+            for title, url, text in pdf_sections(os.path.join(folder, item["file"]), item["title"], item["url"]):
+                if len(text) >= MIN_CHARS:
+                    yield title, url, text
+            continue
         with open(os.path.join(folder, item["file"]), "rb") as f:
             data = f.read()
-        if item["file"].endswith(".pdf"):
-            text = pdf_to_text(data)
-        elif item["file"].endswith((".html", ".htm")):
+        if item["file"].endswith((".html", ".htm")):
             text = html_to_text(data, item.get("kind", "web")) or ""
         else:
             text = data.decode("utf-8", "replace")

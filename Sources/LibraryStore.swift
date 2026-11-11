@@ -33,10 +33,10 @@ struct LibraryPack: Identifiable, Hashable, Sendable {
 /// uploaded to App Store Connect, which hosts them.
 enum PackCatalog {
     static let all: [LibraryPack] = [
-        LibraryPack(id: "lite", label: "Essentials", articles: 308_875, assetPackIDs: ["lite"],
-                    downloadBytes: 926_728_121, unpackedBytes: 2_205_425_664),
-        LibraryPack(id: "full", label: "Everything", articles: 1_272_789, assetPackIDs: ["full"],
-                    downloadBytes: 8_656_795_917, unpackedBytes: 20_147_707_904),
+        LibraryPack(id: "lite", label: "Essentials", articles: 307_060, assetPackIDs: ["lite"],
+                    downloadBytes: 884_883_411, unpackedBytes: 2_114_450_716),
+        LibraryPack(id: "full", label: "Everything", articles: 1_270_974, assetPackIDs: ["full"],
+                    downloadBytes: 8_525_004_998, unpackedBytes: 19_726_311_963),
     ]
 }
 

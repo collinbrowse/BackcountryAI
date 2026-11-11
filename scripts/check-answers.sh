@@ -1,6 +1,6 @@
 #!/bin/bash
 # Checks retrieval quality with the app's own search code and Apple's on-device model (needs a Mac with
-# Apple Intelligence on). Usage: scripts/check-answers.sh <library-folder> [--answers] [--only TEXT]
+# Apple Intelligence on). Usage: scripts/check-answers.sh <library-folder> [--answers] [--no-library] [--only TEXT]
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$ROOT/build/check-answers"

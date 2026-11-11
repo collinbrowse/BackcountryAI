@@ -19,7 +19,7 @@ The data comes only from sources listed in `SOURCES.md`. One script downloads ev
 resumable) and builds both libraries:
 
 ```bash
-/opt/homebrew/bin/python3.12 -m venv .venv && .venv/bin/pip install libzim lxml trafilatura
+/opt/homebrew/bin/python3.12 -m venv .venv && .venv/bin/pip install libzim lxml trafilatura pypdf
 brew install poppler
 BACKCOUNTRY_DATA=~/BackcountryLibraryData scripts/build-library.sh
 ```

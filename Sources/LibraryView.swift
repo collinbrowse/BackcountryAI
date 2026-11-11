@@ -67,7 +67,7 @@ struct LibraryView: View {
     private var about: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Sources and licenses").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
-            Text("Each article shows its source and license. FEMA, CDC, NIH and U.S. military sources are public domain. Wikipedia, Stack Exchange and the other wikis are CC BY-SA: their text is shared under the same license.")
+            Text("Each article shows its source and license. U.S. government sources (FEMA, CDC, NIH, the National Park Service, National Weather Service, Forest Service, Coast Guard and the military) are public domain. Wikipedia, Stack Exchange and the other wikis are CC BY-SA: their text is shared under the same license.")
                 .font(.footnote).foregroundStyle(Theme.inkSoft)
         }
         .card()

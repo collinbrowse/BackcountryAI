@@ -9,13 +9,14 @@ struct CheckAnswers {
     static func main() async throws {
         let args = CommandLine.arguments
         guard args.count >= 3 else {
-            print("usage: check-answers <library-folder> <questions.tsv> [--answers] [--only TEXT]")
+            print("usage: check-answers <library-folder> <questions.tsv> [--answers] [--no-library] [--only TEXT]")
             exit(2)
         }
         let library = try Library(folder: URL(fileURLWithPath: args[1]))
         let rows = try String(contentsOfFile: args[2], encoding: .utf8).split(separator: "\n").dropFirst()
             .map { $0.split(separator: "\t", omittingEmptySubsequences: false).map(String.init) }
-        let answers = args.contains("--answers")
+        let noLibrary = args.contains("--no-library")  // answer from the model alone, to see what it knows
+        let answers = args.contains("--answers") || noLibrary
         let only = args.firstIndex(of: "--only").map { args[$0 + 1].lowercased() }
         let model = SystemLanguageModel(useCase: .general, guardrails: .permissiveContentTransformations)
         guard case .available = model.availability else { print("model unavailable: \(model.availability)"); exit(1) }
@@ -47,7 +48,7 @@ struct CheckAnswers {
             if !dropped.isEmpty { print("    dropped: " + dropped.map(\.title).joined(separator: " · ")) }
             if answers {
                 let session = LanguageModelSession(model: model, instructions: Retrieval.instructions)
-                let prompt = Retrieval.prompt(question: q, sources: picked, previous: nil, previousAnswer: nil)
+                let prompt = Retrieval.prompt(question: q, sources: noLibrary ? [] : picked, previous: nil, previousAnswer: nil)
                 let r = try? await session.respond(to: prompt, options: GenerationOptions(temperature: 0.3,
                                                                                            maximumResponseTokens: 700))
                 print("    answer:\n" + (r?.content ?? "(failed)").split(separator: "\n").map { "      " + $0 }
