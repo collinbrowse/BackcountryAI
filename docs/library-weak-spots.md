@@ -2,26 +2,27 @@
 
 What the offline library answers badly, from running 88 questions (`library/questions.tsv`) through the app's
 retrieval with Apple's on-device model (`scripts/check-answers.sh`, 2026-11-10). A relevant article reached the
-model for 82 of 88 questions with Essentials and 79 of 88 with Everything.
+model for 85 of 88 questions with Essentials and 81 of 88 with Everything (keyword search alone: 83 and 80).
 
 When the library has nothing on a question, Scout says so and answers from the model's general knowledge under
 "Not from the library", which is less reliable and uncited.
 
 ## No useful article
 
-| Question | Essentials | Everything | What the library has instead |
+| Question | Essentials | Everything | Notes |
 |---|---|---|---|
-| Asthma attack, no inhaler | ✗ | ✗ | Inhaler side effects, intubation |
-| Downed power line in the yard | ✗ | ✗ | Ready.gov power outage page (one line on it) |
-| Replacing a chainsaw spark plug | ✗ | ✗ | A leaf blower troubleshooting thread |
-| Charging a phone in a car in the garage (carbon monoxide) | ✗ | ✓ | Ready.gov power outage sheet |
-| Making a phone battery last in an outage | ✗ | ✓ | An unrelated car thread |
-| Falling through lake ice | ✓ | ✗ | A ship's medicine manual |
-| Flash flood while in a canyon | ✓ | ✗ | Travel and hurricane articles |
-| Mountain lion following you | ✓ | ✗ | A chemistry article |
-| Signaling a rescue helicopter | ✓ | ✗ | RECCO, a satellite messenger thread |
+| Canned food that sat in floodwater | ✗ | ✗ | USDA and FEMA cover it, but in pages with generic titles |
+| Flash flood while in a canyon | ✗ | ✗ | Only general flood pages |
+| Thunderstorm above treeline | ✓ | ✗ | Wikipedia mountain and trail articles crowd out lightning safety |
+| Running a stove inside a tent | ✓ | ✗ | Nothing kept on carbon monoxide in tents |
+| Something stuck in an eye | ✓ | ✗ | |
+| Building a snow cave | ✓ | ✗ | The Army cold-weather manual covers it, under a generic title |
+| Setting a snare | ✗ | ✗ | The Army survival manuals cover it, under generic titles |
 
 Everything sometimes does worse than Essentials: its 930,000 Wikipedia articles crowd out the practical sources.
+Questions that now find something, but only a thin answer: an asthma attack with no inhaler (asthma pages, no
+improvised-care guidance), a downed power line (Ready.gov's power outage page), a chainsaw spark plug and
+charging a phone during an outage.
 
 ## Answered only by forum threads (no manual or official guide)
 
