@@ -9,6 +9,9 @@ Forest Service, OSHA, CDC, CPSC, FDA, USDA, National Eye Institute), split the s
 sections ("Snow Walls, Trenches, and Caves (Chapter 7: Survival) — US Army TC 21-3"), gave Ready.gov PDFs
 readable titles, and dropped MedlinePlus's pages about the site itself.
 
+After the quality filter (`docs/library-quality.md`) removed about 30,000 junk articles, Essentials scored 85 of
+88. The one new miss, GMRS versus FRS radios, is the relevance check rejecting radio threads that search still finds.
+
 When the library has nothing on a question, Scout says so and answers from the model's general knowledge under
 "Not from the library". That answer is thin: run `scripts/check-answers.sh <library> --no-library` to see it.
 

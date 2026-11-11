@@ -27,5 +27,6 @@ for LIB in "$FULL" "$LITE"; do
   cp "$ROOT/SOURCES.md" "$LIB/SOURCES.md"   # CC BY-SA asks for the license to travel with every copy
   "$ROOT/scripts/check-licenses.sh" "$LIB"
   "$PY" "$ROOT/library/check_search.py" "$LIB" || echo "WARNING: search check below target for $LIB"
+  "$PY" "$ROOT/library/audit_library.py" "$LIB" --out "$LIB-reports/quality-audit.md"   # read before release: docs/library-quality.md
 done
 echo "Built $FULL and $LITE"

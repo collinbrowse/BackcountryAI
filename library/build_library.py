@@ -8,6 +8,7 @@ Set BACKCOUNTRY_DATA=DIR for where downloads live, LIBRARY_OUT=DIR to build some
 Writes library.noindex/text/<source>/NNNN.md (plain-text Markdown shards of about 16 MB)
 and library.noindex/index.sqlite (SQLite FTS5 over ~1,500-character passages).
 """
+import collections
 import fcntl
 import glob
 import hashlib
@@ -24,6 +25,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from library.passages import split_passages  # noqa: E402
+from library.quality import problems  # noqa: E402
 
 SRC = os.path.normpath(os.environ.get("BACKCOUNTRY_DATA") or
                        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "library.noindex"))
@@ -148,9 +150,12 @@ FIXED_URLS = {"usda-canning": "https://nchfp.uga.edu/resources/category/usda-gui
 # Page paths to leave out: wikis' translated copies ("Page/tr", "Page/zh-hans") and sites' non-English sections, including
 # language-code sections at the top of a site ("www.ready.gov/fr/..."), which often hold untranslated English copies.
 FOREIGN_SECTIONS = r"^[^/]+/[a-z]{2}(-[a-z]+)?/|/(es|spanish|espanol|languages|translations)(/|$)"
-# MedlinePlus pages about the site itself ("RSS Feeds", "Guidelines for Links"), which search kept picking.
+# MedlinePlus pages about the site itself ("RSS Feeds", "Guidelines for Links"), which search kept picking,
+# and pages with nothing for the field.
 MEDLINEPLUS_UTILITY = (r"^medlineplus\.gov/(about|medlineplus-connect|connect|webeval|directories|download)/|"
-                       r"^medlineplus\.gov/[a-z]*(rss|disclaimer)\.html$")
+                       r"^medlineplus\.gov/[a-z]*(rss|disclaimer)\.html$|"
+                       # gene pages, A-Z index pages and recipes: no use in the field
+                       r"/genetics/|/healthtopics_[a-z0-9]+\.html$|/recipes/|/[a-z]+(assistance|locations)\.html$")
 SKIP_PATHS = {
     "wikem": r"/[a-z]{2}(-[a-z]+)?$",
     "appropedia": r"/[a-z]{2,3}(-[a-z]+)?$",
@@ -158,6 +163,20 @@ SKIP_PATHS = {
     "medlineplus": MEDLINEPLUS_UTILITY + "|" + FOREIGN_SECTIONS,
     "ready-gov": FOREIGN_SECTIONS,
     "cdc-travel": FOREIGN_SECTIONS,
+}
+# Whole families of pages that pass the text checks but don't help anyone in the field, found with
+# library/audit_library.py: database records, price tables, project listings, job ads and site navigation.
+SKIP_PATHS["energypedia"] += (r"|\(Cookstove_DB\)|^Fuel_Price_Data|Project_Database|^_assets_/|^Opportunity_-|"
+                              r"^Job_|Mitarbeiter")
+SKIP_PATHS["ready-gov"] += r"|/collection/|/kids/games/|\?page=|_(spanish|korean|chinese[a-z-]*|vietnamese|arabic|" \
+                           r"french|haitian[a-z-]*|russian|tagalog|japanese|portuguese|polish)\.pdf$"
+SKIP_PATHS["cdc-travel"] += r"|/news-announcements"
+# Sources chosen page by page: the text checks would drop formulas (Bayes' theorem) as code, so only the audit
+# reviews them.
+HAND_PICKED = {"risk", "gov-guides"}
+SKIP_TITLES = {  # the same, by title, where the address doesn't tell
+    "cdc-travel": r"^(Travelers|Clinical Updates \| Travelers)$",
+    "ready-gov": r"FEMA\.gov$",
 }
 if PUBLIC or LITE:  # MedlinePlus sections that third parties license to NLM (A.D.A.M., ASHP, Natural Medicines)
     SKIP_PATHS["medlineplus"] = r"/(ency|druginfo)/|" + MEDLINEPLUS_UTILITY + "|" + FOREIGN_SECTIONS
@@ -662,6 +681,10 @@ def build_source(db, key, label, topic, origin, docs_iter):
         source_id = db.execute("INSERT INTO sources(key, label, topic, origin) VALUES(?,?,?,?)",
                                (key, label, topic, os.path.basename(origin))).lastrowid
         writer = SourceWriter(db, source_id, key, label)
+        left_out = collections.Counter()
+        os.makedirs(LIB + "-reports", exist_ok=True)  # beside the library, not in it: packs ship the whole folder
+        log = open(os.path.join(LIB + "-reports", "left-out.tsv"), "a")  # what the quality checks dropped
+        skip_title = re.compile(SKIP_TITLES[key]) if key in SKIP_TITLES else None
         copies = set()  # sites serve some pages at several addresses (CDC's Yellow Book under every country)
         for title, url, text in docs_iter:
             if seen_titles and title.lower() in seen_titles:
@@ -670,10 +693,17 @@ def build_source(db, key, label, topic, origin, docs_iter):
             if digest in copies:
                 continue
             copies.add(digest)
+            why = (["known junk title"] if skip_title and skip_title.search(title)
+                   else [] if key in HAND_PICKED else problems(text))
+            if why:
+                left_out[why[0]] += 1
+                log.write(f"{key}\t{'; '.join(why)}\t{title}\t{url}\n")
+                continue
             writer.add(title, url, text)
             if writer.docs % 20000 == 0:
                 print(f"    {writer.docs:,} articles, {time.time() - start:.0f}s", flush=True)
         writer.close()
+        log.close()
         if writer.docs == 0:  # every page failed (for example a libzim API change); don't ship an empty source
             raise SystemExit(f"{key}: no articles converted from {os.path.basename(origin)}")
         db.execute("UPDATE sources SET docs=?, done=1 WHERE id=?", (writer.docs, source_id))
@@ -681,7 +711,9 @@ def build_source(db, key, label, topic, origin, docs_iter):
     except BaseException:
         db.execute("ROLLBACK")
         raise
-    print(f"    done: {writer.docs:,} articles in {time.time() - start:.0f}s", flush=True)
+    print(f"    done: {writer.docs:,} articles in {time.time() - start:.0f}s"
+          + (f"; left out {sum(left_out.values()):,} ({', '.join(f'{r} {n:,}' for r, n in left_out.most_common())})"
+             if left_out else ""), flush=True)
     return True
 
 
