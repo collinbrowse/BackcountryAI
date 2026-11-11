@@ -9,7 +9,7 @@ struct CheckAnswers {
     static func main() async throws {
         let args = CommandLine.arguments
         guard args.count >= 3 else {
-            print("usage: check-answers <library-folder> <questions.tsv> [--answers] [--no-library] [--only TEXT]")
+            print("usage: check-answers <library-folder> <questions.tsv> [--answers] [--no-library] [--only TEXT] [--json FILE]")
             exit(2)
         }
         let library = try Library(folder: URL(fileURLWithPath: args[1]))
@@ -18,6 +18,9 @@ struct CheckAnswers {
         let noLibrary = args.contains("--no-library")  // answer from the model alone, to see what it knows
         let answers = args.contains("--answers") || noLibrary
         let only = args.firstIndex(of: "--only").map { args[$0 + 1].lowercased() }
+        // --json FILE writes each question's excerpts, prompt and answer, so other models can answer the same prompt.
+        let jsonOut = args.firstIndex(of: "--json").map { args[$0 + 1] }
+        var records: [[String: Any]] = []
         let model = SystemLanguageModel(useCase: .general, guardrails: .permissiveContentTransformations)
         guard case .available = model.availability else { print("model unavailable: \(model.availability)"); exit(1) }
 
@@ -49,12 +52,20 @@ struct CheckAnswers {
             if answers {
                 let session = LanguageModelSession(model: model, instructions: Retrieval.instructions)
                 let prompt = Retrieval.prompt(question: q, sources: noLibrary ? [] : picked, previous: nil, previousAnswer: nil)
+                let began = Date()
                 let r = try? await session.respond(to: prompt, options: GenerationOptions(temperature: 0.3,
                                                                                            maximumResponseTokens: 700))
+                records.append(["area": area, "question": q, "instructions": Retrieval.instructions, "prompt": prompt,
+                                "sources": (noLibrary ? [] : picked).map { ["title": $0.title, "source": $0.source] },
+                                "answer": r?.content ?? "", "seconds": Date().timeIntervalSince(began)])
                 print("    answer:\n" + (r?.content ?? "(failed)").split(separator: "\n").map { "      " + $0 }
                     .joined(separator: "\n"))
             }
             fflush(stdout)
+        }
+        if let jsonOut {
+            let data = try JSONSerialization.data(withJSONObject: records, options: [.prettyPrinted, .sortedKeys])
+            try data.write(to: URL(fileURLWithPath: jsonOut))
         }
         print("\nkeyword search alone: \(keywordPass)/\(total); with the model's searches and picks: \(pass)/\(total)")
     }

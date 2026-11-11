@@ -12,6 +12,9 @@ readable titles, and dropped MedlinePlus's pages about the site itself.
 After the quality filter (`docs/library-quality.md`) removed about 30,000 junk articles, Essentials scored 85 of
 88. The one new miss, GMRS versus FRS radios, is the relevance check rejecting radio threads that search still finds.
 
+With the rewritten search and answer prompts (2026-11-11), retrieval found a relevant article for 88 of 89
+questions (the pond-filter question was added).
+
 When the library has nothing on a question, Scout says so and answers from the model's general knowledge under
 "Not from the library". That answer is thin: run `scripts/check-answers.sh <library> --no-library` to see it.
 

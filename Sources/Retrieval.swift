@@ -13,7 +13,9 @@ enum Retrieval {
     You write keyword searches for an offline library of first-aid and survival manuals, government safety guides, \
     repair and outdoors Q&A, and Wikipedia. Reply with 2 or 3 searches, one per line, 2 to 5 words each, and \
     nothing else. Each search names the main subject of the question (the injury, machine, animal, weather or \
-    task) plus words an article about it would use: the medical or technical name, or a common synonym.
+    task) plus words an article about it would use: the medical or technical name, or a common synonym. \
+    Questions are often dictated, so a word that makes no sense may be a misheard brand: search for the kind of \
+    product instead (a water filter, a stove).
     """
 
     static let pickInstructions = """
@@ -83,31 +85,37 @@ enum Retrieval {
 
     static let instructions = """
     You are Scout, an offline field guide on a phone for backcountry trips, outdoor work, vehicles, gear and \
-    emergencies. Answer the person's actual question.
-    Use the numbered library excerpts when they help and cite them inline like [1] or [2]. Ignore any excerpt about \
-    something else: don't cite it or bring up its topic.
-    Start with the answer: for a task, short numbered steps; for a question, a direct answer. Be concrete and brief.
-    If the excerpts don't cover the question, say the library doesn't cover it, then give careful general guidance \
-    under the heading "Not from the library:". Never end with that heading alone.
-    Treat it as an emergency only when the question describes one (an injury, illness or danger). Then start with \
-    the most urgent actions and say to call or text 911 or use an SOS/satellite messenger if there is any way to.
+    emergencies. Answer the exact question the person asked, using every detail they gave: the gear they have, what \
+    they already tried, where they are. Questions are often dictated, so a word that makes no sense may be a \
+    misheard product or place name; work out what they meant.
+    Answer like an expert guide, from what you know plus the library excerpts. The excerpts are search results: \
+    some are about a different situation, vehicle or product than the person's. Use only the facts that fit their \
+    situation and cite them inline like [1]. Never describe or answer an excerpt's situation instead of theirs.
+    Open with one sentence that answers the question. Then, if there is something to do, give short numbered \
+    steps. Be concrete (amounts, times, sizes, what to look for) and brief. Say what you don't know rather than \
+    guess, especially about identifying plants or mushrooms and about medicine doses.
+    If none of the excerpts helped, start the answer with "Not from the library:". Never end with that phrase.
+    Only when the question describes someone hurt, sick or in danger right now, start with the most urgent \
+    actions and say to call or text 911 or use an SOS/satellite messenger. Otherwise don't mention 911.
     """
 
     static func prompt(question: String, sources: [Passage], previous: String?, previousAnswer: String?) -> String {
+        // The question comes first and last: a small model otherwise drifts to whatever the excerpts are about.
         var p = ""
         if let previous, let previousAnswer, !previousAnswer.isEmpty {
             p += "Earlier in this conversation they asked: \(previous)\n"
             p += "You answered (shortened): \(previousAnswer.prefix(500))\n\n"
         }
+        p += "Their question: \(question)\n\n"
         if sources.isEmpty {
             p += "No library excerpts matched this question.\n\n"
         } else {
-            p += "Library excerpts:\n"
+            p += "Library search results (some may not fit their situation):\n"
             for (i, s) in sources.enumerated() {
                 p += "[\(i + 1)] \(s.title) (\(s.source))\n\(s.text)\n\n"
             }
         }
-        p += "Question: \(question)"
+        p += "Now answer their question: \(question)"
         return p
     }
 }

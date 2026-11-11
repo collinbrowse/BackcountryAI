@@ -8,4 +8,4 @@ mkdir -p "$ROOT/build"
 swiftc -O -parse-as-library -enable-bare-slash-regex -lsqlite3 -o "$BIN" \
   "$ROOT/Sources/Library.swift" "$ROOT/Sources/Retrieval.swift" "$ROOT/tools/check-answers/main.swift"
 LIB="$1"; shift
-"$BIN" "$LIB" "$ROOT/library/questions.tsv" "$@"
+"$BIN" "$LIB" "${QUESTIONS:-$ROOT/library/questions.tsv}" "$@"   # QUESTIONS=library/answer-questions.tsv to judge answers
