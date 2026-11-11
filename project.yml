@@ -3,6 +3,20 @@ options:
   bundleIdPrefix: com.collinbrowse
   deploymentTarget:
     iOS: "27.0"
+packages:
+  # Prototype: an optional bigger on-device model (Qwen 3.5 4B) for answers. See docs/on-device-model-comparison.md.
+  MLXSwiftLM:
+    url: https://github.com/ml-explore/mlx-swift-lm
+    from: 3.32.3
+  MLXSwift:
+    url: https://github.com/ml-explore/mlx-swift
+    from: 0.32.3
+  SwiftHuggingFace:
+    url: https://github.com/huggingface/swift-huggingface
+    from: 0.9.0
+  SwiftTransformers:
+    url: https://github.com/huggingface/swift-transformers
+    from: 1.3.0
 targets:
   BackcountryGuide:
     type: application
@@ -10,6 +24,14 @@ targets:
     sources: [Sources]
     dependencies:
       - target: BackcountryDownloader
+      - package: MLXSwiftLM
+        products: [MLXLLM, MLXLMCommon]   # not MLXHuggingFace: its macros need approval; BetterModel has the adapters
+      - package: MLXSwift
+        products: [MLX]
+      - package: SwiftHuggingFace
+        products: [HuggingFace]
+      - package: SwiftTransformers
+        products: [Tokenizers]
     info:
       path: Sources/Info.plist
       properties:
@@ -21,6 +43,8 @@ targets:
       path: Sources/BackcountryGuide.entitlements
       properties:
         com.apple.security.application-groups: [group.com.collinbrowse.backcountryguide]
+        # A 4B model needs ~4 GB while answering; without this, iOS stops the app sooner on 8 GB iPhones.
+        com.apple.developer.kernel.increased-memory-limit: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryguide

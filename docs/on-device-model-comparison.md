@@ -98,3 +98,32 @@ QUESTIONS=library/answer-questions.tsv scripts/check-answers.sh <library> --answ
 ```
 
 Add `--no-library` to `run_mlx.py` to see what a model knows without excerpts.
+
+## Prototype: measure it on a real iPhone
+
+The app now has **Library › Lab: better answers (prototype)**. With it you can:
+
+- download Qwen 3.5 4B (about 3 GB from Hugging Face, image weights included) and load it;
+- turn on "Use it for Scout's answers", so Qwen writes Scout's answers while Apple's model still searches and checks
+  the excerpts. The battery popover under each answer then shows Qwen's speed and the app's memory;
+- run a **benchmark**: the 16 questions above go through the library once, then each model answers all of them. It
+  records time to the first word, total time, words per second, peak memory, free memory left, battery before and
+  after each model's run, and the phone's heat state. Results share as CSV, and the answers share as text.
+
+To run it:
+
+1. Open the project in Xcode and let it fetch the Swift packages (MLX, swift-huggingface, swift-transformers).
+   Building MLX needs Xcode's Metal Toolchain; it's installed on this Mac now (`xcodebuild -downloadComponent
+   MetalToolchain` installs it elsewhere).
+2. Under Signing & Capabilities, make sure **Increased Memory Limit** is on (`project.yml` adds the entitlement, and
+   automatic signing adds it to the App ID). Build to a real iPhone; MLX doesn't run in the simulator.
+3. In the app, download the library if needed. Then go to Lab › Download and load. Use Wi-Fi.
+4. Unplug the phone, close other apps, and tap **Run benchmark**. It takes 5–15 minutes; keep the screen on.
+5. Share the CSV. Repeat on an 8 GB iPhone if you have one: that's where memory is tightest.
+
+Decide with:
+
+- **Memory:** "min free" should stay above ~0.5 GB. If iOS kills the app during loading or answering, it doesn't
+  fit that phone.
+- **Speed:** time to first word under ~5 s and a full answer under ~30 s feels acceptable while streaming.
+- **Battery:** compare the percentage used per run between Apple and Qwen.

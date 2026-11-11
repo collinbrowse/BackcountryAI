@@ -89,6 +89,7 @@ struct AssistantTurn: View {
                         Text("Battery for this answer").font(.headline)
                         Text(b.summary)
                         if let s = message.batterySession { Text(s) }
+                        if let e = message.engine { Text(e) }
                         if b.lowPowerMode { Text("Low Power Mode is on, so answers may be slower.") }
                         Text("iOS reports battery in 1% steps, so single answers often read under 1%.")
                             .foregroundStyle(.secondary)

@@ -17,6 +17,7 @@ struct ChatMessage: Identifiable {
     var failed = false
     var question = ""                  // for assistant messages: what they answer
     var urgent = false                 // the question sounds like an emergency
+    var engine: String? = nil          // PROTOTYPE: which model wrote it, with speed and memory
 
     var isFinished: Bool { role == .assistant && status == nil && !text.isEmpty }
 }
@@ -104,6 +105,19 @@ final class Assistant {
                 let prompt = try await fittingPrompt(question: q, sources: &sources,
                                                      previous: previous, previousAnswer: previousAnswer)
                 messages[index].sources = sources
+                // PROTOTYPE: the optional bigger model writes the answer when it's turned on (Library › Lab).
+                let better = BetterModel.shared
+                if better.useForAnswers, await better.ensureLoaded() {
+                    let stats = try await better.answer(instructions: Retrieval.instructions, prompt: prompt) { text in
+                        messages[index].status = nil
+                        messages[index].text = text
+                    }
+                    messages[index].engine = String(format: "Qwen 3.5 4B · %.1fs to first word · %.0f words/s · %.1f GB",
+                                                    stats.secondsToFirstWord, stats.tokensPerSecond,
+                                                    MemoryProbe.footprintGB)
+                    if !messages[index].text.isEmpty { Readiness.recordAnswer() }
+                    return
+                }
                 let session = LanguageModelSession(model: model, instructions: Retrieval.instructions)
                 let options = GenerationOptions(temperature: 0.3, maximumResponseTokens: 700)
                 for try await snapshot in session.streamResponse(to: prompt, options: options) {

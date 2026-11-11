@@ -16,6 +16,12 @@ struct LibraryView: View {
                     Text("Downloads from the App Store. Use Wi-Fi; it keeps going if you leave the app, and iOS keeps the library up to date.")
                         .font(.footnote).foregroundStyle(Theme.inkSoft)
                     about
+                    NavigationLink { ModelLabView() } label: {   // PROTOTYPE
+                        Label("Lab: better answers (prototype)", systemImage: "flask")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .card()
+                    }
                     if store.library != nil {
                         Button("Delete library from this iPhone", role: .destructive) { confirmDelete = true }
                             .font(.subheadline.weight(.semibold))
