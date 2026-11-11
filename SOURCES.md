@@ -2,7 +2,8 @@
 
 Backcountry is a paid app, so its library holds only sources that allow commercial redistribution:
 U.S. government works (public domain), UK public sector information (Open Government Licence), and
-Creative Commons Attribution-ShareAlike text. Every article in the app shows its source, license and
+Creative Commons Attribution-ShareAlike text. The app offers one library (Essentials); the
+Wikipedia-based "Everything" library was dropped on 2026-11-11. Every article in the app shows its source, license and
 original address. The CC BY-SA text is published on Hugging Face under the same license
 (`scripts/upload-huggingface.sh`).
 
@@ -11,22 +12,20 @@ The build scripts in `library/` are adapted from [Survival LLM](https://github.c
 license notes are the basis for this table. `scripts/check-licenses.sh` and `library/build_library.py` both
 refuse to produce a library with a non-commercial, no-derivatives, "not for resale" or unlicensed source.
 
-| Source | License | In |
-|---|---|---|
-| Wikipedia, about 930,000 of the most-read articles (Kiwix `wikipedia_en_top1m`) | CC BY-SA 4.0, Wikipedia contributors | Everything |
-| Wikivoyage (Kiwix `wikivoyage_en_all`) | CC BY-SA 4.0, Wikivoyage contributors | Everything |
-| WikiMed, Wikipedia's medical articles (Kiwix `wikipedia_en_medicine`) | CC BY-SA 4.0, Wikipedia contributors | Both |
-| MedlinePlus, NLM-written pages only (Kiwix `medlineplus.gov_en_all`) | Public domain (U.S. National Library of Medicine) | Both |
-| UK Medicines A to Z (Kiwix `nhs.uk_en_medicines`) | Contains public sector information licensed under the Open Government Licence v3.0. Not presented as the NHS website. | Both |
-| CDC Travelers' Health, including the online Yellow Book (Kiwix `wwwnc.cdc.gov_en_all`) | Public domain (CDC) | Both |
-| Ready.gov (Kiwix `ready.gov_en_all`) | Public domain (FEMA) | Both |
-| Military medicine manuals (Kiwix `irp.fas.org_en_military-medicine`) | Public domain (U.S. government) | Both |
-| U.S. government survival and first-aid manuals: AFH 10-644 SERE, ATP 3-50.21 Survival, ATP 4-02.11 First Aid, TC 21-3 Cold Weather, ATP 4-25.12 Field Sanitation, TB MED 577 Field Water, TB MED 507 Heat, FEMA Are You Ready?, FEMA CERT, JTS Prolonged Casualty Care | Public domain (17 U.S.C. 105) | Both |
-| U.S. government safety guides (`library/guides.tsv`, 63 pages): National Park Service (bears, mountain lions, moose, lightning, flash floods, getting lost), National Weather Service and NOAA (lightning, floods, cold water, winter, heat, clouds), U.S. Coast Guard (cold water), Forest Service (avalanches, chain saw course, fire, hiking), OSHA (chainsaws, generators), CDC (downed power lines, carbon monoxide, food after floods, snakes, ticks, cold and heat stress), CPSC (carbon monoxide from camping gear), FDA and USDA (food after floods and outages), National Eye Institute (eye first aid), Ready.gov (avalanche) | Public domain (17 U.S.C. 105) | Both |
-| Risk references: SSA life table, CDC mortality reports, NHTSA crash overview, NWS lightning odds; Essentials also gets Wikipedia's micromort and risk articles | Public domain; Wikipedia articles CC BY-SA 4.0 | Both |
-| USDA Complete Guide to Home Canning (Kiwix `usda-2015_en`) | Public domain (USDA) | Both |
-| Appropedia, Energypedia, WikiCiv | CC BY-SA 3.0 or 4.0 (per page) | Both |
-| Stack Exchange: Home Improvement, The Great Outdoors, Cooking, Gardening, Lifehacks, Sustainable Living, Amateur Radio, Medical Sciences, Motor Vehicle Repair, Bicycles, Pets | CC BY-SA 2.5, 3.0 or 4.0 by post date, with each post's author | Both |
+| Source | License |
+|---|---|
+| WikiMed, Wikipedia's medical articles (Kiwix `wikipedia_en_medicine`) | CC BY-SA 4.0, Wikipedia contributors |
+| MedlinePlus, NLM-written pages only (Kiwix `medlineplus.gov_en_all`) | Public domain (U.S. National Library of Medicine) |
+| UK Medicines A to Z (Kiwix `nhs.uk_en_medicines`) | Contains public sector information licensed under the Open Government Licence v3.0. Not presented as the NHS website. |
+| CDC Travelers' Health, including the online Yellow Book (Kiwix `wwwnc.cdc.gov_en_all`) | Public domain (CDC) |
+| Ready.gov (Kiwix `ready.gov_en_all`) | Public domain (FEMA) |
+| Military medicine manuals (Kiwix `irp.fas.org_en_military-medicine`) | Public domain (U.S. government) |
+| U.S. government survival and first-aid manuals: AFH 10-644 SERE, ATP 3-50.21 Survival, ATP 4-02.11 First Aid, TC 21-3 Cold Weather, ATP 4-25.12 Field Sanitation, TB MED 577 Field Water, TB MED 507 Heat, FEMA Are You Ready?, FEMA CERT, JTS Prolonged Casualty Care | Public domain (17 U.S.C. 105) |
+| U.S. government safety guides (`library/guides.tsv`, 63 pages): National Park Service (bears, mountain lions, moose, lightning, flash floods, getting lost), National Weather Service and NOAA (lightning, floods, cold water, winter, heat, clouds), U.S. Coast Guard (cold water), Forest Service (avalanches, chain saw course, fire, hiking), OSHA (chainsaws, generators), CDC (downed power lines, carbon monoxide, food after floods, snakes, ticks, cold and heat stress), CPSC (carbon monoxide from camping gear), FDA and USDA (food after floods and outages), National Eye Institute (eye first aid), Ready.gov (avalanche) | Public domain (17 U.S.C. 105) |
+| Risk references: SSA life table, CDC mortality reports, NHTSA crash overview, NWS lightning odds, plus Wikipedia's micromort and risk articles | Public domain; Wikipedia articles CC BY-SA 4.0 |
+| USDA Complete Guide to Home Canning (Kiwix `usda-2015_en`) | Public domain (USDA) |
+| Appropedia, Energypedia, WikiCiv | CC BY-SA 3.0 or 4.0 (per page) |
+| Stack Exchange: Home Improvement, The Great Outdoors, Cooking, Gardening, Lifehacks, Sustainable Living, Amateur Radio, Medical Sciences, Motor Vehicle Repair, Bicycles, Pets | CC BY-SA 2.5, 3.0 or 4.0 by post date, with each post's author |
 
 ## Left out
 

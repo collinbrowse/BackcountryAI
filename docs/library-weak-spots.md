@@ -21,8 +21,8 @@ When the library has nothing on a question, Scout says so and answers from the m
 | Building a snow cave | ✓ | ✗ | Found the right TC 21-3 section, then the relevance check dropped it |
 | Hypothermia (shivering, confused) | ✓ | ✓* | *Picked the TC 21-3 frostbite section, which the check's title pattern doesn't count |
 
-Everything still sometimes does worse than Essentials: its 930,000 Wikipedia articles crowd out the practical
-sources. Still thin: an asthma attack with no inhaler (no good public-domain source; the answer should tell people
+Everything sometimes did worse than Essentials, since its 930,000 Wikipedia articles crowded out the practical
+sources, so the app now offers only Essentials. Still thin: an asthma attack with no inhaler (no good public-domain source; the answer should tell people
 to get help).
 
 ## Answered only by forum threads (no manual or official guide)

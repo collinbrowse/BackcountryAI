@@ -1,5 +1,7 @@
 #!/bin/bash
-# Downloads every source and builds both libraries: $BACKCOUNTRY_DATA/library-full and library-lite.
+# Downloads every source and builds the app's library, $BACKCOUNTRY_DATA/library-lite (Essentials).
+# library-full (with Wikipedia) is only a build step now: Essentials reuses its converted text and the app no
+# longer offers it.
 # Re-run any time: downloads resume and finished sources are skipped.
 #
 # Usage: BACKCOUNTRY_DATA=/path/with/40GB/free scripts/build-library.sh

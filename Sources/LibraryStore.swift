@@ -20,23 +20,21 @@ struct LibraryPack: Identifiable, Hashable, Sendable {
     var title: String { label }
     var blurb: String {
         switch id {
-        case "lite": "First aid and medicine, FEMA and CDC guidance, U.S. Army survival and cold-weather manuals, "
-            + "plus outdoors, vehicle, bike and home-repair Q&A."
-        case "full": "Essentials plus about 930,000 Wikipedia articles (skiing, avalanches, weather, wildlife, "
-            + "plants) and the Wikivoyage travel guide."
+        case "lite": "First aid and medicine, U.S. Army survival and cold-weather manuals, National Park Service, "
+            + "Weather Service, Forest Service, FEMA and CDC safety guides, plus outdoors, vehicle, bike and "
+            + "home-repair Q&A."
         default: label
         }
     }
 }
 
-/// The libraries the app offers. Each is built into asset packs with scripts/build-asset-packs.sh and
+/// The libraries the app offers: one download. A bigger "Everything" pack with Wikipedia was dropped
+/// (2026-11-11): it was ten times the size and its general articles crowded out the practical ones. Each is built into asset packs with scripts/build-asset-packs.sh and
 /// uploaded to App Store Connect, which hosts them.
 enum PackCatalog {
     static let all: [LibraryPack] = [
         LibraryPack(id: "lite", label: "Essentials", articles: 307_060, assetPackIDs: ["lite"],
                     downloadBytes: 884_883_411, unpackedBytes: 2_114_450_716),
-        LibraryPack(id: "full", label: "Everything", articles: 1_270_974, assetPackIDs: ["full"],
-                    downloadBytes: 8_525_004_998, unpackedBytes: 19_726_311_963),
     ]
 }
 

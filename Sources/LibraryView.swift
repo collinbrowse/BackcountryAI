@@ -11,7 +11,7 @@ struct LibraryView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     status
                     if store.isWorking || isFailed { DownloadProgressCard() }
-                    Text("Choose a library").sectionLabel()
+                    if store.packs.count > 1 { Text("Choose a library").sectionLabel() }
                     ForEach(store.packs) { PackCard(pack: $0) }
                     Text("Downloads from the App Store. Use Wi-Fi; it keeps going if you leave the app, and iOS keeps the library up to date.")
                         .font(.footnote).foregroundStyle(Theme.inkSoft)
@@ -85,7 +85,7 @@ struct PackCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text(pack.title).font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Theme.ink)
-                if pack.id == "lite" && !installed {
+                if pack.id == "lite" && !installed && store.packs.count > 1 {
                     Text("Recommended").font(.caption2.weight(.bold)).foregroundStyle(Theme.accentDeep)
                         .padding(.horizontal, 7).padding(.vertical, 3)
                         .background(Theme.accent.opacity(0.14), in: .capsule)
@@ -103,7 +103,8 @@ struct PackCard: View {
                 stat("iphone", "\(gb(pack.unpackedBytes)) on phone")
             }
             if !installed {
-                let label = Label(store.library == nil ? "Download" : "Switch to \(pack.title)", systemImage: "arrow.down")
+                let label = Label(store.library == nil || store.packs.count == 1 ? "Download" : "Switch to \(pack.title)",
+                              systemImage: "arrow.down")
                 Group {
                     if pack.id == "lite" {
                         Button { store.install(pack) } label: { label }.buttonStyle(PrimaryButtonStyle())

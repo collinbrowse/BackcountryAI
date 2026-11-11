@@ -7,16 +7,17 @@ to meet CC BY-SA's share-alike terms.
 | Library | Asset pack ID | Path in the app's asset namespace |
 |---|---|---|
 | Essentials | `lite` | `lite/index.sqlite`, `lite/text/…` |
-| Everything | `full` | `full/index.sqlite`, `full/text/…` |
 
-Both use the `onDemand` policy: nothing downloads until someone picks a library. iOS keeps a downloaded
+It is the only library: an "Everything" pack with Wikipedia was dropped on 2026-11-11 (ten times the size,
+and its general articles crowded out the practical ones). It uses the `onDemand` policy: nothing downloads until
+someone taps Download. iOS keeps a downloaded
 pack up to date in the background. The `BackcountryDownloader` extension and the
 `group.com.collinbrowse.backcountryguide` app group make that work.
 
 ## Build the libraries
 
 The data comes only from sources listed in `SOURCES.md`. One script downloads everything (about 29 GB,
-resumable) and builds both libraries:
+resumable) and builds the library:
 
 ```bash
 /opt/homebrew/bin/python3.12 -m venv .venv && .venv/bin/pip install libzim lxml trafilatura pypdf
@@ -24,15 +25,16 @@ brew install poppler
 BACKCOUNTRY_DATA=~/BackcountryLibraryData scripts/build-library.sh
 ```
 
-This produces `$BACKCOUNTRY_DATA/library-full` (Everything) and `library-lite` (Essentials). It runs the
-license check and `library/check_search.py` on each one. The search check runs 36 real questions through
+This produces `$BACKCOUNTRY_DATA/library-lite` (Essentials, the one the app ships) and `library-full`, an
+intermediate build with Wikipedia that Essentials reuses text from. It runs the license check and
+`library/check_search.py` on each one. The search check runs 36 real questions through
 the app's ranking.
 
 ## Release a library
 
 1. Check the licenses. This fails on any NC or ND source:
    `scripts/check-licenses.sh <library-folder>`
-2. Build the pack: `scripts/build-asset-packs.sh <library-folder> lite` (or `full`). This writes `build/asset-packs/lite.aar`.
+2. Build the pack: `scripts/build-asset-packs.sh <library-folder> lite`. This writes `build/asset-packs/lite.aar`.
 3. In App Store Connect, open the app record and upload the `.aar` with the
    [Transporter](https://apps.apple.com/us/app/transporter/id1450874784) app.
 4. Test it with TestFlight internal testers, then submit the pack for review along with the next build.

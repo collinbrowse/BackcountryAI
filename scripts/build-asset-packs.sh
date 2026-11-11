@@ -2,7 +2,7 @@
 # Packages a library folder (index.sqlite + text/) into an Apple-hosted asset pack for App Store Connect.
 #
 # Usage: scripts/build-asset-packs.sh <library-folder> <pack-id> [--allow-noncommercial]
-#   pack-id is "lite" (Essentials) or "full" (Everything); it must match PackCatalog in Sources/LibraryStore.swift.
+#   pack-id is "lite" (Essentials, the only library the app offers); it must match PackCatalog in Sources/LibraryStore.swift.
 #   --allow-noncommercial skips the license check. Only for local testing with ba-serve; never upload that pack.
 #
 # Output: build/asset-packs/<pack-id>.aar. Upload it with the Transporter app (or altool) to the app's
