@@ -79,14 +79,20 @@ final class LibraryStore {
         }
     }
 
+    /// Whether an asset pack is on this iPhone. Before iOS 26.4 there's no direct question to ask, so it looks for
+    /// the index every library pack keeps in a folder named after itself.
+    nonisolated static func isLocal(_ assetPackID: String) -> Bool {
+        if #available(iOS 26.4, *) { return manager.assetPackIsAvailableLocally(withID: assetPackID) }
+        return (try? manager.url(for: FilePath("\(assetPackID)/index.sqlite"))) != nil
+    }
+
     func open() {
         if let folder = ScreenshotMode.libraryFolder, let lib = try? Library(folder: folder) {
             use(lib, packID: "lite")
             return
         }
-        let manager = Self.manager
         for pack in packs.reversed()
-        where pack.assetPackIDs.allSatisfy({ manager.assetPackIsAvailableLocally(withID: $0) }) {
+        where pack.assetPackIDs.allSatisfy({ Self.isLocal($0) }) {
             let root = pack.id
             if let lib = try? Library(locate: { try? Self.manager.url(for: FilePath("\(root)/\($0)")) }) {
                 use(lib, packID: pack.id)
@@ -155,7 +161,7 @@ final class LibraryStore {
         library = nil
         work = Task {
             for pack in packs {
-                for id in pack.assetPackIDs where Self.manager.assetPackIsAvailableLocally(withID: id) {
+                for id in pack.assetPackIDs where Self.isLocal(id) {
                     try? await Self.manager.remove(assetPackWithID: id)
                 }
             }
@@ -170,7 +176,7 @@ final class LibraryStore {
         var assetPacks: Set<AssetPack> = []
         for id in pack.assetPackIDs { assetPacks.insert(try await Self.manager.assetPack(withID: id)) }
 
-        let missing = assetPacks.filter { !Self.manager.assetPackIsAvailableLocally(withID: $0.id) }
+        let missing = assetPacks.filter { !Self.isLocal($0.id) }
         let downloadBytes = missing.reduce(Int64(0)) { $0 + Int64($1.downloadSize) }
         let free = (try? URL.applicationSupportDirectory.resourceValues(
             forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage) ?? 0
@@ -189,13 +195,24 @@ final class LibraryStore {
         }
         defer { watchers.forEach { $0.cancel() } }
 
-        try await Self.manager.ensureLocalAvailability(of: assetPacks, requireLatestVersions: true)
+        if #available(iOS 27.0, *) {
+            try await Self.manager.ensureLocalAvailability(of: assetPacks, requireLatestVersions: true)
+        } else if #available(iOS 26.4, *) {
+            for assetPack in assetPacks {
+                try await Self.manager.ensureLocalAvailability(of: assetPack, requireLatestVersion: true)
+            }
+        } else {
+            // Before iOS 26.4 there's no way to ask for the latest version; iOS updates packs by itself.
+            for assetPack in assetPacks {
+                try await Self.manager.ensureLocalAvailability(of: assetPack)
+            }
+        }
         try Task.checkCancellation()
 
         // One library at a time: free the space the other one used.
         for other in packs where other.id != pack.id {
             for id in other.assetPackIDs
-            where !pack.assetPackIDs.contains(id) && Self.manager.assetPackIsAvailableLocally(withID: id) {
+            where !pack.assetPackIDs.contains(id) && Self.isLocal(id) {
                 try? await Self.manager.remove(assetPackWithID: id)
             }
         }

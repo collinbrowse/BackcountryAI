@@ -237,8 +237,10 @@ final class LabBenchmark {
                     if first == nil { first = Date().timeIntervalSince(t0) }
                     text = snap.content
                 }
-                r.promptTokens = (try? await apple.tokenCount(for: prompt)) ?? 0
-                r.answerTokens = (try? await apple.tokenCount(for: text)) ?? 0
+                if #available(iOS 26.4, *) {
+                    r.promptTokens = (try? await apple.tokenCount(for: prompt)) ?? 0
+                    r.answerTokens = (try? await apple.tokenCount(for: text)) ?? 0
+                }
             } else {
                 let stats = try await BetterModel.shared.answer(instructions: Retrieval.instructions, prompt: prompt) { text = $0 }
                 first = stats.secondsToFirstWord

@@ -6,6 +6,7 @@ ANSWERS YOU CAN CHECK
 • Every answer lists the articles it came from. Tap a citation to read the original.
 • Sources include the National Park Service, National Weather Service, CDC, FEMA, U.S. Army survival, first aid and cold-weather manuals, MedlinePlus, and outdoors, vehicle, bike and home-repair Q&A.
 • When something isn't in the library, Scout says so.
+• Optional "Better answers": download a larger on-device AI model (2.3 GB) for more accurate, specific answers. It still works with no signal.
 
 A LIBRARY THAT LIVES ON YOUR PHONE
 • 277,000 articles in one download (about 0.8 GB). Get it once on Wi-Fi before you leave.

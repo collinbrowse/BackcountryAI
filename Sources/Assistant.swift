@@ -190,6 +190,17 @@ final class Assistant {
         chats?.save(id: conversationID, messages: messages)
     }
 
+    /// Exact token counts need iOS 26.4. Before that the callers estimate from the text's length.
+    private func tokens(inInstructions text: String) async -> Int? {
+        guard #available(iOS 26.4, *) else { return nil }
+        return try? await model.tokenCount(for: Instructions(text))
+    }
+
+    private func tokens(inPrompt text: String) async -> Int? {
+        guard #available(iOS 26.4, *) else { return nil }
+        return try? await model.tokenCount(for: text)
+    }
+
     /// Builds the prompt, dropping the weakest excerpts until it fits the model's context window
     /// with room left for the answer.
     private func fittingPrompt(question: String, sources: inout [Passage], previous: String?,
@@ -197,11 +208,11 @@ final class Assistant {
         let reserve = 900  // tokens for the answer plus overhead
         // Guard against a not-yet-loaded model reporting a tiny window, which would drop every source.
         let window = max(model.contextSize, 4096)
-        let instructionTokens = (try? await model.tokenCount(for: Instructions(Retrieval.instructions))) ?? 250
+        let instructionTokens = await tokens(inInstructions: Retrieval.instructions) ?? 250
         while true {
             let prompt = Retrieval.prompt(question: question, sources: sources, previous: previous,
                                      previousAnswer: previousAnswer)
-            let counted = try? await model.tokenCount(for: prompt)
+            let counted = await tokens(inPrompt: prompt)
             let n = sources.count
             let tokens = counted ?? prompt.count / 3
             log.notice("context \(window) instructions \(instructionTokens) prompt \(tokens) (counted: \(counted != nil)) sources \(n)")

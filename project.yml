@@ -2,7 +2,7 @@ name: BackcountryAI
 options:
   bundleIdPrefix: com.collinbrowse
   deploymentTarget:
-    iOS: "27.0"
+    iOS: "26.0"
 packages:
   # Prototype: an optional bigger on-device model (Qwen 3.5 4B) for answers. See docs/on-device-model-comparison.md.
   MLXSwiftLM:

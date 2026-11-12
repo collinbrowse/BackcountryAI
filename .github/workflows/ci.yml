@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   test:
-    # Needs Xcode 27 (the app targets iOS 27). Set the MACOS_RUNNER repository variable to "self-hosted" to
+    # Needs Xcode 27 (the app is built with the iOS 27 SDK). Set the MACOS_RUNNER repository variable to "self-hosted" to
     # run on your own Mac instead (docs/release.md).
     runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
     timeout-minutes: 45

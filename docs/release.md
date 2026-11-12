@@ -139,7 +139,7 @@ App Store Connect requires a live privacy policy and support address.
 
 ### 8. Pick where the workflows run
 
-The app targets iOS 27, so the runner needs Xcode 27 and the iPhone 18 Pro Max simulator. The workflows default to
+The app runs on iOS 26 and later but is built with the iOS 27 SDK, so the runner needs Xcode 27 and the iPhone 18 Pro Max simulator. The workflows default to
 GitHub's `macos-26` image and stop with a clear message if it has no Xcode 27. Two ways to change that:
 
 - A different GitHub image: `gh variable set MACOS_RUNNER --body "macos-27"` (use whatever label GitHub lists).
@@ -149,15 +149,19 @@ GitHub's `macos-26` image and stop with a clear message if it has no Xcode 27. T
   2. `gh variable set MACOS_RUNNER --body "self-hosted"`
   3. Leave `./run.sh` running (or install it as a service with `./svc.sh install && ./svc.sh start`).
 
-### 9. Upload the library pack (it's built from 29 GB of sources on your Mac)
+### 9. Upload the asset packs (they're built on your Mac from 29 GB of sources and a 3 GB model)
 
-The Essentials library is an Apple-hosted asset pack, separate from the app binary.
+The Essentials library and the optional "Better answers" model are Apple-hosted asset packs, separate from the app
+binary.
 
 1. Build it: `docs/library-hosting.md`, steps 1 to 4.
 2. Upload `lite.aar` with the **Transporter** app to the BackcountryAI record.
 3. Wait for the "asset pack is ready" email. The pack is reviewed together with the first build that uses it.
 
-Repeat this only when the library itself changes.
+4. Upload the Better answers model (pack `answers`): `scripts/release-model-pack.sh`. Until it's on App Store
+   Connect, the Better answers card says it isn't available yet.
+
+Repeat these only when the library or the model changes.
 
 ### 10. Answer App Privacy (Apple's API doesn't cover it; this lane uses your Apple ID once)
 
@@ -182,7 +186,7 @@ These were filled in from reading the code. Change the file if any is wrong:
 - `Sources/Assets.xcassets/AppIcon.appiconset/AppIcon.png` is a generated placeholder icon
   (`scripts/make-app-icon.swift`). Replace the PNG with a designed 1024×1024 icon, no transparency.
 - `docs/library-hosting.md` still lists two open questions before a first release: the NHS and CDC Yellow Book
-  terms, and whether the Lab screen (the optional Qwen model) stays in.
+  terms.
 
 ### 12. First run
 

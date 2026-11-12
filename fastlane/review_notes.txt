@@ -7,7 +7,9 @@ How to review it:
    The answer is written on the device by Apple's on-device model (Apple Intelligence must be turned on in Settings) using passages found in the downloaded library. Every answer lists the articles it used.
 4. The Guide tab browses the same library by topic and source. Field mode (in Guide) is a patient assessment checklist and quick reference cards that need no AI.
 
-After the library is downloaded, everything works in Airplane Mode. The app does not collect any data and makes no network requests other than downloading its library (and, only if you choose it under Library › Lab, an optional larger answer model).
+After the library is downloaded, everything works in Airplane Mode. The app does not collect any data and makes no network requests other than downloading its library and, only if you choose it, the optional "Better answers" model.
+
+Better answers (optional): the card on the Offline library screen downloads a larger open model (Qwen 3.5 4B, Apache 2.0, about 2.3 GB) as a second Apple-hosted Background Assets pack, "answers". It runs on the device with MLX and writes the answers in place of Apple's model; a Faster / Better switch on the same card changes between them. Nothing is sent off the device.
 
 On an iPhone that cannot run Apple Intelligence, the app still searches and shows the library articles.
 
