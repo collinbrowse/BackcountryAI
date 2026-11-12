@@ -149,6 +149,10 @@ GitHub's `macos-26` image and stop with a clear message if it has no Xcode 27. T
   2. `gh variable set MACOS_RUNNER --body "self-hosted"`
   3. Leave `./run.sh` running (or install it as a service with `./svc.sh install && ./svc.sh start`).
 
+  The repository is public, so CI sends pull requests from forks to GitHub's machine instead of your Mac, and
+  **Settings › Actions › General** requires approval before any outside contributor's workflow runs. For more
+  isolation, register the runner under a separate macOS user that can't see your keys.
+
 ### 9. Upload the asset packs (they're built on your Mac from 29 GB of sources and a 3 GB model)
 
 The Essentials library and the optional "Better answers" model are Apple-hosted asset packs, separate from the app

@@ -10,8 +10,9 @@ concurrency:
 jobs:
   test:
     # Needs Xcode 27 (the app is built with the iOS 27 SDK). Set the MACOS_RUNNER repository variable to "self-hosted" to
-    # run on your own Mac instead (docs/release.md).
-    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    # run on your own Mac instead (docs/release.md). Pull requests from forks always get GitHub's machine, so a
+    # stranger's code never runs on that Mac.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.MACOS_RUNNER || 'macos-26' }}
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
