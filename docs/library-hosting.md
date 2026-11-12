@@ -16,7 +16,7 @@ The data folder, `$BACKCOUNTRY_DATA`, defaults to `library.noindex/` in the main
 
 | What | Where |
 |---|---|
-| Downloaded sources | `$BACKCOUNTRY_DATA/raw/` and `zim/` (about 29 GB) |
+| Downloaded sources (the Kiwix archives of WikiMed, MedlinePlus, Stack Exchange and the rest) | `$BACKCOUNTRY_DATA/zim/` (27 GB) and `raw/` (0.1 GB) |
 | The library | `$BACKCOUNTRY_DATA/library-lite/` |
 | Quality reports, kept out of the pack | `$BACKCOUNTRY_DATA/library-lite-reports/` |
 | Built pack and release summary | `build/asset-packs/` |
@@ -54,7 +54,7 @@ because Apple offers no command for them:
 1. test the new version with TestFlight;
 2. submit it for review with the next build.
 
-## One-time setup
+## One-time setup (only before your first release)
 
 1. **Python and tools:**
 
