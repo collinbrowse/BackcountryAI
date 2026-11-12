@@ -30,6 +30,54 @@ the data somewhere else.
 | What the app expects | `PackCatalog` in `Sources/LibraryStore.swift` (article count and byte sizes) |
 | Sources and licenses | `SOURCES.md`; `library/guides.tsv` lists the government guide pages |
 
+## Release in one command
+
+In Claude Code, from the main checkout:
+
+```
+/release-pack lite
+```
+
+The command (`.claude/skills/release-pack/SKILL.md`) runs `scripts/release-pack.sh`, handles anything that stops it,
+reviews the quality audit, commits the `PackCatalog` update and reports back. Add options as needed:
+
+- `--rebuild` downloads the sources and rebuilds the library first;
+- `--hf user/name` also publishes the text on Hugging Face;
+- `--no-upload` builds and checks without uploading.
+
+You can also run the script directly:
+
+```bash
+scripts/release-pack.sh lite [--rebuild] [--no-upload] [--hf user/name] [--force]
+```
+
+It does steps 3–6 below in order and stops at the first problem:
+
+1. checks licenses, search and content quality;
+2. builds `lite.aar`;
+3. updates `PackCatalog`;
+4. uploads with `xcrun altool --upload-asset-pack --wait` and waits for Apple to finish processing;
+5. lists the pack's versions;
+6. writes `build/asset-packs/lite-release.md`.
+
+A run without `--rebuild` takes about 3 minutes, plus the upload.
+
+Two steps stay manual because App Store Connect has no command for them: testing the new version in TestFlight,
+and submitting it for review with the next build.
+
+### One-time: App Store Connect API key
+
+1. **Create a key.** In App Store Connect, go to Users and Access › Integrations › App Store Connect API and create
+   a Team key with the **App Manager** role.
+2. **Save the key file.** Download the `.p8` file; Apple only lets you download it once. Save it as
+   `~/private_keys/AuthKey_<KEY_ID>.p8`.
+3. **Fill in `.asc.env`.** Copy `.asc.env.example` to `.asc.env` at the repository root and fill in:
+   - the key ID;
+   - the Issuer ID, shown above the keys table;
+   - the app's Apple ID, a number under the app › App Information.
+
+   `.asc.env` is git-ignored. The script checks the key against App Store Connect before it builds anything.
+
 ## 1. One-time setup
 
 ```bash
@@ -107,7 +155,7 @@ scripts/build-asset-packs.sh library.noindex/library-lite lite
 
 1. **Upload a build.** In Xcode, use Product › Archive, then Distribute App › App Store Connect. The asset pack
    attaches to the app's record, so the record and a build have to exist.
-2. **Upload `lite.aar`** with the [Transporter](https://apps.apple.com/us/app/transporter/id1450874784) app. Sign in
+2. **Upload `lite.aar`.** `scripts/release-pack.sh` does this with `altool`. To do it by hand, use the [Transporter](https://apps.apple.com/us/app/transporter/id1450874784) app. Sign in
    with the developer account and add the `.aar` file. `xcrun altool` also works from the command line.
 3. **Wait for Apple to process it.** The pack then appears under the app's record in App Store Connect. See Apple's
    [Background Assets documentation](https://developer.apple.com/documentation/backgroundassets) for the current
