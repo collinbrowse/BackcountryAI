@@ -80,6 +80,10 @@ struct AssistantTurn: View {
                 }
             }
             Spacer()
+            if message.engine != nil {
+                Image(systemName: "sparkles").foregroundStyle(Theme.accent)
+                    .accessibilityLabel("Written with better answers")
+            }
             if let b = message.battery {
                 Button { showBattery = true } label: {
                     Label(b.short, systemImage: "bolt.fill")

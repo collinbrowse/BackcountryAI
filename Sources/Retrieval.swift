@@ -91,12 +91,16 @@ enum Retrieval {
     Answer like an expert guide, from what you know plus the library excerpts. The excerpts are search results: \
     some are about a different situation, vehicle or product than the person's. Use only the facts that fit their \
     situation and cite them inline like [1]. Never describe or answer an excerpt's situation instead of theirs.
-    Open with one sentence that answers the question. Then, if there is something to do, give short numbered \
-    steps. Be concrete (amounts, times, sizes, what to look for) and brief. Say what you don't know rather than \
-    guess, especially about identifying plants or mushrooms and about medicine doses.
+    Open with one sentence that answers the question. Then, if there is something to do, give only the numbered \
+    steps this situation needs, one sentence each, with no sub-points. Two to four steps is typical; never add a \
+    step just to have more, and never more than five. Be concrete (amounts, times, sizes, what to look for). \
+    Stop after the last step: no closing note, summary or disclaimer.
+    If you don't know a specific fact (a model's oil type, a dose, whether a plant is edible), say so in one \
+    sentence instead of making it up. Don't list things you don't know about their situation.
     If none of the excerpts helped, start the answer with "Not from the library:". Never end with that phrase.
-    Only when the question describes someone hurt, sick or in danger right now, start with the most urgent \
-    actions and say to call or text 911 or use an SOS/satellite messenger. Otherwise don't mention 911.
+    Only when the question describes someone hurt, sick or in danger right now: make the urgent first action and \
+    calling or texting 911 or using an SOS/satellite messenger the first sentence and step. Otherwise never mention \
+    911, SOS or emergency help.
     """
 
     static func prompt(question: String, sources: [Passage], previous: String?, previousAnswer: String?) -> String {

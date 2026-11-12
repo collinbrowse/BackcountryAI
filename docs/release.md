@@ -154,12 +154,12 @@ GitHub's `macos-26` image and stop with a clear message if it has no Xcode 27. T
 The Essentials library and the optional "Better answers" model are Apple-hosted asset packs, separate from the app
 binary.
 
-1. Build it: `docs/library-hosting.md`, steps 1 to 4.
-2. Upload `lite.aar` with the **Transporter** app to the BackcountryAI record.
-3. Wait for the "asset pack is ready" email. The pack is reviewed together with the first build that uses it.
-
-4. Upload the Better answers model (pack `answers`): `scripts/release-model-pack.sh`. Until it's on App Store
+1. Do the one-time setup in `docs/library-hosting.md` (Python tools and `.asc.env`).
+2. Release the library (pack `lite`): `scripts/release-pack.sh lite`. It checks licenses and search quality, builds
+   the pack and uploads it.
+3. Release the Better answers model (pack `answers`): `scripts/release-model-pack.sh`. Until it's on App Store
    Connect, the Better answers card says it isn't available yet.
+4. Each pack is reviewed together with the first build that uses it.
 
 Repeat these only when the library or the model changes.
 

@@ -1,191 +1,114 @@
-# Building and hosting the library
+# Building and releasing the library
 
-The app offers one library, **Essentials** (277,281 articles; 0.81 GB download, 1.9 GB on the phone). It ships as
-an **Apple-hosted asset pack**: free with the developer program, up to 200 GB per app. A public copy of the text
-also goes on **Hugging Face**, to meet the share-alike terms of the CC BY-SA sources.
+The app has one library, **Essentials**, shipped as an Apple-hosted asset pack:
 
-| Library | Asset pack ID | Download policy | Path in the app's asset namespace |
-|---|---|---|---|
-| Essentials | `lite` | `onDemand`: nothing downloads until someone taps Download | `lite/index.sqlite`, `lite/text/…` |
+| Pack ID | Download policy | Files in the app |
+|---|---|---|
+| `lite` | `onDemand`: downloads when someone taps Download | `lite/index.sqlite`, `lite/text/…` |
 
-An "Everything" pack with Wikipedia was dropped on 2026-11-11. It was ten times the size, and its general articles
-crowded out the practical ones. `library-full` is still built, but only as a step that Essentials reuses text from.
-Never upload `full.aar`.
-
-iOS keeps a downloaded pack up to date in the background. Two pieces make that work: the `BackcountryAIDownloader`
-extension and the `group.com.collinbrowse.backcountryai` app group. `project.yml` sets `BAHasManagedAssetPacks` and
-`BAUsesAppleHosting`.
+iOS keeps a downloaded pack up to date through the `BackcountryAIDownloader` extension and the
+`group.com.collinbrowse.backcountryai` app group. A copy of the text is also published on Hugging Face, which
+the CC BY-SA sources require.
 
 ## Where things are
 
-The table assumes `BACKCOUNTRY_DATA` is left at its default, `library.noindex/` in the repository root. Set it to put
-the data somewhere else.
+The data folder, `$BACKCOUNTRY_DATA`, defaults to `library.noindex/` in the main checkout.
 
 | What | Where |
 |---|---|
-| Downloaded sources (about 29 GB, resumable) | `$BACKCOUNTRY_DATA/raw/` and `$BACKCOUNTRY_DATA/zim/` |
-| The app's library | `$BACKCOUNTRY_DATA/library-lite/` (`index.sqlite`, `text/`, `SOURCES.md`) |
-| Quality reports, kept out of the pack | `$BACKCOUNTRY_DATA/library-lite-reports/` (`left-out.tsv`, `quality-audit.md`) |
-| Built asset pack | `build/asset-packs/lite.aar` and `lite-manifest.json` (the current, ready-to-upload pack was moved to `library.noindex/asset-packs/`) |
-| What the app expects | `PackCatalog` in `Sources/LibraryStore.swift` (article count and byte sizes) |
-| Sources and licenses | `SOURCES.md`; `library/guides.tsv` lists the government guide pages |
+| Downloaded sources (the Kiwix archives of WikiMed, MedlinePlus, Stack Exchange and the rest) | `$BACKCOUNTRY_DATA/zim/` (27 GB) and `raw/` (0.1 GB) |
+| The library | `$BACKCOUNTRY_DATA/library-lite/` |
+| Quality reports, kept out of the pack | `$BACKCOUNTRY_DATA/library-lite-reports/` |
+| Built pack and release summary | `build/asset-packs/` |
+| Article count and sizes the app shows | `PackCatalog` in `Sources/LibraryStore.swift` |
+| Upload credentials, git-ignored | `.asc.env` |
 
-## 1. One-time setup
+## Release
 
-```bash
-/opt/homebrew/bin/python3.12 -m venv .venv
-.venv/bin/pip install libzim lxml trafilatura pypdf
-brew install poppler
+In Claude Code, from the main checkout:
+
+```
+/release-pack lite
 ```
 
-You need about 40 GB free for the sources and both builds.
+The command runs `scripts/release-pack.sh`, which stops at the first problem. In order, it:
 
-## 2. Build the library
+1. checks the App Store Connect key;
+2. runs the license check, the search check and the quality audit;
+3. builds `lite.aar`;
+4. updates `PackCatalog`;
+5. uploads the pack with `xcrun altool --upload-asset-pack --wait`, which returns once Apple has processed it.
+
+The agent then reviews the audit, commits the `PackCatalog` change and reports the new version.
+
+| Option | What it does |
+|---|---|
+| `--rebuild` | Downloads the sources and rebuilds the library first (hours) |
+| `--hf user/name` | Also publishes the text on Hugging Face (do this every release) |
+| `--no-upload` | Does everything except the upload |
+| `--force` | Releases even if the search check is below target |
+
+Without `--rebuild`, a release takes about 3 minutes plus the upload. Two steps stay manual in App Store Connect,
+because Apple offers no command for them:
+
+1. test the new version with TestFlight;
+2. submit it for review with the next build.
+
+## The Better answers model
+
+The optional larger model (Qwen 3.5 4B, see `docs/on-device-model-comparison.md`) is a second on-demand pack,
+`answers`, released the same way:
 
 ```bash
-scripts/build-library.sh
+scripts/release-model-pack.sh
 ```
 
-Prefix the command with `BACKCOUNTRY_DATA=/path/with/space` to build elsewhere.
+It downloads the pinned model from Hugging Face, drops the image weights, builds `build/asset-packs/answers.aar`
+(2.3 GB) and uploads it. Pass `--no-upload` to stop after the build. If the size changes, update
+`BetterModel.estimatedDownloadBytes` and `unpackedBytes`. Then test it in TestFlight and submit it for review with
+the next build, like the library.
 
-The script:
+## One-time setup (only before your first release)
 
-1. **Downloads the sources.** Finished downloads are skipped, so a re-run is quick:
-   - the manuals;
-   - the Kiwix ZIMs;
-   - the government guides in `library/guides.tsv`, falling back to the Internet Archive if a site is down;
-   - the risk references.
-2. **Builds `library-full`, then `library-lite`.** Essentials reuses the text already converted for `library-full`.
-3. **Runs the quality filter.** `library/quality.py` rejects articles with almost no sentences, articles that aren't
-   English prose, and articles that are mostly code or data. Every rejected article goes to `left-out.tsv` in the
-   reports folder. See `docs/library-quality.md`.
-4. **Checks each library:**
-   - the license check fails on any non-commercial, no-derivatives or unlicensed source;
-   - the search check runs real questions through the app's ranking;
-   - the quality audit is written to `quality-audit.md` in the reports folder.
-
-## 3. Check it before release
-
-1. **Read `library-lite-reports/quality-audit.md`.** It lists, for each source:
-   - articles that fail the checks;
-   - articles that only just pass;
-   - titles that are file names;
-   - duplicate titles.
-
-   To remove more, fix the cause in `library/build_library.py` (`SKIP_PATHS`, `SKIP_TITLES` or a source's own
-   filter), then rebuild.
-2. **Run retrieval and answers through Apple's model.** This needs a Mac with Apple Intelligence on:
+1. **Python and tools:**
 
    ```bash
-   scripts/check-answers.sh library.noindex/library-lite
+   /opt/homebrew/bin/python3.12 -m venv .venv
+   .venv/bin/pip install libzim lxml trafilatura pypdf huggingface_hub
+   brew install poppler
    ```
 
-   - The last result was 88 of 89 questions finding the right article.
-   - To judge the written answers, add `--answers` and run it with
-     `QUESTIONS=library/answer-questions.tsv`.
-   - Misses are tracked in `docs/library-weak-spots.md`.
-3. **Update `PackCatalog`** in `Sources/LibraryStore.swift` if the article count or sizes changed.
-   - Article count: `sqlite3 library.noindex/library-lite/index.sqlite "SELECT SUM(docs) FROM sources WHERE done=1"`.
-   - `downloadBytes` is the size of `lite.aar` from step 4.
-   - `unpackedBytes` is the size of the `library-lite` folder.
+2. **App Store Connect API key:**
+   1. In App Store Connect, go to Users and Access › Integrations › App Store Connect API and create a Team key
+      with the App Manager role.
+   2. Save the `.p8` file as `~/private_keys/AuthKey_<KEY_ID>.p8`. Apple lets you download it only once.
+   3. Copy `.asc.env.example` to `.asc.env` and fill in the key ID, the Issuer ID and the app's Apple ID.
 
-   Once the app can reach the App Store, it replaces these estimates with Apple's real figures.
+3. **Hugging Face:** run `.venv/bin/hf auth login` with a write token. You only need this for `--hf`.
 
-## 4. Build the asset pack
+## What the build does
 
-```bash
-scripts/build-asset-packs.sh library.noindex/library-lite lite
-```
+`scripts/build-library.sh`, run by `--rebuild`, does three things:
 
-- It runs the license check again and refuses a library that fails it.
-- It writes `build/asset-packs/lite.aar` and `lite-manifest.json`.
-- The pack ID must be `lite`, to match `PackCatalog`.
-- The `--allow-noncommercial` flag skips the license check. Use it only for a local test, and never upload that
-  pack.
+1. **Downloads every source** listed in `SOURCES.md`. Interrupted downloads resume.
+2. **Builds `library-full`, then `library-lite`.** The `library-full` build includes Wikipedia but only exists as a
+   step: Essentials reuses its converted text, and the app never ships it.
+3. **Drops junk articles** with the quality filter. The rejected ones are listed in `left-out.tsv`.
 
-## 5. Upload to Apple
-
-1. **Upload a build.** In Xcode, use Product › Archive, then Distribute App › App Store Connect. The asset pack
-   attaches to the app's record, so the record and a build have to exist.
-2. **Upload `lite.aar`** with the [Transporter](https://apps.apple.com/us/app/transporter/id1450874784) app. Sign in
-   with the developer account and add the `.aar` file. `xcrun altool` also works from the command line.
-3. **Wait for Apple to process it.** The pack then appears under the app's record in App Store Connect. See Apple's
-   [Background Assets documentation](https://developer.apple.com/documentation/backgroundassets) for the current
-   screens.
-4. **Test in TestFlight.** Install the TestFlight build, tap Download on the Library screen, and check that:
-   - the download finishes;
-   - search works;
-   - the library survives quitting and reopening the app.
-5. **Submit the pack for review** together with the next App Store build.
-
-To ship a new version of the library, rebuild, then repeat steps 4 and 5 with the same pack ID. iOS updates
-downloaded copies in the background.
-
-## 6. Publish the text on Hugging Face
-
-```bash
-.venv/bin/pip install -U huggingface_hub
-hf auth login   # needs a write token
-scripts/upload-huggingface.sh library.noindex/library-lite <your-hf-user>/backcountryai-library
-```
-
-The script:
-
-- refuses to upload a library that fails the license check;
-- uploads the folder;
-- writes a dataset card from `docs/huggingface-dataset-card.md`, with a table of sources and licenses.
-
-Do this whenever you ship a new version of the pack.
-
-Still to check before the first release: the NHS and CDC Yellow Book terms (see `SOURCES.md`).
+To add a source, see `SOURCES.md` for what's allowed. Then add the source to `library/build_library.py`, or to
+`library/guides.tsv` if it's a single web page. `docs/library-quality.md` covers the quality checks.
 
 ## Testing on a phone without App Store Connect
 
-Apple-hosted packs only download in TestFlight and App Store builds. In an Xcode build, Download does nothing.
-There are two ways around that.
-
-### Copy the library in with Finder (simplest)
+Apple-hosted packs only download in TestFlight and App Store builds. For an Xcode build, copy the library in
+instead:
 
 1. Install the app from Xcode and open it once.
-2. Plug in the phone, open Finder, select the iPhone, and open the **Files** tab.
-3. Drag `library.noindex/library-lite` into **BackcountryAI**, then rename the copy to **Library**. It must end up as
-   On My iPhone › BackcountryAI › Library, with `index.sqlite` directly inside. The copy is 1.8 GB and takes a few
-   minutes.
-4. Reopen the app. The Library screen shows the library as "Custom".
+2. In Finder, select the iPhone and open the Files tab.
+3. Drag `library-lite` into BackcountryAI, then rename the copy to `Library`.
 
-A downloaded asset pack takes priority over this folder. To test a new build of the library on a phone that already
-has the pack, delete the pack from the Library screen first.
+The app shows it as a "Custom" library. A downloaded pack takes priority over this copy, so delete the pack first
+if the phone has one.
 
-### Serve the pack from your Mac
-
-This tests the real download path.
-
-1. Build the pack (step 4).
-2. Follow Apple's
-   [Testing asset packs locally](https://developer.apple.com/documentation/backgroundassets/testing-asset-packs-locally)
-   to make a certificate and trust it on the phone.
-3. Run `xcrun ba-serve --host <your-mac>.local build/asset-packs/lite.aar`.
-4. On the phone, go to Settings › Developer › Background Assets Testing › Development Overrides. Set the URL
-   override to `https://<your-mac>.local:<port>`.
-5. Run the app from Xcode and tap Download.
-
-## The optional answer model (prototype)
-
-Library › Lab can download Qwen 3.5 4B (about 3 GB). Unlike the library, it isn't an asset pack yet: it downloads
-straight from Hugging Face, so it works in Xcode builds too. `docs/on-device-model-comparison.md` covers how to
-benchmark it on a phone and how to decide whether to ship it. If it ships, it would become a second
-Apple-hosted asset pack, released the same way as above.
-
-Before a TestFlight build goes to anyone outside your own testing, decide whether the Lab screen stays in. It's
-currently in every build.
-
-## Cleaning up disk space
-
-These can be deleted once you no longer need them:
-
-- `library.noindex/asset-packs/full.aar` (8.5 GB), the dropped Wikipedia library;
-- the build logs (`library.noindex/*.log`);
-- the evaluation models in `~/.cache/huggingface` (about 20 GB).
-
-Keep `raw/`, `zim/` and `library-full/` if you'll rebuild: without them the build downloads and converts
-everything again.
+To test the real download path, serve the pack from your Mac with `xcrun ba-serve`, following Apple's
+[Testing asset packs locally](https://developer.apple.com/documentation/backgroundassets/testing-asset-packs-locally).

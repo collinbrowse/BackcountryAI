@@ -2,34 +2,202 @@ import FoundationModels
 import SwiftUI
 import UIKit
 
-/// PROTOTYPE: download the bigger model, turn it on for answers, and benchmark it against Apple's model on this
-/// iPhone (speed, memory, battery, heat). Results can be shared as CSV for docs/on-device-model-comparison.md.
-struct ModelLabView: View {
+/// The "Better answers" option on the library screen: what it gives you, what it costs, and one clear choice.
+/// The technical side is one tap away, on BetterAnswersDetailsView.
+struct BetterAnswersCard: View {
+    @State private var better = BetterModel.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Label("Better answers", systemImage: "sparkles")
+                    .font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Theme.ink)
+                    .labelStyle(.titleAndIcon)
+                Spacer()
+                if better.isActive {
+                    Label("On", systemImage: "checkmark.circle.fill")
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.moss)
+                } else if !better.isDownloaded {
+                    Text("Optional").font(.caption2.weight(.bold)).foregroundStyle(Theme.accentDeep)
+                        .padding(.horizontal, 7).padding(.vertical, 3)
+                        .background(Theme.accent.opacity(0.14), in: .capsule)
+                }
+            }
+            Text("Scout can write answers with a larger AI model that lives on this iPhone. It follows your situation more closely and gives more accurate, specific steps. It still works with no signal.")
+                .font(.subheadline).foregroundStyle(Theme.inkSoft)
+            HStack(spacing: 8) {
+                if !better.isDownloaded { chip("arrow.down.circle", "\(gb(better.downloadBytes)) download") }
+                chip("timer", "~10 s answers")
+                chip("battery.50percent", "More battery")
+            }
+            action
+            NavigationLink { BetterAnswersDetailsView() } label: {
+                HStack {
+                    Text("How it works")
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption.weight(.bold))
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.accentDeep)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+        }
+        .card()
+        .overlay {
+            if better.isActive {
+                RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Theme.moss.opacity(0.6), lineWidth: 1.5)
+            }
+        }
+        .animation(.bouncy, value: better.state)
+        .task { await better.refreshSize() }
+        // Load it now so the next answer doesn't wait, or give the memory back right away.
+        .onChange(of: better.useForAnswers) { _, on in if on { better.warmUp() } else { better.unload() } }
+    }
+
+    @ViewBuilder private var action: some View {
+        switch better.state {
+        case .downloading(let f):
+            VStack(alignment: .leading, spacing: 8) {
+                ProgressView(value: f) {
+                    Text(f > 0 ? "Downloading… \(Int(f * 100))%" : "Starting the download…").font(.footnote.weight(.semibold))
+                }
+                .tint(Theme.accent)
+                Button("Cancel", role: .cancel) { better.cancelDownload() }.font(.subheadline.weight(.semibold))
+            }
+        case .failed(let message) where !better.isDownloaded:
+            Text(message).font(.footnote).foregroundStyle(Theme.danger)
+            Button { better.download() } label: { Label("Try again", systemImage: "arrow.clockwise") }
+                .buttonStyle(SecondaryButtonStyle())
+        default:
+            if better.isDownloaded {
+                Picker("Answers", selection: $better.useForAnswers) {
+                    Text("Faster").tag(false)
+                    Text("Better").tag(true)
+                }
+                .pickerStyle(.segmented)
+                Text(better.useForAnswers
+                     ? "Scout uses the larger model. Answers take about 10 seconds and use more battery."
+                     : "Scout uses Apple's built-in model. Answers take about 3 seconds. The download stays on this iPhone.")
+                    .font(.caption).foregroundStyle(Theme.inkSoft)
+            } else {
+                Button { better.download() } label: { Label("Download better answers", systemImage: "arrow.down") }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .disabled(!BetterModel.isSupported)
+                Text(BetterModel.isSupported
+                     ? "Use Wi-Fi. Needs about \(gb(better.downloadBytes + BetterModel.unpackedBytes)) free while it installs."
+                     : "Needs a real iPhone; the simulator can't run it.")
+                    .font(.caption).foregroundStyle(Theme.inkSoft).frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    private func chip(_ symbol: String, _ text: String) -> some View {
+        Label(text, systemImage: symbol)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Theme.ink)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .padding(.horizontal, 8).padding(.vertical, 5)
+            .background(Theme.cardRaised, in: .capsule)
+    }
+
+    private func gb(_ bytes: Int64) -> String { String(format: "%.1f GB", Double(bytes) / 1e9) }
+}
+
+/// The technical details most people skip: how the two models split the work, what was measured, the model and
+/// its license, this iPhone's memory, and a benchmark to compare both models here.
+struct BetterAnswersDetailsView: View {
     @Environment(LibraryStore.self) private var store
     @State private var better = BetterModel.shared
     @State private var bench = LabBenchmark()
     @State private var memoryNow = MemoryProbe.footprintGB
     @State private var availableNow = MemoryProbe.availableGB
+    @State private var confirmDelete = false
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Prototype. Tests whether a bigger on-device model (Qwen 3.5 4B) gives better answers, and what it costs this iPhone in speed, memory and battery. Apple's model still does the searching.")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft)
+                howItWorks
+                measured
+                modelInfo
                 device
-                model
                 benchmark
+                if better.isDownloaded {
+                    Button("Remove better answers from this iPhone", role: .destructive) { confirmDelete = true }
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                }
             }
             .padding(16)
         }
         .background(Theme.background)
-        .navigationTitle("Lab: better answers")
+        .navigationTitle("How better answers work")
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(tick) { _ in
             memoryNow = MemoryProbe.footprintGB
             availableNow = MemoryProbe.availableGB
         }
+        .confirmationDialog("Remove better answers?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Remove", role: .destructive) { better.delete() }
+        } message: {
+            Text("Scout goes back to Apple's built-in model. You'll need Wi-Fi to download it again.")
+        }
+    }
+
+    private var howItWorks: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Two models, one answer").font(.headline)
+            step(1, "Apple's built-in model turns your question into library searches and keeps only the passages that fit.")
+            step(2, "The larger model reads those passages and writes the answer. It's better at following details like the gear you have and what you already tried.")
+            step(3, "Both run entirely on this iPhone. Nothing you ask leaves it, and it works in Airplane Mode.")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card()
+    }
+
+    private var measured: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("What we measured").font(.headline)
+            Text("16 backcountry questions with the same library passages. Each answer was scored 0 (wrong or unsafe), 1 (vague) or 2 (right and specific). Times and memory are from an 8 GB iPhone.")
+                .font(.footnote).foregroundStyle(Theme.inkSoft)
+            Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
+                GridRow {
+                    Text("")
+                    Text("Built-in").font(.caption.weight(.bold)).foregroundStyle(Theme.inkSoft)
+                    Text("Better").font(.caption.weight(.bold)).foregroundStyle(Theme.inkSoft)
+                }
+                compare("Answer quality", "9 of 32", "23 of 32")
+                compare("First words", "1.6 s", "3.3 s")
+                compare("Full answer", "3.5 s", "10 s")
+                compare("Memory in use", "part of iOS", "3.4 GB")
+            }
+            .font(.subheadline)
+            Text("It runs on the graphics chip, so each answer uses more battery than the built-in model, and the phone can get warm during long sessions.")
+                .font(.footnote).foregroundStyle(Theme.inkSoft)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card()
+    }
+
+    private var modelInfo: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("The model").font(.headline)
+            row("Name", "Qwen 3.5 4B")
+            row("Made by", "Qwen team, Alibaba Cloud")
+            row("Format", "4-bit, text only, MLX")
+            row("Download", String(format: "%.1f GB", Double(better.downloadBytes) / 1e9))
+            row("On this iPhone", String(format: "%.1f GB", Double(BetterModel.unpackedBytes) / 1e9))
+            HStack {
+                Text("License").foregroundStyle(Theme.inkSoft)
+                Spacer()
+                Link("Apache 2.0", destination: URL(string: "https://www.apache.org/licenses/LICENSE-2.0")!)
+            }
+            .font(.subheadline)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card()
     }
 
     private var device: some View {
@@ -38,8 +206,21 @@ struct ModelLabView: View {
             row("Memory (RAM)", String(format: "%.1f GB", MemoryProbe.deviceGB))
             row("App is using", String(format: "%.2f GB", memoryNow))
             row("iOS allows this app more", String(format: "%.2f GB", availableNow))
+            HStack {
+                Text("Larger model").foregroundStyle(Theme.inkSoft)
+                Spacer()
+                Text(modelStatus)
+                if better.isReady {
+                    Button { better.unload() } label: { Label("Unload", systemImage: "eject") }
+                        .buttonStyle(.bordered).tint(Theme.inkSoft).font(.subheadline)
+                        .accessibilityLabel("Unload from memory")
+                }
+            }
+            .font(.subheadline)
+            Text("It loads when you open Scout and unloads when you leave the app, so other apps get the memory back.")
+                .font(.footnote).foregroundStyle(Theme.inkSoft)
             if !BetterModel.isSupported {
-                Text("This device can't run the bigger model (the simulator has no GPU for it, or the iPhone has under 8 GB).")
+                Text("This device can't run it: the simulator has no GPU for it, or the iPhone has under 8 GB.")
                     .font(.footnote).foregroundStyle(Theme.danger)
             }
         }
@@ -47,42 +228,20 @@ struct ModelLabView: View {
         .card()
     }
 
-    private var model: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Qwen 3.5 4B (4-bit)").font(.headline)
-            switch better.state {
-            case .notDownloaded:
-                Text("Not downloaded. The download is \(BetterModel.approximateDownload) from Hugging Face; use Wi-Fi.")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft)
-                Button("Download and load") { better.prepare() }.buttonStyle(PrimaryButtonStyle())
-                    .disabled(!BetterModel.isSupported)
-            case .onDisk:
-                Text("Downloaded, not in memory.").font(.footnote).foregroundStyle(Theme.inkSoft)
-                Button("Load into memory") { better.prepare() }.buttonStyle(PrimaryButtonStyle())
-            case .downloading(let f):
-                ProgressView(value: f) { Text("Downloading… \(Int(f * 100))%").font(.footnote) }
-            case .loading:
-                ProgressView { Text("Loading into memory…").font(.footnote) }
-            case .ready:
-                Label("Loaded and ready", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.moss)
-                Button("Unload from memory") { better.unload() }.font(.subheadline.weight(.semibold))
-            case .failed(let m):
-                Text("Failed: \(m)").font(.footnote).foregroundStyle(Theme.danger)
-                Button("Try again") { better.prepare() }.buttonStyle(SecondaryButtonStyle())
-            }
-            Toggle("Use it for Scout's answers", isOn: $better.useForAnswers)
-                .disabled(!better.isDownloaded && !better.isReady)
-            if better.isDownloaded {
-                Button("Delete the model", role: .destructive) { better.delete() }.font(.subheadline)
-            }
+    private var modelStatus: String {
+        switch better.state {
+        case .notDownloaded: "Not downloaded"
+        case .downloading(let f): "Downloading \(Int(f * 100))%"
+        case .onDisk: "Not in memory"
+        case .loading: "Loading…"
+        case .ready: "In memory"
+        case .failed: "Didn't load"
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .card()
     }
 
     private var benchmark: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Benchmark").font(.headline)
+            Text("Compare on this iPhone").font(.headline)
             Text("Runs \(LabBenchmark.questions.count) test questions through the library search once, then has each model write the answers. Unplug the phone first so battery use can be measured. Takes 5–15 minutes.")
                 .font(.footnote).foregroundStyle(Theme.inkSoft)
             if bench.isRunning {
@@ -90,7 +249,7 @@ struct ModelLabView: View {
                 Button("Stop", role: .cancel) { bench.stop() }
             } else {
                 Button("Run benchmark") { bench.run(library: store.library) }
-                    .buttonStyle(PrimaryButtonStyle())
+                    .buttonStyle(SecondaryButtonStyle())
                     .disabled(store.library == nil)
                 if store.library == nil {
                     Text("Download the library first.").font(.footnote).foregroundStyle(Theme.danger)
@@ -108,6 +267,22 @@ struct ModelLabView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .card()
+    }
+
+    private func step(_ n: Int, _ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text("\(n)").font(.caption.weight(.heavy)).foregroundStyle(.white)
+                .frame(width: 22, height: 22).background(Theme.accent, in: .circle)
+            Text(text).font(.subheadline).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func compare(_ label: String, _ builtIn: String, _ better: String) -> some View {
+        GridRow {
+            Text(label).foregroundStyle(Theme.inkSoft)
+            Text(builtIn).monospacedDigit()
+            Text(better).monospacedDigit().fontWeight(.semibold)
+        }
     }
 
     private func row(_ label: String, _ value: String) -> some View {

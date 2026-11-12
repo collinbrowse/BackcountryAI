@@ -29,6 +29,7 @@ struct ChatView: View {
     @AppStorage(Readiness.askedKey) private var asked = false
     @AppStorage(Readiness.offlineKey) private var testedOffline = false
     @AppStorage(Readiness.celebratedKey) private var celebrated = false
+    @AppStorage("betterAnswers.tipDismissed") private var betterTipDismissed = false
 
     private var trimmed: String { draft.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var isEmpty: Bool { assistant.messages.isEmpty }
@@ -99,6 +100,7 @@ struct ChatView: View {
         .sensoryFeedback(.impact(weight: .medium), trigger: sent)
         .sensoryFeedback(.success, trigger: assistant.messages.last?.isFinished == true)
         .task(id: scenePhase) { await watchAI() }
+        .onChange(of: scenePhase, initial: true) { if scenePhase == .active { BetterModel.shared.warmUp() } }
         .task(id: trimmed) { await searchPeek() }
         .onChange(of: router.pending, initial: true) {
             if let q = router.pending {
@@ -222,6 +224,8 @@ struct ChatView: View {
                 .padding(.horizontal, 40)
                 .padding(.top, 16)
                 .riseIn(2)
+            } else if showBetterTip {
+                betterTip.padding(.top, 16).riseIn(2)
             }
             // Three spacers below, one above: the text sits halfway between the title and dead center.
             Spacer(minLength: 0)
@@ -230,6 +234,29 @@ struct ChatView: View {
         }
         .frame(maxWidth: .infinity)
         .containerRelativeFrame(.vertical)
+    }
+
+    /// Once the library is in, point out the optional larger model, until it's downloaded or dismissed.
+    private var showBetterTip: Bool {
+        BetterModel.isOffered && BetterModel.shared.state == .notDownloaded && !betterTipDismissed
+    }
+
+    private var betterTip: some View {
+        HStack(spacing: 4) {
+            Button { showLibrary = true } label: {
+                Label("Want more accurate answers?", systemImage: "sparkles")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.accentDeep)
+                    .padding(.leading, 14).padding(.vertical, 9)
+            }
+            Button { withAnimation { betterTipDismissed = true } } label: {
+                Image(systemName: "xmark").font(.caption.weight(.bold)).foregroundStyle(Theme.inkSoft)
+                    .padding(.horizontal, 12).padding(.vertical, 9)
+            }
+            .accessibilityLabel("Hide this tip")
+        }
+        .background(Theme.card.opacity(0.9), in: .capsule)
+        .overlay(Capsule().strokeBorder(Theme.hairline))
     }
 
     private var introText: String {

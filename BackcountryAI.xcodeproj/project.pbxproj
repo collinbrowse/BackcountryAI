@@ -22,9 +22,11 @@
 		5252BD525AAEA9CE9DEC6741 /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5199F5BD2B7EBF0CB5B8EEC /* ChatStore.swift */; };
 		52FB16C894F1B0054125B171 /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = 701D41315969D6F9DE6CEDC8 /* MLX */; };
 		55D65A085441D64222E1A612 /* AnswerContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FBB59455B48F31EB58C7A6 /* AnswerContent.swift */; };
+		59975BBA6D8C41480AC2080E /* UrgencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE27F1E117DAD1C471B65ED0 /* UrgencyTests.swift */; };
 		5EF8299C1D08D9696967A88B /* ChatStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F18AFE66894FD8D276154C3 /* ChatStoreTests.swift */; };
 		63142D1529C2188B9431242E /* ChatHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D45A62A7AD51C7B3A544297A /* ChatHistoryView.swift */; };
 		64226778A58ED1D8AEFE6E91 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 316FF0EDBCCFCD9DA5409B11 /* MLXLMCommon */; };
+		64EF816937442A0D946CAC86 /* BetterAnswersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAD88F9F6682F14F7CFC161F /* BetterAnswersView.swift */; };
 		86F1582355E8BF70F98DC667 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548DE6B9FE8E7C373C2B8A9D /* ScreenshotTests.swift */; };
 		974861887A20ECB963801743 /* BackcountryAIDownloader.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = BD667E04C0051E16486FE321 /* BackcountryAIDownloader.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9AB3B09C1DF45EC43F6447F8 /* SavedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA066571DB5FACD9ED3561EF /* SavedStore.swift */; };
@@ -34,7 +36,6 @@
 		AE27980426CC7BB9A640F910 /* BetterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04DC41F7EFB9713FC4A2FC58 /* BetterModel.swift */; };
 		B4E889E30FBCFA36A1DE6D64 /* SavedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B007F631D908B95A1C6969D5 /* SavedViews.swift */; };
 		BBFB3869513556DB4842C01A /* Topics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2242DE11CF60CEAFC08F5AAF /* Topics.swift */; };
-		C1A4E664D77DE6D5BAA57A46 /* ModelLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B34416267D3CF9E62E2111DB /* ModelLabView.swift */; };
 		CB52E6FED628755987B3788E /* FieldModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3ABD1A6AA84BAC16BF8AE8B /* FieldModel.swift */; };
 		CD83D1530D09E2CB6CF26806 /* FieldCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1F5E1A60D2FF802D01E85F /* FieldCards.swift */; };
 		CFB9944DB1427D4425BF5FDE /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAD60B3D6B2F613DC51ED644 /* Library.swift */; };
@@ -118,12 +119,12 @@
 		B007F631D908B95A1C6969D5 /* SavedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViews.swift; sourceTree = "<group>"; };
 		B12170F4C61C9F65E0D6EC6F /* ConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationView.swift; sourceTree = "<group>"; };
 		B2917396594C68CE8683BDAD /* Scenery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenery.swift; sourceTree = "<group>"; };
-		B34416267D3CF9E62E2111DB /* ModelLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLabView.swift; sourceTree = "<group>"; };
 		B3A2A2F462FD4938C9F542C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B526919DD2B6F8CC38923DFB /* BackcountryAITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BackcountryAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA066571DB5FACD9ED3561EF /* SavedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedStore.swift; sourceTree = "<group>"; };
 		BD667E04C0051E16486FE321 /* BackcountryAIDownloader.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = BackcountryAIDownloader.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C01D18C23AC53F830B410AD3 /* Assistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assistant.swift; sourceTree = "<group>"; };
+		CAD88F9F6682F14F7CFC161F /* BetterAnswersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterAnswersView.swift; sourceTree = "<group>"; };
 		CC1F5E1A60D2FF802D01E85F /* FieldCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCards.swift; sourceTree = "<group>"; };
 		D45A62A7AD51C7B3A544297A /* ChatHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatHistoryView.swift; sourceTree = "<group>"; };
 		D99492452F59C5C8ECFCCE65 /* FieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldView.swift; sourceTree = "<group>"; };
@@ -132,6 +133,7 @@
 		E1371E559B12B2A43689C2EA /* GuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideView.swift; sourceTree = "<group>"; };
 		E5199F5BD2B7EBF0CB5B8EEC /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
 		F2E2FCEB63DA5A32DF75AC4C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		FE27F1E117DAD1C471B65ED0 /* UrgencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrgencyTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +156,7 @@
 			isa = PBXGroup;
 			children = (
 				6F18AFE66894FD8D276154C3 /* ChatStoreTests.swift */,
+				FE27F1E117DAD1C471B65ED0 /* UrgencyTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -208,6 +211,7 @@
 				C01D18C23AC53F830B410AD3 /* Assistant.swift */,
 				07C170B2A80F7AD29D23464A /* BackcountryAI.entitlements */,
 				80413D2B42C15DD33735EB20 /* BatteryMeter.swift */,
+				CAD88F9F6682F14F7CFC161F /* BetterAnswersView.swift */,
 				04DC41F7EFB9713FC4A2FC58 /* BetterModel.swift */,
 				D45A62A7AD51C7B3A544297A /* ChatHistoryView.swift */,
 				E5199F5BD2B7EBF0CB5B8EEC /* ChatStore.swift */,
@@ -223,7 +227,6 @@
 				DAD60B3D6B2F613DC51ED644 /* Library.swift */,
 				257B84C1E273DD9A008815CB /* LibraryStore.swift */,
 				404F44B81DA7BD32E9088A36 /* LibraryView.swift */,
-				B34416267D3CF9E62E2111DB /* ModelLabView.swift */,
 				AAF4905B9A3EBCF719428534 /* Onboarding.swift */,
 				A7C38A1055E1D6375CFDA5D1 /* Readiness.swift */,
 				88AD4D7689E5BF0291897070 /* Retrieval.swift */,
@@ -418,6 +421,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5EF8299C1D08D9696967A88B /* ChatStoreTests.swift in Sources */,
+				59975BBA6D8C41480AC2080E /* UrgencyTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -430,6 +434,7 @@
 				1A961770E8B159D24B31105B /* ArticleView.swift in Sources */,
 				33F08966BCF5F7035FE82331 /* Assistant.swift in Sources */,
 				5118B5D89C27312E19812C9A /* BatteryMeter.swift in Sources */,
+				64EF816937442A0D946CAC86 /* BetterAnswersView.swift in Sources */,
 				AE27980426CC7BB9A640F910 /* BetterModel.swift in Sources */,
 				63142D1529C2188B9431242E /* ChatHistoryView.swift in Sources */,
 				5252BD525AAEA9CE9DEC6741 /* ChatStore.swift in Sources */,
@@ -444,7 +449,6 @@
 				CFB9944DB1427D4425BF5FDE /* Library.swift in Sources */,
 				A71225C1FC2DD934F1C3ADB5 /* LibraryStore.swift in Sources */,
 				508247AFEB4ADA3179E12F4E /* LibraryView.swift in Sources */,
-				C1A4E664D77DE6D5BAA57A46 /* ModelLabView.swift in Sources */,
 				3016AF4260781089F26E68C0 /* Onboarding.swift in Sources */,
 				E09BEF2824E172AE33243CE2 /* Readiness.swift in Sources */,
 				21552C8A4CC7B18E3E58E829 /* Retrieval.swift in Sources */,
@@ -650,7 +654,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = BackcountryAI;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -782,7 +785,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = BackcountryAI;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (

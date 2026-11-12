@@ -17,7 +17,7 @@ struct ChatMessage: Identifiable, Codable, Hashable {
     var failed = false
     var question = ""                  // for assistant messages: what they answer
     var urgent = false                 // the question sounds like an emergency
-    var engine: String? = nil          // PROTOTYPE: which model wrote it, with speed and memory
+    var engine: String? = nil          // set when the larger model wrote it: its speed and memory (not saved)
 
     var isFinished: Bool { role == .assistant && status == nil && !text.isEmpty }
 
@@ -120,19 +120,21 @@ final class Assistant {
                 messages[index].failed = true
                 return
             }
-            messages[index].status = "Writing an answer on this phone…"
+            let better = BetterModel.shared
+            messages[index].status = better.isActive && !better.isReady
+                ? "Getting better answers ready…" : "Writing an answer on this phone…"
             do {
                 let prompt = try await fittingPrompt(question: q, sources: &sources,
                                                      previous: previous, previousAnswer: previousAnswer)
                 messages[index].sources = sources
-                // PROTOTYPE: the optional bigger model writes the answer when it's turned on (Library › Lab).
-                let better = BetterModel.shared
-                if better.useForAnswers, await better.ensureLoaded() {
+                // Better answers: the larger model writes the answer when it's on. If it can't load, Apple's does.
+                if better.isActive, await better.ensureLoaded() {
+                    messages[index].status = "Writing an answer on this phone…"
                     let stats = try await better.answer(instructions: Retrieval.instructions, prompt: prompt) { text in
                         messages[index].status = nil
                         messages[index].text = text
                     }
-                    messages[index].engine = String(format: "Qwen 3.5 4B · %.1fs to first word · %.0f words/s · %.1f GB",
+                    messages[index].engine = String(format: "Written with better answers: first words in %.1f s, %.0f tokens/s, %.1f GB memory",
                                                     stats.secondsToFirstWord, stats.tokensPerSecond,
                                                     MemoryProbe.footprintGB)
                     if !messages[index].text.isEmpty { Readiness.recordAnswer() }

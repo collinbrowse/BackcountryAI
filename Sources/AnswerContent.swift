@@ -11,6 +11,7 @@ enum AnswerBlock: Hashable {
     static func parse(_ text: String) -> [AnswerBlock] {
         var blocks: [AnswerBlock] = []
         var paragraph: [String] = []
+        var notFromLibrary = false
         func flush() {
             if !paragraph.isEmpty { blocks.append(.paragraph(paragraph.joined(separator: " "))) }
             paragraph = []
@@ -21,8 +22,9 @@ enum AnswerBlock: Hashable {
             let plain = line.replacingOccurrences(of: "*", with: "").replacingOccurrences(of: "#", with: "")
                 .trimmingCharacters(in: .whitespaces)
             if plain.lowercased().hasPrefix("not from the library") {
+                // Small models sometimes put the label mid-answer or last; show it once, as a badge on top.
                 flush()
-                blocks.append(.notFromLibrary)
+                notFromLibrary = true
                 let rest = plain.dropFirst("not from the library".count)
                     .trimmingCharacters(in: CharacterSet(charactersIn: ": ").union(.whitespaces))
                 if !rest.isEmpty { paragraph.append(rest) }
@@ -51,6 +53,7 @@ enum AnswerBlock: Hashable {
             paragraph.append(line)
         }
         flush()
+        if notFromLibrary { blocks.insert(.notFromLibrary, at: 0) }
         return blocks
     }
 }
