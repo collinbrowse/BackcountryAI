@@ -1,0 +1,220 @@
+# The BackcountryAI release pipeline. docs/release.md explains the whole process; `bundle exec fastlane lanes`
+# lists these.
+#
+#   test         unit tests
+#   screenshots  App Store screenshots from the current code  → fastlane/screenshots/en-US
+#   previews     App Preview video from the current code      → fastlane/app_previews/en-US
+#   beta         build, sign, upload to TestFlight
+#   release      test, build, TestFlight, screenshots, preview, every App Store field, submit for review
+#   metadata     only refresh the App Store listing (text, screenshots, preview) without a new build
+#   privacy      one-time: App Privacy answers (needs your Apple ID, not the API key)
+#   bump         set the next version number
+require "base64"
+require "tmpdir"
+
+default_platform(:ios)
+
+PROJECT = "BackcountryAI.xcodeproj"
+APP_ID = "com.collinbrowse.backcountryai"
+TEAM_ID = "84XX2W7G34"
+ROOT = File.expand_path("..", __dir__)
+DEVICE = ENV.fetch("SCREENSHOT_DEVICE", "iPhone 18 Pro Max")   # a 6.9" iPhone: 1320×2868 screenshots
+XCFLAGS = "-skipMacroValidation -skipPackagePluginValidation"
+LOCALE = "en-US"
+
+def in_root(command)
+  Dir.chdir(ROOT) { sh(command) }
+end
+
+def need(*names)
+  missing = names.select { |n| ENV[n].to_s.strip.empty? }
+  UI.user_error!("Missing #{missing.join(', ')}. Set them in fastlane/.env or as GitHub secrets (docs/release.md).") unless missing.empty?
+end
+
+def marketing_version
+  File.read(File.join(ROOT, "project.yml"))[/MARKETING_VERSION: "([^"]+)"/, 1]
+end
+
+def last_release_tag
+  `git -C "#{ROOT}" describe --tags --abbrev=0 --match "v*" 2>/dev/null`.strip
+end
+
+# Commit subjects since the last release, as a bulleted list.
+def changes_since_last_release(limit)
+  range = last_release_tag.empty? ? "-n 15" : "#{last_release_tag}..HEAD"
+  subjects = `git -C "#{ROOT}" log #{range} --no-merges --pretty=format:%s`.lines.map(&:strip).reject(&:empty?)
+  text = subjects.map { |s| "• #{s}" }.join("\n")
+  text.length > limit ? text[0, limit - 1].sub(/\n[^\n]*\z/, "") + "\n…" : text
+end
+
+# "What's New". The first version of an app can't have one. After that: fastlane/release_notes.txt if you
+# edited it since the last release, otherwise the commit subjects since then.
+def whats_new
+  tag = last_release_tag
+  return nil if tag.empty?
+  written = File.join(__dir__, "release_notes.txt")
+  edited = !`git -C "#{ROOT}" diff --name-only #{tag} HEAD -- fastlane/release_notes.txt`.strip.empty?
+  return File.read(written).strip if File.exist?(written) && edited
+  changes_since_last_release(3900)
+end
+
+platform :ios do
+  before_all do
+    in_root("xcodegen generate --quiet")
+  end
+
+  def asc_key
+    need("ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_P8_BASE64")
+    app_store_connect_api_key(key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"],
+                              key_content: ENV["ASC_KEY_P8_BASE64"], is_key_content_base64: true)
+  end
+
+  # xcodebuild signs with the same API key (cloud-managed certificates), so no certificates or
+  # provisioning profiles are stored anywhere.
+  def signing_flags
+    path = File.join(Dir.tmpdir, "AuthKey_#{ENV['ASC_KEY_ID']}.p8")
+    File.write(path, Base64.decode64(ENV["ASC_KEY_P8_BASE64"]), perm: 0o600)
+    "-allowProvisioningUpdates -authenticationKeyPath #{path} " \
+      "-authenticationKeyID #{ENV['ASC_KEY_ID']} -authenticationKeyIssuerID #{ENV['ASC_ISSUER_ID']}"
+  end
+
+  def boot_simulator
+    in_root(%Q[xcrun simctl list devices available | grep -q "#{DEVICE} (" || xcrun simctl create "#{DEVICE}" "#{DEVICE}"])
+    in_root(%(xcrun simctl bootstatus "#{DEVICE}" -b))
+    # The classic clean status bar: 9:41, full battery.
+    in_root(%(xcrun simctl status_bar "#{DEVICE}" override --time "9:41" --batteryState discharging ) +
+            %(--batteryLevel 100 --cellularBars 4 --wifiBars 3 --dataNetwork wifi))
+    in_root(%(xcrun simctl ui "#{DEVICE}" appearance light))
+  end
+
+  desc "Run the unit tests"
+  lane :test do
+    in_root(%(set -o pipefail && xcodebuild -project #{PROJECT} -scheme BackcountryAI ) +
+            %(-destination "platform=iOS Simulator,name=#{DEVICE}" -derivedDataPath build/DerivedData #{XCFLAGS} ) +
+            %(test 2>&1 | tee build/test.log | grep -E "^(✔|✘|Test |\\*\\*)|error:" || (tail -40 build/test.log; exit 1)))
+  end
+
+  desc "Take the App Store screenshots from the current code"
+  lane :screenshots do
+    boot_simulator
+    in_root("rm -rf build/screenshots fastlane/screenshots/#{LOCALE} && mkdir -p build/screenshots")
+    in_root(%(set -o pipefail && xcodebuild -project #{PROJECT} -scheme BackcountryAIScreenshots ) +
+            %(-destination "platform=iOS Simulator,name=#{DEVICE}" -derivedDataPath build/DerivedData #{XCFLAGS} ) +
+            %(-resultBundlePath build/screenshots/run.xcresult ) +
+            %(-only-testing:BackcountryAIUITests/ScreenshotTests/testScreenshots test > build/screenshots/run.log 2>&1 ) +
+            %(|| (grep -E "error|failed" build/screenshots/run.log | tail -20; exit 1)))
+    in_root("scripts/export-screenshots.sh build/screenshots/run.xcresult build/screenshots/raw")
+    in_root("swift scripts/compose-screenshots.swift build/screenshots/raw " \
+            "fastlane/screenshot-fixtures/captions.json fastlane/screenshots/#{LOCALE}")
+  end
+
+  desc "Record the App Preview video from the current code"
+  lane :previews do
+    boot_simulator
+    in_root(%(scripts/record-preview.sh "#{DEVICE}" fastlane/app_previews/#{LOCALE}/01_IPHONE_67_walkthrough.mp4 ) +
+            %(-derivedDataPath build/DerivedData))
+  end
+
+  desc "Screenshots and the preview video"
+  lane :media do
+    screenshots
+    previews
+  end
+
+  # Archives a Release build with the next build number and returns that number.
+  private_lane :build do
+    key = asc_key
+    number = latest_testflight_build_number(api_key: key, app_identifier: APP_ID, initial_build_number: 0) + 1
+    build_app(project: PROJECT, scheme: "BackcountryAI", configuration: "Release", clean: true,
+              output_directory: "build/release", output_name: "BackcountryAI.ipa",
+              xcargs: "#{XCFLAGS} #{signing_flags} CURRENT_PROJECT_VERSION=#{number}",
+              export_xcargs: signing_flags,
+              export_options: { method: "app-store-connect", signingStyle: "automatic", teamID: TEAM_ID,
+                                manageAppVersionAndBuildNumber: false })
+    number
+  end
+
+  private_lane :testflight_upload do
+    groups = ENV["TESTFLIGHT_GROUPS"].to_s.split(",").map(&:strip).reject(&:empty?)
+    upload_to_testflight(api_key: asc_key, app_identifier: APP_ID, ipa: "build/release/BackcountryAI.ipa",
+                         changelog: changes_since_last_release(3900),
+                         distribute_external: !groups.empty?, groups: groups.empty? ? nil : groups,
+                         notify_external_testers: !groups.empty?)
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    number = build
+    testflight_upload
+    UI.success("BackcountryAI #{marketing_version} (#{number}) is on TestFlight")
+  end
+
+  # Text, categories, age rating, review details, screenshots and the preview video.
+  private_lane :listing do |options|
+    need("REVIEW_FIRST_NAME", "REVIEW_LAST_NAME", "REVIEW_PHONE", "REVIEW_EMAIL", "APP_SITE_URL")
+    site = ENV["APP_SITE_URL"].sub(%r{/+\z}, "")
+    notes = whats_new
+    upload_to_app_store(
+      api_key: asc_key, app_identifier: APP_ID, app_version: marketing_version, platform: "ios",
+      skip_binary_upload: true, build_number: options[:build_number]&.to_s,
+      metadata_path: "fastlane/metadata", languages: [LOCALE],
+      screenshots_path: "fastlane/screenshots", overwrite_screenshots: true,
+      app_previews_path: "fastlane/app_previews", overwrite_preview_videos: true,
+      preview_frame_time_code: "00:00:09:00",   # the poster frame: an answer on screen
+      support_url: { LOCALE => "#{site}/support.html" },
+      marketing_url: { LOCALE => site },
+      privacy_url: { LOCALE => "#{site}/privacy.html" },
+      release_notes: notes ? { LOCALE => notes } : nil,
+      app_rating_config_path: "fastlane/age_rating.json",
+      app_review_information: {
+        first_name: ENV["REVIEW_FIRST_NAME"], last_name: ENV["REVIEW_LAST_NAME"],
+        phone_number: ENV["REVIEW_PHONE"], email_address: ENV["REVIEW_EMAIL"],
+        demo_user: "", demo_password: "",
+        notes: File.read(File.join(__dir__, "review_notes.txt")).strip
+      },
+      submit_for_review: options[:submit] == true, reject_if_possible: true,
+      automatic_release: true, phased_release: true,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        content_rights_contains_third_party_content: true,   # the library: see SOURCES.md
+        content_rights_has_rights: true
+      },
+      run_precheck_before_submit: true, precheck_include_in_app_purchases: false,
+      force: true   # no HTML preview to confirm: this runs unattended
+    )
+  end
+
+  desc "Refresh the App Store listing from the current code, without a new build. submit:true also submits"
+  lane :metadata do |options|
+    media unless options[:skip_media]
+    listing(submit: options[:submit] == true)
+  end
+
+  desc "Ship it: test, build, TestFlight, screenshots, preview, every App Store field. submit:false stops before review"
+  lane :release do |options|
+    test
+    media
+    number = build
+    testflight_upload
+    listing(build_number: number, submit: options[:submit] != false)
+    UI.success("BackcountryAI #{marketing_version} (#{number}) " +
+               (options[:submit] == false ? "is ready in App Store Connect" : "is waiting for App Review"))
+  end
+
+  desc "One-time: answer App Privacy as 'Data Not Collected' (asks for your Apple ID and 2FA code)"
+  lane :privacy do
+    upload_app_privacy_details_to_app_store(app_identifier: APP_ID, team_id: TEAM_ID,
+                                            json_path: "fastlane/app_privacy_details.json")
+  end
+
+  desc "Set the next version: fastlane bump version:1.1.0"
+  lane :bump do |options|
+    version = options[:version] or UI.user_error!("Usage: fastlane bump version:1.1.0")
+    UI.user_error!("Use three numbers, like 1.1.0") unless version.match?(/\A\d+\.\d+\.\d+\z/)
+    path = File.join(ROOT, "project.yml")
+    File.write(path, File.read(path).gsub(/MARKETING_VERSION: "[^"]+"/, %(MARKETING_VERSION: "#{version}")))
+    in_root("xcodegen generate --quiet")
+    UI.success("Version is now #{version}. Commit project.yml and BackcountryAI.xcodeproj.")
+  end
+end

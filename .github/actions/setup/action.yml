@@ -1,0 +1,32 @@
+name: Set up the build
+description: Xcode, Ruby with fastlane, XcodeGen, ffmpeg and cached Swift packages
+runs:
+  using: composite
+  steps:
+    - name: Select Xcode
+      if: runner.environment == 'github-hosted'
+      shell: bash
+      run: |
+        XCODE="$(ls -d /Applications/Xcode_27*.app 2>/dev/null | sort -V | tail -1)"
+        if [ -z "$XCODE" ]; then
+          echo "::error::This runner has no Xcode 27. Installed: $(ls /Applications | grep -i xcode | tr '\n' ' '). Use a newer runner image or a self-hosted Mac (docs/release.md)."
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE"
+        xcodebuild -version
+    - uses: ruby/setup-ruby@v1
+      if: runner.environment == 'github-hosted'
+      with:
+        bundler-cache: true
+    - name: Install gems (self-hosted)
+      if: runner.environment != 'github-hosted'
+      shell: bash
+      run: bundle config set --local path vendor/bundle && bundle install
+    - name: Install tools
+      shell: bash
+      run: |
+        for tool in xcodegen ffmpeg; do command -v "$tool" >/dev/null || brew install "$tool"; done
+    - uses: actions/cache@v4
+      with:
+        path: build/DerivedData/SourcePackages
+        key: spm-${{ hashFiles('BackcountryAI.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}

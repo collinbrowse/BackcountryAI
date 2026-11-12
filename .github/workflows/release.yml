@@ -1,0 +1,65 @@
+# The App Store release, started by hand (Actions › Release › Run workflow) once main is what you want to ship.
+# It tests, takes fresh screenshots and a preview video from this exact code, builds and uploads to TestFlight,
+# fills in every App Store field, submits for review, then tags the commit and publishes a GitHub release.
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: Submit for App Review (off = stop with everything ready in App Store Connect)
+        type: boolean
+        default: true
+concurrency:
+  group: release
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    timeout-minutes: 150
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+      REVIEW_FIRST_NAME: ${{ secrets.REVIEW_FIRST_NAME }}
+      REVIEW_LAST_NAME: ${{ secrets.REVIEW_LAST_NAME }}
+      REVIEW_PHONE: ${{ secrets.REVIEW_PHONE }}
+      REVIEW_EMAIL: ${{ secrets.REVIEW_EMAIL }}
+      APP_SITE_URL: ${{ vars.APP_SITE_URL }}
+      TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_GROUPS }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check the version is new
+        id: version
+        run: |
+          VERSION="$(sed -n 's/.*MARKETING_VERSION: "\(.*\)"/\1/p' project.yml | head -1)"
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error::v$VERSION was already released. Run 'bundle exec fastlane bump version:X.Y.Z', commit, and try again."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/setup
+      - run: bundle exec fastlane release submit:${{ inputs.submit }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-${{ steps.version.outputs.version }}
+          path: |
+            build/release/*.ipa
+            build/release/*.dSYM.zip
+            fastlane/screenshots
+            fastlane/app_previews
+            build/screenshots/run.log
+            build/test.log
+          if-no-files-found: ignore
+      - name: Tag and publish the GitHub release
+        if: inputs.submit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" --target "$GITHUB_SHA" \
+            --title "BackcountryAI ${{ steps.version.outputs.version }}" --generate-notes \
+            fastlane/screenshots/en-US/*.png

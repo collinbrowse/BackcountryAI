@@ -1,0 +1,14 @@
+BackcountryAI is an offline field guide. There is no account or sign-in.
+
+How to review it:
+1. Open the app and finish the short introduction.
+2. Tap "Get the library" and download Essentials (about 0.8 GB, an Apple-hosted Background Assets pack). Wi-Fi is recommended.
+3. Ask Scout a question on the first tab, for example "How do I make water from a stream safe to drink?".
+   The answer is written on the device by Apple's on-device model (Apple Intelligence must be turned on in Settings) using passages found in the downloaded library. Every answer lists the articles it used.
+4. The Guide tab browses the same library by topic and source. Field mode (in Guide) is a patient assessment checklist and quick reference cards that need no AI.
+
+After the library is downloaded, everything works in Airplane Mode. The app does not collect any data and makes no network requests other than downloading its library (and, only if you choose it under Library › Lab, an optional larger answer model).
+
+On an iPhone that cannot run Apple Intelligence, the app still searches and shows the library articles.
+
+The first aid and safety content comes from the public sources credited inside the app (National Park Service, CDC, FEMA, U.S. Army manuals, MedlinePlus and others), each used under a license that allows it. The app tells people to call emergency services first: the SOS button is on every chat screen.

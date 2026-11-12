@@ -2,14 +2,19 @@ import SwiftUI
 
 @main
 struct BackcountryAIApp: App {
-    @State private var store = LibraryStore()
+    @State private var store: LibraryStore
     @State private var chats: ChatStore
     @State private var assistant: Assistant
-    @State private var saved = SavedStore()
+    @State private var saved: SavedStore
     @State private var field = FieldStore()
     init() {
+        let store = LibraryStore()
         let chats = ChatStore()
+        let saved = SavedStore()
+        ScreenshotMode.seed(chats: chats, saved: saved, library: store.library)
+        _store = State(initialValue: store)
         _chats = State(initialValue: chats)
+        _saved = State(initialValue: saved)
         _assistant = State(initialValue: Assistant(chats: chats))
     }
 

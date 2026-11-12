@@ -1,0 +1,24 @@
+# Every pull request and every push to main: build and run the unit tests.
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    # Needs Xcode 27 (the app targets iOS 27). Set the MACOS_RUNNER repository variable to "self-hosted" to
+    # run on your own Mac instead (docs/release.md).
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: bundle exec fastlane test
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-log
+          path: build/test.log

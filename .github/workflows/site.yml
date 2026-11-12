@@ -1,0 +1,35 @@
+# Publishes site/ (home, privacy policy, support) to GitHub Pages. App Store Connect needs the privacy and
+# support pages to be live. The contact address comes from the SUPPORT_EMAIL repository variable.
+name: Site
+on:
+  push:
+    branches: [main]
+    paths: [site/**, .github/workflows/site.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fill in the contact address
+        env:
+          SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
+        run: |
+          if [ -z "$SUPPORT_EMAIL" ]; then echo "::error::Set the SUPPORT_EMAIL repository variable."; exit 1; fi
+          sed -i "s/__SUPPORT_EMAIL__/$SUPPORT_EMAIL/g" site/*.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

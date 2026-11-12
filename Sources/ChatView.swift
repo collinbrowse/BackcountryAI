@@ -349,6 +349,7 @@ struct ChatView: View {
                 .opacity(trimmed.isEmpty ? 0.4 : 1)
                 .scaleEffect(trimmed.isEmpty ? 0.9 : 1)
                 .accessibilityLabel("Send")
+                .accessibilityIdentifier("composer.send")
                 .transition(.scale.combined(with: .opacity))
             }
         }

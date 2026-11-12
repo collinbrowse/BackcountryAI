@@ -1,0 +1,10 @@
+[
+  { "shot": "01_answer", "title": "Answers with\nno signal", "subtitle": "Step-by-step help, written on your iPhone" },
+  { "shot": "02_sos", "title": "Calm help in\nan emergency", "subtitle": "One tap to SOS guidance and first aid" },
+  { "shot": "03_guide", "title": "A field guide\nin your pocket", "subtitle": "First aid, weather, navigation, repair" },
+  { "shot": "04_field", "title": "Field mode for\npatient care", "subtitle": "Assessment, vitals and a SOAP note" },
+  { "shot": "05_topic", "title": "277,000 articles,\nall offline", "subtitle": "From park, military and medical sources" },
+  { "shot": "07_sources", "title": "Every answer\nshows its sources", "subtitle": "Tap a citation to read the original" },
+  { "shot": "06_saved", "title": "Save what\nmatters", "subtitle": "Reread answers without using battery" },
+  { "shot": "08_home", "title": "Meet Scout", "subtitle": "Describe what's happening in your own words" }
+]

@@ -43,6 +43,7 @@ final class Assistant {
     private let model = SystemLanguageModel(useCase: .general, guardrails: .permissiveContentTransformations)
 
     var availabilityProblem: String? {
+        if ScreenshotMode.isOn { return nil }
         switch model.availability {
         case .available: return nil
         case .unavailable(.deviceNotEligible):
@@ -78,6 +79,13 @@ final class Assistant {
                 messages[index].status = nil
                 isBusy = false
                 save()
+            }
+
+            if let script = ScreenshotMode.script(for: q) {
+                messages[index].sources = library?.search(q, limit: 3) ?? []
+                await ScreenshotMode.play(script, status: { messages[index].status = $0 },
+                                          text: { messages[index].text = $0 })
+                return
             }
 
             // 1. Find passages. With the model: it rewrites the question into searches, then keeps only the

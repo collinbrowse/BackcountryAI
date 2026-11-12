@@ -1,0 +1,35 @@
+# Every push to main: a signed build goes to TestFlight, with the commits since the last release as
+# "What to Test". Internal testers get it automatically; set TESTFLIGHT_GROUPS to send it to external groups.
+name: TestFlight
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+jobs:
+  beta:
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    timeout-minutes: 90
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+      TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_GROUPS }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # release notes come from the commits since the last v* tag
+      - uses: ./.github/actions/setup
+      - run: bundle exec fastlane test
+      - run: bundle exec fastlane beta
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build
+          path: |
+            build/release/*.ipa
+            build/release/*.dSYM.zip
+            build/test.log
+          if-no-files-found: ignore

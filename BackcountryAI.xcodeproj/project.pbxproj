@@ -25,9 +25,12 @@
 		5EF8299C1D08D9696967A88B /* ChatStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F18AFE66894FD8D276154C3 /* ChatStoreTests.swift */; };
 		63142D1529C2188B9431242E /* ChatHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D45A62A7AD51C7B3A544297A /* ChatHistoryView.swift */; };
 		64226778A58ED1D8AEFE6E91 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 316FF0EDBCCFCD9DA5409B11 /* MLXLMCommon */; };
+		86F1582355E8BF70F98DC667 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548DE6B9FE8E7C373C2B8A9D /* ScreenshotTests.swift */; };
 		974861887A20ECB963801743 /* BackcountryAIDownloader.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = BD667E04C0051E16486FE321 /* BackcountryAIDownloader.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9AB3B09C1DF45EC43F6447F8 /* SavedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA066571DB5FACD9ED3561EF /* SavedStore.swift */; };
+		9FE7C4A8DAFD5DCE64A8B771 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B3A2A2F462FD4938C9F542C2 /* Assets.xcassets */; };
 		A71225C1FC2DD934F1C3ADB5 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 257B84C1E273DD9A008815CB /* LibraryStore.swift */; };
+		A995B5CD74705786910EACF5 /* ScreenshotMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F077B8D8244B95DE7FEC499 /* ScreenshotMode.swift */; };
 		AE27980426CC7BB9A640F910 /* BetterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04DC41F7EFB9713FC4A2FC58 /* BetterModel.swift */; };
 		B4E889E30FBCFA36A1DE6D64 /* SavedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B007F631D908B95A1C6969D5 /* SavedViews.swift */; };
 		BBFB3869513556DB4842C01A /* Topics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2242DE11CF60CEAFC08F5AAF /* Topics.swift */; };
@@ -62,6 +65,13 @@
 			remoteGlobalIDString = 293A2EE5FA76BB9412B1CC3B;
 			remoteInfo = BackcountryAIDownloader;
 		};
+		745273A95FF96FD40FC0FF7D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B8FD37EBC39E031D0C2C62D2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 36570C25239BD50A0E918843;
+			remoteInfo = BackcountryAI;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -89,8 +99,11 @@
 		29FBB59455B48F31EB58C7A6 /* AnswerContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerContent.swift; sourceTree = "<group>"; };
 		2DD9CC6444963FE5D3CE28E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		33402F18AAC47699E4874BF3 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		3FC6E0D4E4CC6AC3F9A29403 /* BackcountryAIUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BackcountryAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		404F44B81DA7BD32E9088A36 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		42B5939B841C74D05BA27BA2 /* BackcountryAIDownloader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BackcountryAIDownloader.entitlements; sourceTree = "<group>"; };
+		548DE6B9FE8E7C373C2B8A9D /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
+		5F077B8D8244B95DE7FEC499 /* ScreenshotMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotMode.swift; sourceTree = "<group>"; };
 		6ABBE1F3C02C35A8F3BF9B14 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		6F18AFE66894FD8D276154C3 /* ChatStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStoreTests.swift; sourceTree = "<group>"; };
 		7F06188766C444410068466F /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
@@ -106,6 +119,7 @@
 		B12170F4C61C9F65E0D6EC6F /* ConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationView.swift; sourceTree = "<group>"; };
 		B2917396594C68CE8683BDAD /* Scenery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenery.swift; sourceTree = "<group>"; };
 		B34416267D3CF9E62E2111DB /* ModelLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLabView.swift; sourceTree = "<group>"; };
+		B3A2A2F462FD4938C9F542C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B526919DD2B6F8CC38923DFB /* BackcountryAITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BackcountryAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA066571DB5FACD9ED3561EF /* SavedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedStore.swift; sourceTree = "<group>"; };
 		BD667E04C0051E16486FE321 /* BackcountryAIDownloader.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = BackcountryAIDownloader.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -150,8 +164,17 @@
 				CA735C8A8F6DFE6574A79958 /* DownloaderExtension */,
 				D891D030593D16C805430471 /* Sources */,
 				0021C904988CF490D4ED062F /* Tests */,
+				57FE32F20C4BF2DDF0852A88 /* UITests */,
 				A39E39C4EAB1F1A66110F96D /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		57FE32F20C4BF2DDF0852A88 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				548DE6B9FE8E7C373C2B8A9D /* ScreenshotTests.swift */,
+			);
+			path = UITests;
 			sourceTree = "<group>";
 		};
 		A39E39C4EAB1F1A66110F96D /* Products */ = {
@@ -160,6 +183,7 @@
 				98748477FFCCCF2B19947E5E /* BackcountryAI.app */,
 				BD667E04C0051E16486FE321 /* BackcountryAIDownloader.appex */,
 				B526919DD2B6F8CC38923DFB /* BackcountryAITests.xctest */,
+				3FC6E0D4E4CC6AC3F9A29403 /* BackcountryAIUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -180,6 +204,7 @@
 				29FBB59455B48F31EB58C7A6 /* AnswerContent.swift */,
 				29EB26B6688735C4051BAD92 /* App.swift */,
 				DDF56E6658D070F01861580F /* ArticleView.swift */,
+				B3A2A2F462FD4938C9F542C2 /* Assets.xcassets */,
 				C01D18C23AC53F830B410AD3 /* Assistant.swift */,
 				07C170B2A80F7AD29D23464A /* BackcountryAI.entitlements */,
 				80413D2B42C15DD33735EB20 /* BatteryMeter.swift */,
@@ -207,6 +232,7 @@
 				B007F631D908B95A1C6969D5 /* SavedViews.swift */,
 				B2917396594C68CE8683BDAD /* Scenery.swift */,
 				288F28E1048C15C4D37806AE /* Scout.swift */,
+				5F077B8D8244B95DE7FEC499 /* ScreenshotMode.swift */,
 				33402F18AAC47699E4874BF3 /* Theme.swift */,
 				2242DE11CF60CEAFC08F5AAF /* Topics.swift */,
 			);
@@ -238,8 +264,10 @@
 			buildConfigurationList = 49E37D718983DC178E955005 /* Build configuration list for PBXNativeTarget "BackcountryAI" */;
 			buildPhases = (
 				7A70450C896328E58562D331 /* Sources */,
+				961AFCBF40C155E00E79FEAB /* Resources */,
 				7F8EC3BACC655FD8AF334E2C /* Frameworks */,
 				A76A81714EE49BEADC2845C7 /* Embed ExtensionKit Extensions */,
+				971956A9DCF7AE14669467E1 /* Screenshot fixtures (Debug only) */,
 			);
 			buildRules = (
 			);
@@ -276,6 +304,24 @@
 			productReference = B526919DD2B6F8CC38923DFB /* BackcountryAITests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		70C33801E1443F4992402668 /* BackcountryAIUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 02445444405351CB6758F49F /* Build configuration list for PBXNativeTarget "BackcountryAIUITests" */;
+			buildPhases = (
+				CEF0ABEF5C0213366A86CA77 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FDF4CA2F886443B16C42B740 /* PBXTargetDependency */,
+			);
+			name = BackcountryAIUITests;
+			packageProductDependencies = (
+			);
+			productName = BackcountryAIUITests;
+			productReference = 3FC6E0D4E4CC6AC3F9A29403 /* BackcountryAIUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -296,6 +342,11 @@
 					65A8B03C472E304D98B10246 = {
 						DevelopmentTeam = 84XX2W7G34;
 						ProvisioningStyle = Automatic;
+					};
+					70C33801E1443F4992402668 = {
+						DevelopmentTeam = 84XX2W7G34;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 36570C25239BD50A0E918843;
 					};
 				};
 			};
@@ -321,10 +372,45 @@
 			targets = (
 				36570C25239BD50A0E918843 /* BackcountryAI */,
 				65A8B03C472E304D98B10246 /* BackcountryAITests */,
+				70C33801E1443F4992402668 /* BackcountryAIUITests */,
 				293A2EE5FA76BB9412B1CC3B /* BackcountryAIDownloader */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		961AFCBF40C155E00E79FEAB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9FE7C4A8DAFD5DCE64A8B771 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		971956A9DCF7AE14669467E1 /* Screenshot fixtures (Debug only) */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Screenshot fixtures (Debug only)";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "DEST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/ScreenshotFixtures\"\nif [ \"$CONFIGURATION\" = \"Debug\" ]; then\n  rsync -a --delete \"$SRCROOT/fastlane/screenshot-fixtures/\" \"$DEST/\"\nelse\n  rm -rf \"$DEST\"\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4AC480F0F1FF3D881ECE5245 /* Sources */ = {
@@ -367,8 +453,17 @@
 				B4E889E30FBCFA36A1DE6D64 /* SavedViews.swift in Sources */,
 				DE10A27E5010C9E664396023 /* Scenery.swift in Sources */,
 				35DE7160777842A72B2E8E8F /* Scout.swift in Sources */,
+				A995B5CD74705786910EACF5 /* ScreenshotMode.swift in Sources */,
 				FB54A705D3A27C3BE8C311E2 /* Theme.swift in Sources */,
 				BBFB3869513556DB4842C01A /* Topics.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CEF0ABEF5C0213366A86CA77 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86F1582355E8BF70F98DC667 /* ScreenshotTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -393,9 +488,34 @@
 			target = 293A2EE5FA76BB9412B1CC3B /* BackcountryAIDownloader */;
 			targetProxy = 627D6D8566D4DF2C6D87C5E1 /* PBXContainerItemProxy */;
 		};
+		FDF4CA2F886443B16C42B740 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 36570C25239BD50A0E918843 /* BackcountryAI */;
+			targetProxy = 745273A95FF96FD40FC0FF7D /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		0F789C8A0B46B9704AFB08DA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 84XX2W7G34;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryai.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = BackcountryAI;
+			};
+			name = Release;
+		};
 		398E47642091D3A6A0BC930F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -524,9 +644,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 84XX2W7G34;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BackcountryAI;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -542,6 +664,26 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
+		};
+		6B2CBCB0494BB09FB6BB2495 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 84XX2W7G34;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryai.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = BackcountryAI;
+			};
+			name = Debug;
 		};
 		A03B659F07474CC074BCC357 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -634,9 +776,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 84XX2W7G34;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BackcountryAI;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -656,6 +800,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		02445444405351CB6758F49F /* Build configuration list for PBXNativeTarget "BackcountryAIUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6B2CBCB0494BB09FB6BB2495 /* Debug */,
+				0F789C8A0B46B9704AFB08DA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		49E37D718983DC178E955005 /* Build configuration list for PBXNativeTarget "BackcountryAI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

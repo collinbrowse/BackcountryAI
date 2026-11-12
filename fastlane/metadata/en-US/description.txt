@@ -1,0 +1,30 @@
+BackcountryAI is a field guide you can talk to, and it works with no signal.
+
+Describe what's happening in your own words: "My friend rolled their ankle six miles from the trailhead." Scout, the app's guide, finds the right passages in a library stored on your iPhone and writes a clear, step-by-step answer on the phone itself. Nothing is sent anywhere, so it works in Airplane Mode, in a canyon, or a week from the nearest cell tower.
+
+ANSWERS YOU CAN CHECK
+• Every answer lists the articles it came from. Tap a citation to read the original.
+• Sources include the National Park Service, National Weather Service, CDC, FEMA, U.S. Army survival, first aid and cold-weather manuals, MedlinePlus, and outdoors, vehicle, bike and home-repair Q&A.
+• When something isn't in the library, Scout says so.
+
+A LIBRARY THAT LIVES ON YOUR PHONE
+• 277,000 articles in one download (about 0.8 GB). Get it once on Wi-Fi before you leave.
+• Browse by topic: wilderness first aid, weather and environment, lost and rescue, camp skills, wildlife, vehicles.
+• Search the whole library instantly, with no AI and almost no battery.
+
+BUILT FOR EMERGENCIES
+• SOS on every chat screen: how to reach help first, then what to do while you wait.
+• One-tap guides for heavy bleeding, hypothermia, burns, fractures, allergic reactions, snakebite and heat illness.
+• Field mode: a Wilderness First Responder-style patient assessment, a vitals log and a SOAP note you can hand to rescuers, plus quick reference cards.
+
+MADE FOR THE BACKCOUNTRY
+• Private by design: no account, no tracking, no data collected.
+• Battery-aware: see what each answer cost, and save answers to reread for free.
+• Chats save automatically on your phone, and you can delete them any time.
+• A "Trail ready" checklist confirms everything works offline before you go.
+
+REQUIREMENTS
+Scout's written answers use Apple Intelligence on your iPhone. On iPhones without it, you can still search and read the entire library and use Field mode.
+
+IMPORTANT
+BackcountryAI is a reference, not a substitute for professional medical care, training or emergency services. In an emergency, call for help first.

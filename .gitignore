@@ -6,3 +6,14 @@ build/
 __pycache__/
 library.noindex/
 dist/
+# Release pipeline (docs/release.md)
+vendor/bundle/
+.bundle/
+fastlane/.env
+fastlane/report.xml
+fastlane/README.md
+fastlane/screenshots/
+fastlane/app_previews/
+*.p8
+*.ipa
+*.dSYM.zip

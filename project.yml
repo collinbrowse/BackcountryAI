@@ -34,6 +34,18 @@ targets:
         products: [Tokenizers]
     scheme:
       testTargets: [BackcountryAITests]
+    postBuildScripts:
+      # Debug builds only: the demo library and scripted answers for App Store screenshots (ScreenshotMode.swift).
+      - name: Screenshot fixtures (Debug only)
+        basedOnDependencyAnalysis: false
+        showEnvVars: false
+        script: |
+          DEST="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/ScreenshotFixtures"
+          if [ "$CONFIGURATION" = "Debug" ]; then
+            rsync -a --delete "$SRCROOT/fastlane/screenshot-fixtures/" "$DEST/"
+          else
+            rm -rf "$DEST"
+          fi
     info:
       path: Sources/Info.plist
       properties:
@@ -60,6 +72,10 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UIFileSharingEnabled: YES
         INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
+        # Only HTTPS and Apple's frameworks: exempt, so App Store Connect skips the export-compliance question.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        ENABLE_USER_SCRIPT_SANDBOXING: NO   # the fixtures script reads fastlane/screenshot-fixtures
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
   BackcountryAITests:
@@ -71,6 +87,21 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryai.tests
+        DEVELOPMENT_TEAM: 84XX2W7G34
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
+  # App Store screenshots and preview videos (fastlane screenshots / previews). Never part of a release build.
+  BackcountryAIUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: BackcountryAI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryai.uitests
         DEVELOPMENT_TEAM: 84XX2W7G34
         CODE_SIGN_STYLE: Automatic
         SWIFT_VERSION: "6.0"
@@ -100,3 +131,12 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
+schemes:
+  BackcountryAIScreenshots:
+    build:
+      targets:
+        BackcountryAI: all
+        BackcountryAIUITests: [test]
+    test:
+      config: Debug
+      targets: [BackcountryAIUITests]

@@ -80,6 +80,10 @@ final class LibraryStore {
     }
 
     func open() {
+        if let folder = ScreenshotMode.libraryFolder, let lib = try? Library(folder: folder) {
+            use(lib, packID: "lite")
+            return
+        }
         let manager = Self.manager
         for pack in packs.reversed()
         where pack.assetPackIDs.allSatisfy({ manager.assetPackIsAvailableLocally(withID: $0) }) {
