@@ -55,8 +55,15 @@ struct Topic: Identifiable, Hashable {
 enum Urgency {
     static let words: [String] = ["bleed", "blood", "not breathing", "unconscious", "unresponsive", "cpr", "heart attack",
         "chest pain", "stroke", "seizure", "anaphyla", "can't breathe", "cant breathe", "trouble breathing", "choking",
-        "hypothermi", "heat stroke", "snake", "overdose", "poison", "broken", "fracture", "head injury", "avalanche",
-        "drown", "severe", "emergency", "dying", "allergic"]
+        "hypothermi", "heat stroke", "snake", "overdose", "poisoned", "poisoning", "broken", "fracture", "head injury", "avalanche",
+        "drown", "severe", "emergency", "dying", "allergic",
+        // Emergencies described by what people see, not by name. Bears, storms and floods are left out on purpose:
+        // there the first move is to act (back away, get off the ridge, climb), not to call.
+        "slurr", "confused", "passed out", "fainted", "won't wake", "wont wake", "not waking",
+        "cut their", "cut my", "cut his", "cut her", "deep cut", "badly cut", "burned", "badly burn",
+        "fell off", "a bad fall", "took a fall", "fell from",
+        "i'm lost", "im lost", "i am lost", "we're lost", "we are lost", "got lost", "are lost",
+        "struck by lightning", "lightning hit"]
 
     static func isUrgent(_ text: String) -> Bool {
         let t = text.lowercased()
