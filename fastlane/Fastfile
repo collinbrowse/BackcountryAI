@@ -89,7 +89,7 @@ platform :ios do
 
   desc "Run the unit tests"
   lane :test do
-    in_root(%(set -o pipefail && xcodebuild -project #{PROJECT} -scheme BackcountryAI ) +
+    in_root(%(mkdir -p build && set -o pipefail && xcodebuild -project #{PROJECT} -scheme BackcountryAI ) +
             %(-destination "platform=iOS Simulator,name=#{DEVICE}" -derivedDataPath build/DerivedData #{XCFLAGS} ) +
             %(test 2>&1 | tee build/test.log | grep -E "^(✔|✘|Test |\\*\\*)|error:" || (tail -40 build/test.log; exit 1)))
   end
