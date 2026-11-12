@@ -23,7 +23,7 @@ CARD="$(mktemp -d)/README.md"
     "SELECT '| ' || label, COALESCE(license,''), docs || ' |' FROM sources WHERE done=1 ORDER BY docs DESC"
 } > "$CARD"
 
-hf repo create "$REPO" --repo-type dataset 2>/dev/null || true
-hf upload-large-folder "$REPO" --repo-type dataset "$LIB"
+hf repos create "$REPO" --repo-type dataset --exist-ok
+hf upload "$REPO" "$LIB" . --repo-type dataset --commit-message "Library text"
 hf upload "$REPO" "$CARD" README.md --repo-type dataset
 echo "Published https://huggingface.co/datasets/$REPO"
