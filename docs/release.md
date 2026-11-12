@@ -153,6 +153,25 @@ GitHub's `macos-26` image and stop with a clear message if it has no Xcode 27. T
   **Settings › Actions › General** requires approval before any outside contributor's workflow runs. For more
   isolation, register the runner under a separate macOS user that can't see your keys.
 
+  Install the runner outside `~/Documents` (for example `~/actions-runner`): macOS doesn't let background
+  services read that folder. The service runs in its own security session where your login keychain stays
+  locked, so give CI its own copy of your signing certificate:
+
+  4. In Keychain Access, under **login › My Certificates**, find the valid (not revoked) **Apple Development**
+     certificate Xcode signs with, right-click it, choose **Export**, and save it as a `.p12` with a password.
+  5. Store it as two secrets, then delete the `.p12`:
+
+     ```bash
+     base64 -i ~/Desktop/ci-signing.p12 | gh secret set CI_SIGNING_P12_BASE64
+     ```
+
+     ```bash
+     gh secret set CI_SIGNING_P12_PASSWORD
+     ```
+
+  Each build imports it into a throwaway keychain with a random password, signs from that keychain only, and
+  deletes it afterwards. GitHub's own machines don't need these secrets.
+
 ### 9. Upload the asset packs (they're built on your Mac from 29 GB of sources and a 3 GB model)
 
 The Essentials library and the optional "Better answers" model are Apple-hosted asset packs, separate from the app

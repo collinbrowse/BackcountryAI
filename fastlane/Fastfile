@@ -69,8 +69,37 @@ platform :ios do
                               key_content: ENV["ASC_KEY_P8_BASE64"], is_key_content_base64: true)
   end
 
-  # xcodebuild signs with the same API key (cloud-managed certificates), so no certificates or
-  # provisioning profiles are stored anywhere.
+  # On CI, the archive is signed from a throwaway keychain holding only the Apple Development certificate
+  # (CI_SIGNING_P12_BASE64 and CI_SIGNING_P12_PASSWORD), so the runner never needs your login keychain. The
+  # keychain gets a random password and is deleted afterwards. Without those variables, Xcode signs from your
+  # own keychains as usual.
+  def with_ci_keychain
+    p12 = ENV["CI_SIGNING_P12_BASE64"].to_s.strip
+    return yield("") if p12.empty?
+
+    require "securerandom"
+    name = "backcountryai-ci-#{SecureRandom.hex(4)}.keychain"
+    path = File.expand_path("~/Library/Keychains/#{name}-db")
+    password = SecureRandom.hex(24)
+    cert = File.join(Dir.tmpdir, "#{name}.p12")
+    File.write(cert, Base64.decode64(p12), perm: 0o600)
+    begin
+      create_keychain(name: name, password: password, unlock: true, timeout: 0, lock_when_sleeps: false,
+                      default_keychain: false, add_to_search_list: true)
+      import_certificate(certificate_path: cert, certificate_password: ENV["CI_SIGNING_P12_PASSWORD"].to_s,
+                         keychain_path: path, keychain_password: password, log_output: false)
+      # Apple's public intermediate that issued the certificate, so the chain resolves without your keychains.
+      import_certificate(certificate_path: File.join(ROOT, "fastlane/certs/AppleWWDRCAG3.cer"),
+                         keychain_path: path, keychain_password: password, log_output: false)
+      yield(%(OTHER_CODE_SIGN_FLAGS="--keychain #{path}"))
+    ensure
+      File.delete(cert) if File.exist?(cert)
+      delete_keychain(keychain_path: path) if File.exist?(path)
+    end
+  end
+
+  # xcodebuild signs with the same API key (cloud-managed certificates), so no provisioning profiles are
+  # stored anywhere.
   def signing_flags
     path = File.join(Dir.tmpdir, "AuthKey_#{ENV['ASC_KEY_ID']}.p8")
     File.write(path, Base64.decode64(ENV["ASC_KEY_P8_BASE64"]), perm: 0o600)
@@ -125,12 +154,14 @@ platform :ios do
   private_lane :build do
     key = asc_key
     number = latest_testflight_build_number(api_key: key, app_identifier: APP_ID, initial_build_number: 0) + 1
-    build_app(project: PROJECT, scheme: "BackcountryAI", configuration: "Release", clean: true,
-              output_directory: "build/release", output_name: "BackcountryAI.ipa",
-              xcargs: "#{XCFLAGS} #{signing_flags} CURRENT_PROJECT_VERSION=#{number}",
-              export_xcargs: signing_flags,
-              export_options: { method: "app-store-connect", signingStyle: "automatic", teamID: TEAM_ID,
-                                manageAppVersionAndBuildNumber: false })
+    with_ci_keychain do |codesign_flags|
+      build_app(project: PROJECT, scheme: "BackcountryAI", configuration: "Release", clean: true,
+                output_directory: "build/release", output_name: "BackcountryAI.ipa",
+                xcargs: "#{XCFLAGS} #{signing_flags} CURRENT_PROJECT_VERSION=#{number} #{codesign_flags}".strip,
+                export_xcargs: signing_flags,
+                export_options: { method: "app-store-connect", signingStyle: "automatic", teamID: TEAM_ID,
+                                  manageAppVersionAndBuildNumber: false })
+    end
     number
   end
 
