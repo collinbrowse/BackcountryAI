@@ -28,9 +28,7 @@ struct LibraryPack: Identifiable, Hashable, Sendable {
     }
 }
 
-/// The libraries the app offers: one download. A bigger "Everything" pack with Wikipedia was dropped
-/// (2026-11-11): it was ten times the size and its general articles crowded out the practical ones. Each is built into asset packs with scripts/build-asset-packs.sh and
-/// uploaded to App Store Connect, which hosts them.
+/// The libraries the app offers. scripts/release-pack.sh builds and uploads each pack and keeps these figures current.
 enum PackCatalog {
     static let all: [LibraryPack] = [
         LibraryPack(id: "lite", label: "Essentials", articles: 277_281, assetPackIDs: ["lite"],

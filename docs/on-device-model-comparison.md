@@ -1,95 +1,83 @@
 # Would a bigger on-device model be worth it?
 
-Tested 2026-11-11 on a Mac (M1 Max, 64 GB). Every model got the same prompts, with the same library excerpts and
-the same instructions (`Retrieval.instructions`), for the 16 questions in `library/answer-questions.tsv`. The
-excerpts came from the app's retrieval, run with Apple's model (`check-answers.sh --json`). The open models ran
-through MLX (`tools/model-eval/run_mlx.py`), 4-bit, with thinking turned off. No cloud models.
+**Recommendation:** Qwen 3.5 4B, as an optional "Better answers" download of about 2.4 GB. It scored 23 of 32
+against Apple's 9. Ship it only if it passes on a real iPhone (see "Prototype" below).
 
 ## Results
 
-| Model | Answer quality (of 32) | Weights in memory | Peak memory | Mac: words/s* | Phone estimate per answer** | License |
-|---|---|---|---|---|---|---|
-| Apple Foundation Model (built in) | **9** | 0 (part of iOS) | n/a | n/a | ~4–6 s | Apple |
-| Qwen 3.5 2B | not usable (dangerous mistakes) | 1.06 GB | 2.2 GB | 170 | ~10 s | Apache 2.0 |
-| Gemma 4 E2B | 18 | 2.60 GB | 3.5 GB | 103 | ~10 s | Gemma terms |
-| Qwen 3 4B (2507) | 20 | 2.26 GB | 3.2 GB | 96 | ~20 s | Apache 2.0 |
-| Gemma 4 E4B | 22 | 4.20 GB | 5.1 GB | 70 | ~15 s | Gemma terms |
-| **Qwen 3.5 4B** | **23** | **2.37 GB** | **3.8 GB** | 93 | **~20–25 s** | Apache 2.0 |
-| Qwen 3.5 9B | 25 | 5.04 GB | 6.4 GB | 57 | ~40–50 s | Apache 2.0 |
+**Setup:** tested 2026-11-11 on an M1 Max Mac. Every model got the same 16 questions
+(`library/answer-questions.tsv`), with the same library excerpts and instructions. The open models ran 4-bit
+through MLX, with thinking off.
 
-\* Tokens per second while writing, measured on the Mac.
-\*\* Estimated: the Mac speeds scaled down by the iPhone's lower memory bandwidth (about 60–77 GB/s, against the
-M1 Max's 400 GB/s), for a ~950-token prompt and the model's typical answer length. Measure on a real iPhone
-before deciding.
+**Scoring:** each answer got 0 (wrong or unsafe), 1 (vague) or 2 (right and specific), from one reviewer.
 
-**How quality was scored:** each answer got 0 (wrong or unsafe), 1 (partly right or vague) or 2 (right, specific
-and on the question), across 16 questions, by one reviewer. Treat the gaps as rough, not exact.
+| Model | Quality (of 32) | Weights | Peak memory | Phone estimate per answer* | License |
+|---|---|---|---|---|---|
+| Apple Foundation Model | 9 | part of iOS | n/a | ~4–6 s | Apple |
+| Qwen 3.5 2B | unsafe | 1.06 GB | 2.2 GB | ~10 s | Apache 2.0 |
+| Gemma 4 E2B | 18 | 2.60 GB | 3.5 GB | ~10 s | Gemma terms |
+| Qwen 3 4B (2507) | 20 | 2.26 GB | 3.2 GB | ~20 s | Apache 2.0 |
+| Gemma 4 E4B | 22 | 4.20 GB | 5.1 GB | ~15 s | Gemma terms |
+| **Qwen 3.5 4B** | **23** | **2.37 GB** | **3.8 GB** | **~20–25 s** | Apache 2.0 |
+| Qwen 3.5 9B | 25 | 5.04 GB | 6.4 GB | ~40–50 s | Apache 2.0 |
 
-## What the answers showed
+\* Estimated by scaling the Mac speeds down to the iPhone's memory bandwidth. The prototype measures the real figure.
 
-- **Apple's model** follows the excerpts even when they're about something else, and it fills gaps with confident,
-  made-up specifics:
-  - the snowmobile answer gave a dipstick and 10W-30;
-  - lightning above treeline: "move to a hard-top vehicle";
-  - one answer to the mushroom question was the "Not from the library:" heading with nothing after it.
-- **Qwen 3.5 4B** was the only model that read "Kathryn be free" as the Katadyn BeFree. It gave correct, specific
-  steps for hypothermia, bleeding, lightning above treeline, flash floods, being lost and mushrooms.
-  - It still gets gear facts wrong: it said the BeFree doesn't remove bacteria, when it does.
-  - It assumes every snowmobile is a four-stroke with a dipstick.
-- **Qwen 3.5 9B** is a little better again. It knows to ask whether a snowmobile is two-stroke or four-stroke, and
-  it says what it doesn't know. It still gets numbers wrong (FRS power).
-- **The Gemma 4 models** are careful but short (100–150 words), and they often just restate the excerpts.
-- **Qwen 3.5 2B** made dangerous mistakes: "snowmobiles use snow lubrication" and "turn off the stove" for a
-  hypothermic friend.
-- **With no library at all,** Qwen 3.5 4B is much better organized than Apple's model, but it still invents
-  details. It even cited "[1]" when there were no excerpts. The library is still needed.
+**What the answers showed:**
 
-## Size: what each option costs on the phone
+- **Apple's model** follows the excerpts even when they're off-topic, and it invents specifics. For example, it
+  gave a dipstick and 10W-30 oil for a snowmobile.
+- **Qwen 3.5 4B** was the only model that read "Kathryn be free" as the Katadyn BeFree water filter. Its steps for
+  hypothermia, bleeding, lightning, flash floods, being lost and mushrooms were right. It still gets some gear
+  facts wrong.
+- **Qwen 3.5 9B** is a little better, but it can't fit on a phone.
+- **Qwen 3.5 2B** made dangerous mistakes.
+- **Without the library,** every model invents details. The library is still needed.
 
-The deciding factor is memory, more than download size.
+## Size on the phone
 
-| | Download | On the phone | Peak memory while answering | Fits which iPhones |
-|---|---|---|---|---|
-| Today: Essentials only | 0.81 GB | 1.9 GB | Apple's model is shared with iOS | All Apple Intelligence iPhones (8 GB+) |
-| + Qwen 3.5 4B | +2.4 GB (3.2 GB total) | +2.4 GB (4.3 GB total) | about 3.8 GB in the app | 12 GB iPhones; on 8 GB iPhones, only with Apple's increased-memory-limit entitlement, if at all. Must test |
-| + Qwen 3.5 9B | +5.0 GB (5.8 GB total) | +5.0 GB (6.9 GB total) | about 6.4 GB in the app | Not realistic: iOS stops apps well before this on 8 GB phones, and it's risky even on 12 GB |
-| + Gemma 4 E4B | +4.2 GB | +4.2 GB | about 5.1 GB | Same problem as the 9B |
+The deciding factor is memory, not download size.
 
-Notes:
-- **Text-only size.** The Qwen 3.5 files on Hugging Face include image weights (3.0 GB for the 4B). The app would
-  ship only the text model, 2.37 GB. Model weights don't compress, so download size is about the same as the
-  size on the phone.
-- **Delivery.** The model would ship as a second Apple-hosted asset pack, like the library, so the app itself
-  stays small and people choose whether to download it.
-- **Speed.** Apple's model answers in a few seconds. Qwen 3.5 4B would take roughly 20–25 seconds on a recent
-  iPhone, including about 5 seconds of reading the prompt before the first word appears. It streams, so words
-  appear as they're written, but it's still noticeably slower.
-- **Battery.** MLX runs on the GPU, while Apple's model uses the more efficient Neural Engine, so expect several
-  times the battery cost per answer. Rough guess: about 0.2–0.4% of the battery per answer, against under 0.1%.
-  The app's battery meter would show the real number.
-- **Software support.** MLX Swift (`mlx-swift-lm`) already supports Qwen 3.5 (`Qwen35.swift`) and Gemma 4, so
-  the app could run these models without new low-level code.
+| Option | Extra download and storage | Peak memory in the app | Fits |
+|---|---|---|---|
+| Today: Apple's model only | none | shared with iOS | every Apple Intelligence iPhone |
+| + Qwen 3.5 4B | +2.4 GB | ~3.8 GB | 12 GB iPhones; 8 GB iPhones only with the Increased Memory Limit entitlement, if at all |
+| + Qwen 3.5 9B or Gemma 4 E4B | +4–5 GB | 5–6.4 GB | not realistic |
 
-## Recommendation
+**Notes:**
 
-Qwen 3.5 4B is the only option that's both much better and could plausibly fit on a phone. It scored 23 of 32 on
-this set against Apple's 9. The 9B is only slightly better and can't fit. The 2B isn't safe.
+- **Size:** weights don't compress, so the download is about the size on the phone.
+- **Delivery:** a shipped model would be a second Apple-hosted asset pack, released like the library, with only
+  the text weights. The prototype's Hugging Face download is about 3 GB because it includes image weights.
+- **Battery:** MLX runs on the GPU, so expect several times the battery per answer that Apple's model uses.
+- **How it would work:** Apple's model keeps planning the searches and checking the excerpts. Only the final
+  answer waits on Qwen.
 
-Ship it, if at all, as an **optional "Better answers" download** (about 2.4 GB) for iPhones with enough memory:
+## Prototype: measure it on a real iPhone
 
-- Apple's model stays the default. It keeps doing the fast steps (planning searches and checking excerpts), so
-  only the final answer waits on Qwen.
-- Phones without the download, or without enough memory, keep today's behavior.
+**Library › Lab: better answers (prototype)** does three things:
 
-Before committing, build a small prototype and measure on a real 8 GB iPhone and a 12 GB iPhone:
+- downloads Qwen 3.5 4B from Hugging Face. This works in Xcode builds.
+- can let Qwen write Scout's answers. Each answer's battery popover then shows its speed and memory use.
+- runs a **benchmark**: both models answer the 16 questions. It records time to the first word, total time,
+  words per second, peak and free memory, battery and heat, and exports a CSV.
 
-- time to the first word and the total answer time;
-- peak memory (and whether iOS kills the app);
-- battery per answer.
+**To run it:**
 
-Those numbers decide it. The answer quality is already clear.
+1. In Xcode, check that Signing & Capabilities has **Increased Memory Limit**, then build to a real iPhone. MLX
+   doesn't run in the simulator.
+2. Copy the library to the phone (see `docs/library-hosting.md`, "Testing on a phone").
+3. In the app, open Lab and tap Download and load, on Wi-Fi.
+4. Unplug the phone and tap **Run benchmark**. It takes 5–15 minutes; keep the screen on.
+5. Share the CSV. Repeat on an 8 GB iPhone if you can.
 
-## Reproduce
+**Ship it if:**
+
+- free memory stays above ~0.5 GB, and iOS never stops the app;
+- the first word appears within ~5 s;
+- a full answer takes under ~30 s.
+
+## Reproduce the Mac comparison
 
 ```bash
 QUESTIONS=library/answer-questions.tsv scripts/check-answers.sh <library> --answers --json build/model-eval/apple.json
@@ -98,32 +86,3 @@ QUESTIONS=library/answer-questions.tsv scripts/check-answers.sh <library> --answ
 ```
 
 Add `--no-library` to `run_mlx.py` to see what a model knows without excerpts.
-
-## Prototype: measure it on a real iPhone
-
-The app now has **Library › Lab: better answers (prototype)**. With it you can:
-
-- download Qwen 3.5 4B (about 3 GB from Hugging Face, image weights included) and load it;
-- turn on "Use it for Scout's answers", so Qwen writes Scout's answers while Apple's model still searches and checks
-  the excerpts. The battery popover under each answer then shows Qwen's speed and the app's memory;
-- run a **benchmark**: the 16 questions above go through the library once, then each model answers all of them. It
-  records time to the first word, total time, words per second, peak memory, free memory left, battery before and
-  after each model's run, and the phone's heat state. Results share as CSV, and the answers share as text.
-
-To run it:
-
-1. Open the project in Xcode and let it fetch the Swift packages (MLX, swift-huggingface, swift-transformers).
-   Building MLX needs Xcode's Metal Toolchain; it's installed on this Mac now (`xcodebuild -downloadComponent
-   MetalToolchain` installs it elsewhere).
-2. Under Signing & Capabilities, make sure **Increased Memory Limit** is on (`project.yml` adds the entitlement, and
-   automatic signing adds it to the App ID). Build to a real iPhone; MLX doesn't run in the simulator.
-3. In the app, download the library if needed. Then go to Lab › Download and load. Use Wi-Fi.
-4. Unplug the phone, close other apps, and tap **Run benchmark**. It takes 5–15 minutes; keep the screen on.
-5. Share the CSV. Repeat on an 8 GB iPhone if you have one: that's where memory is tightest.
-
-Decide with:
-
-- **Memory:** "min free" should stay above ~0.5 GB. If iOS kills the app during loading or answering, it doesn't
-  fit that phone.
-- **Speed:** time to first word under ~5 s and a full answer under ~30 s feels acceptable while streaming.
-- **Battery:** compare the percentage used per run between Apple and Qwen.

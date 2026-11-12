@@ -5,7 +5,7 @@
 #   pack-id is "lite" (Essentials, the only library the app offers); it must match PackCatalog in Sources/LibraryStore.swift.
 #   --allow-noncommercial skips the license check. Only for local testing with ba-serve; never upload that pack.
 #
-# Output: build/asset-packs/<pack-id>.aar. Upload it with the Transporter app (or altool) to the app's
+# Output: build/asset-packs/<pack-id>.aar. scripts/release-pack.sh runs this and uploads it; by hand, use Transporter, to the app's
 # record in App Store Connect, then submit it for review with the next TestFlight or App Store build.
 set -euo pipefail
 LIB="${1:?usage: build-asset-packs.sh <library-folder> <pack-id> [--allow-noncommercial]}"

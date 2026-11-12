@@ -1,16 +1,13 @@
 # Library sources and licenses
 
-Backcountry is a paid app, so its library holds only sources that allow commercial redistribution:
-U.S. government works (public domain), UK public sector information (Open Government Licence), and
-Creative Commons Attribution-ShareAlike text. The app offers one library (Essentials); the
-Wikipedia-based "Everything" library was dropped on 2026-11-11. Every article in the app shows its source, license and
-original address. The CC BY-SA text is published on Hugging Face under the same license
-(`scripts/upload-huggingface.sh`).
+Backcountry is a paid app, so the library holds only sources that allow commercial redistribution:
+U.S. government works (public domain), UK public sector information (Open Government Licence) and Creative Commons
+Attribution-ShareAlike text. Every article in the app shows its source, license and original address.
+`scripts/check-licenses.sh` refuses any library with a non-commercial, no-derivatives, "not for resale" or
+unlicensed source, and every release runs it.
 
 The build scripts in `library/` are adapted from [Survival LLM](https://github.com/anonnerdfrenzy/survival-llm)
-(MIT, see `library/LICENSE-survival-llm`), which checked each source's terms on 2026-10-24. That project's
-license notes are the basis for this table. `scripts/check-licenses.sh` and `library/build_library.py` both
-refuse to produce a library with a non-commercial, no-derivatives, "not for resale" or unlicensed source.
+(MIT, `library/LICENSE-survival-llm`), whose license review (2026-10-24) this table builds on.
 
 | Source | License |
 |---|---|

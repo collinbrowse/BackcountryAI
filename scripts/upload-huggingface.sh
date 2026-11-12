@@ -8,6 +8,7 @@ set -euo pipefail
 LIB="${1:?usage: upload-huggingface.sh <library-folder> <repo-id>}"
 REPO="${2:?usage: upload-huggingface.sh <library-folder> <repo-id>}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+export PATH="$ROOT/.venv/bin:$PATH"   # hf from the project venv
 command -v hf >/dev/null || { echo "Install the Hugging Face CLI: pip install -U huggingface_hub" >&2; exit 1; }
 
 "$ROOT/scripts/check-licenses.sh" "$LIB"
