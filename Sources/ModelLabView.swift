@@ -64,8 +64,15 @@ struct ModelLabView: View {
             case .loading:
                 ProgressView { Text("Loading into memory…").font(.footnote) }
             case .ready:
-                Label("Loaded and ready", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.moss)
-                Button("Unload from memory") { better.unload() }.font(.subheadline.weight(.semibold))
+                HStack {
+                    Label("Loaded and ready", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.moss)
+                    Spacer()
+                    Button { better.unload() } label: {
+                        Label("Unload", systemImage: "eject")
+                    }
+                    .buttonStyle(.bordered).tint(Theme.inkSoft).font(.subheadline)
+                    .accessibilityLabel("Unload from memory")
+                }
             case .failed(let m):
                 Text("Failed: \(m)").font(.footnote).foregroundStyle(Theme.danger)
                 Button("Try again") { better.prepare() }.buttonStyle(SecondaryButtonStyle())
