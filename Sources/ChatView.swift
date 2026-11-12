@@ -15,6 +15,7 @@ struct ChatView: View {
     @State private var peek: [Passage] = []
     @State private var openArticle: Passage?
     @State private var showLibrary = false
+    @State private var showHistory = false
     @State private var showSOS = false
     @State private var showHowItWorks = false
     @State private var showOfflineTip = false
@@ -78,6 +79,7 @@ struct ChatView: View {
             .overlay { ConfettiBurst(trigger: confetti) }
         }
         .sheet(isPresented: $showLibrary) { LibraryView() }
+        .sheet(isPresented: $showHistory) { ChatHistoryView() }
         .sheet(isPresented: $showReadiness) {
             ReadinessSheet(items: readiness) { item in
                 showReadiness = false
@@ -130,6 +132,11 @@ struct ChatView: View {
         }
         .sharedBackgroundVisibility(.hidden)
         ToolbarItem(placement: .topBarTrailing) {
+            Button { showHistory = true } label: { Image(systemName: "clock.arrow.circlepath") }
+                .disabled(assistant.isBusy)
+                .accessibilityLabel("Chat history")
+        }
+        ToolbarItem(placement: .topBarTrailing) {
             if isEmpty {
                 Menu { menuItems } label: { Image(systemName: "ellipsis") }
                     .accessibilityLabel("More")
@@ -145,6 +152,7 @@ struct ChatView: View {
         Button { showReadiness = true } label: {
             Label("Trail-ready checklist · \(readyCount)/\(readiness.count)", systemImage: "checklist")
         }
+        Button { showHistory = true } label: { Label("Chat history", systemImage: "clock.arrow.circlepath") }
         Button { showLibrary = true } label: { Label("Offline library", systemImage: "books.vertical") }
         Button { showHowItWorks = true } label: { Label("How Scout works", systemImage: "questionmark.circle") }
     }

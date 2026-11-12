@@ -10,6 +10,8 @@ targets:
     sources: [Sources]
     dependencies:
       - target: BackcountryDownloader
+    scheme:
+      testTargets: [BackcountryGuideTests]
     info:
       path: Sources/Info.plist
       properties:
@@ -36,6 +38,20 @@ targets:
         INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
+  BackcountryGuideTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: BackcountryGuide
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryguide.tests
+        DEVELOPMENT_TEAM: 84XX2W7G34
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
   BackcountryDownloader:
     type: extensionkit-extension
     platform: iOS

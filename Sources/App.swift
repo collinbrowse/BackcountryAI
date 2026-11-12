@@ -3,9 +3,16 @@ import SwiftUI
 @main
 struct BackcountryApp: App {
     @State private var store = LibraryStore()
-    @State private var assistant = Assistant()
+    @State private var chats: ChatStore
+    @State private var assistant: Assistant
     @State private var saved = SavedStore()
     @State private var field = FieldStore()
+    init() {
+        let chats = ChatStore()
+        _chats = State(initialValue: chats)
+        _assistant = State(initialValue: Assistant(chats: chats))
+    }
+
     @AppStorage(Onboarding.completedKey) private var completedOnboarding = false
     @AppStorage(Onboarding.legacyBatteryNoticeKey) private var seenBatteryNotice = false
 
@@ -17,6 +24,7 @@ struct BackcountryApp: App {
             RootView()
                 .environment(store)
                 .environment(assistant)
+                .environment(chats)
                 .environment(saved)
                 .environment(field)
                 .tint(Theme.accent)
