@@ -1,13 +1,13 @@
 ---
 license: cc-by-sa-4.0
 language: [en]
-pretty_name: Backcountry offline library
+pretty_name: BackcountryAI offline library
 tags: [first-aid, survival, wilderness, offline, search]
 ---
 
-# Backcountry offline library
+# BackcountryAI offline library
 
-The text library behind the Backcountry iPhone app: first aid, survival, weather and repair articles,
+The text library behind the BackcountryAI iPhone app: first aid, survival, weather and repair articles,
 indexed for offline search.
 
 ## Files

@@ -1,6 +1,6 @@
 # Library sources and licenses
 
-Backcountry is a paid app, so its library holds only sources that allow commercial redistribution:
+BackcountryAI is a paid app, so its library holds only sources that allow commercial redistribution:
 U.S. government works (public domain), UK public sector information (Open Government Licence), and
 Creative Commons Attribution-ShareAlike text. The app offers one library (Essentials); the
 Wikipedia-based "Everything" library was dropped on 2026-11-11. Every article in the app shows its source, license and

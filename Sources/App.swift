@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct BackcountryApp: App {
+struct BackcountryAIApp: App {
     @State private var store = LibraryStore()
     @State private var chats: ChatStore
     @State private var assistant: Assistant

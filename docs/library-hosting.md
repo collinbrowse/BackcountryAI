@@ -12,8 +12,8 @@ An "Everything" pack with Wikipedia was dropped on 2026-11-11. It was ten times 
 crowded out the practical ones. `library-full` is still built, but only as a step that Essentials reuses text from.
 Never upload `full.aar`.
 
-iOS keeps a downloaded pack up to date in the background. Two pieces make that work: the `BackcountryDownloader`
-extension and the `group.com.collinbrowse.backcountryguide` app group. `project.yml` sets `BAHasManagedAssetPacks` and
+iOS keeps a downloaded pack up to date in the background. Two pieces make that work: the `BackcountryAIDownloader`
+extension and the `group.com.collinbrowse.backcountryai` app group. `project.yml` sets `BAHasManagedAssetPacks` and
 `BAUsesAppleHosting`.
 
 ## Where things are
@@ -126,7 +126,7 @@ downloaded copies in the background.
 ```bash
 .venv/bin/pip install -U huggingface_hub
 hf auth login   # needs a write token
-scripts/upload-huggingface.sh library.noindex/library-lite <your-hf-user>/backcountry-library
+scripts/upload-huggingface.sh library.noindex/library-lite <your-hf-user>/backcountryai-library
 ```
 
 The script:
@@ -148,8 +148,8 @@ There are two ways around that.
 
 1. Install the app from Xcode and open it once.
 2. Plug in the phone, open Finder, select the iPhone, and open the **Files** tab.
-3. Drag `library.noindex/library-lite` into **Backcountry**, then rename the copy to **Library**. It must end up as
-   On My iPhone › Backcountry › Library, with `index.sqlite` directly inside. The copy is 1.8 GB and takes a few
+3. Drag `library.noindex/library-lite` into **BackcountryAI**, then rename the copy to **Library**. It must end up as
+   On My iPhone › BackcountryAI › Library, with `index.sqlite` directly inside. The copy is 1.8 GB and takes a few
    minutes.
 4. Reopen the app. The Library screen shows the library as "Custom".
 

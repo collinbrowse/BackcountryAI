@@ -62,7 +62,7 @@ final class LibraryStore {
 
     private nonisolated static var manager: AssetPackManager { .shared }
 
-    /// A library copied in with Finder (iPhone › Files › Backcountry) also works.
+    /// A library copied in with Finder (iPhone › Files › BackcountryAI) also works.
     static var documentsFolder: URL { URL.documentsDirectory.appending(path: "Library", directoryHint: .isDirectory) }
     /// Where builds before Apple hosting unpacked their GitHub download. Read if present, removed on delete.
     static var legacyFolder: URL {

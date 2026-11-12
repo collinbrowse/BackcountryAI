@@ -36,7 +36,7 @@ RAW_DIR = os.path.join(SRC, "raw")
 TEXT_DIR = os.path.join(LIB, "text")
 DB_PATH = os.path.join(LIB, "index.sqlite")
 ARGS = sys.argv[1:]
-# Backcountry is a paid app, so every build is a public build: only what may be redistributed commercially.
+# BackcountryAI is a paid app, so every build is a public build: only what may be redistributed commercially.
 PUBLIC = True
 LITE = "--lite" in ARGS      # public, minus the big general-reference sources
 NOT_PUBLIC = {"post-disaster", "water", "food-prep", "medical-library", "knots"}

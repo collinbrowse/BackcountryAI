@@ -3,7 +3,7 @@ import FoundationModels
 import Observation
 import os
 
-let log = Logger(subsystem: "com.collinbrowse.backcountryguide", category: "assistant")
+let log = Logger(subsystem: "com.collinbrowse.backcountryai", category: "assistant")
 
 struct ChatMessage: Identifiable, Codable, Hashable {
     enum Role: String, Codable { case user, assistant }

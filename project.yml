@@ -1,4 +1,4 @@
-name: BackcountryGuide
+name: BackcountryAI
 options:
   bundleIdPrefix: com.collinbrowse
   deploymentTarget:
@@ -18,12 +18,12 @@ packages:
     url: https://github.com/huggingface/swift-transformers
     from: 1.3.0
 targets:
-  BackcountryGuide:
+  BackcountryAI:
     type: application
     platform: iOS
     sources: [Sources]
     dependencies:
-      - target: BackcountryDownloader
+      - target: BackcountryAIDownloader
       - package: MLXSwiftLM
         products: [MLXLLM, MLXLMCommon]   # not MLXHuggingFace: its macros need approval; BetterModel has the adapters
       - package: MLXSwift
@@ -33,66 +33,66 @@ targets:
       - package: SwiftTransformers
         products: [Tokenizers]
     scheme:
-      testTargets: [BackcountryGuideTests]
+      testTargets: [BackcountryAITests]
     info:
       path: Sources/Info.plist
       properties:
         # Apple-Hosted Background Assets: the library packs live on Apple's servers (App Store Connect).
-        BAAppGroupID: group.com.collinbrowse.backcountryguide
+        BAAppGroupID: group.com.collinbrowse.backcountryai
         BAHasManagedAssetPacks: true
         BAUsesAppleHosting: true
     entitlements:
-      path: Sources/BackcountryGuide.entitlements
+      path: Sources/BackcountryAI.entitlements
       properties:
-        com.apple.security.application-groups: [group.com.collinbrowse.backcountryguide]
+        com.apple.security.application-groups: [group.com.collinbrowse.backcountryai]
         # A 4B model needs ~4 GB while answering; without this, iOS stops the app sooner on 8 GB iPhones.
         com.apple.developer.kernel.increased-memory-limit: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryguide
+        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryai
         DEVELOPMENT_TEAM: 84XX2W7G34
         CODE_SIGN_STYLE: Automatic
         SWIFT_VERSION: "6.0"
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: Backcountry
+        INFOPLIST_KEY_CFBundleDisplayName: BackcountryAI
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UIFileSharingEnabled: YES
         INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
-  BackcountryGuideTests:
+  BackcountryAITests:
     type: bundle.unit-test
     platform: iOS
     sources: [Tests]
     dependencies:
-      - target: BackcountryGuide
+      - target: BackcountryAI
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryguide.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryai.tests
         DEVELOPMENT_TEAM: 84XX2W7G34
         CODE_SIGN_STYLE: Automatic
         SWIFT_VERSION: "6.0"
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: YES
-  BackcountryDownloader:
+  BackcountryAIDownloader:
     type: extensionkit-extension
     platform: iOS
     sources: [DownloaderExtension]
     info:
       path: DownloaderExtension/Info.plist
       properties:
-        CFBundleDisplayName: Backcountry Downloader
+        CFBundleDisplayName: BackcountryAI Downloader
         EXAppExtensionAttributes:
           EXExtensionPointIdentifier: com.apple.background-asset-downloader-extension
     entitlements:
-      path: DownloaderExtension/BackcountryDownloader.entitlements
+      path: DownloaderExtension/BackcountryAIDownloader.entitlements
       properties:
-        com.apple.security.application-groups: [group.com.collinbrowse.backcountryguide]
+        com.apple.security.application-groups: [group.com.collinbrowse.backcountryai]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryguide.downloader
+        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryai.downloader
         DEVELOPMENT_TEAM: 84XX2W7G34
         CODE_SIGN_STYLE: Automatic
         SWIFT_VERSION: "6.0"

@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C5C95CEF20E23481FA41C045"
-               BuildableName = "BackcountryGuide.app"
-               BlueprintName = "BackcountryGuide"
-               ReferencedContainer = "container:BackcountryGuide.xcodeproj">
+               BlueprintIdentifier = "36570C25239BD50A0E918843"
+               BuildableName = "BackcountryAI.app"
+               BlueprintName = "BackcountryAI"
+               ReferencedContainer = "container:BackcountryAI.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C5C95CEF20E23481FA41C045"
-            BuildableName = "BackcountryGuide.app"
-            BlueprintName = "BackcountryGuide"
-            ReferencedContainer = "container:BackcountryGuide.xcodeproj">
+            BlueprintIdentifier = "36570C25239BD50A0E918843"
+            BuildableName = "BackcountryAI.app"
+            BlueprintName = "BackcountryAI"
+            ReferencedContainer = "container:BackcountryAI.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -44,10 +44,10 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "794D900B07658D5E55710737"
-               BuildableName = "BackcountryGuideTests.xctest"
-               BlueprintName = "BackcountryGuideTests"
-               ReferencedContainer = "container:BackcountryGuide.xcodeproj">
+               BlueprintIdentifier = "65A8B03C472E304D98B10246"
+               BuildableName = "BackcountryAITests.xctest"
+               BlueprintName = "BackcountryAITests"
+               ReferencedContainer = "container:BackcountryAI.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -68,10 +68,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C5C95CEF20E23481FA41C045"
-            BuildableName = "BackcountryGuide.app"
-            BlueprintName = "BackcountryGuide"
-            ReferencedContainer = "container:BackcountryGuide.xcodeproj">
+            BlueprintIdentifier = "36570C25239BD50A0E918843"
+            BuildableName = "BackcountryAI.app"
+            BlueprintName = "BackcountryAI"
+            ReferencedContainer = "container:BackcountryAI.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -87,10 +87,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C5C95CEF20E23481FA41C045"
-            BuildableName = "BackcountryGuide.app"
-            BlueprintName = "BackcountryGuide"
-            ReferencedContainer = "container:BackcountryGuide.xcodeproj">
+            BlueprintIdentifier = "36570C25239BD50A0E918843"
+            BuildableName = "BackcountryAI.app"
+            BlueprintName = "BackcountryAI"
+            ReferencedContainer = "container:BackcountryAI.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>

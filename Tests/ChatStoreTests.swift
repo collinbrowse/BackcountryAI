@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import BackcountryGuide
+@testable import BackcountryAI
 
 @MainActor
 struct ChatStoreTests {
