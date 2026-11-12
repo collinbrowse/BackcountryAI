@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		0CF0123D5D9746464D11C0AC /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = C441E747EDCACEA4C32A7E37 /* App.swift */; };
 		10DD756A54DAE93815DA053E /* Scenery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A33C2F5E0E69783A0DA6F19 /* Scenery.swift */; };
-		130E3ACF71780FED4CA21C28 /* ModelLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69075351E2F04F18654D805 /* ModelLabView.swift */; };
 		1CA921C8E88469C1804AFA9E /* SavedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772495CD0720FFE7B8323511 /* SavedStore.swift */; };
 		2135036B221F5A0B17ECDB90 /* UrgencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F374C8DF4A272E686A5E96 /* UrgencyTests.swift */; };
 		224D776CCD0F48DDCF3ADA84 /* ChatHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8CA88915001E9B0D589998C /* ChatHistoryView.swift */; };
@@ -23,6 +22,7 @@
 		593214E42DC337A1F2972A8F /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8489C197191008DB5D01E651 /* Onboarding.swift */; };
 		5DF7D1DE364DDF7641C27F10 /* ArticleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B861855D2873600FA8B2685 /* ArticleView.swift */; };
 		60BF8875A4E7F5BCABB78570 /* ChatStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B034E9277B24DBB553445A2 /* ChatStoreTests.swift */; };
+		648F4246537284ABD1011192 /* BetterAnswersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF495469B5169D83AC4DF51 /* BetterAnswersView.swift */; };
 		651348182D22B9C65C215F34 /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = A34040AAB0FBB81C971BFFF0 /* Tokenizers */; };
 		74E51C8377B17200A3914585 /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7149DA695D73AED47B498C66 /* Library.swift */; };
 		797AD0860DDA8B6438D5BF9A /* Guide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9762E2C10BFB12FAE8214389 /* Guide.swift */; };
@@ -113,8 +113,8 @@
 		B34E5E3DC9D7CE322E832A1B /* GuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideView.swift; sourceTree = "<group>"; };
 		B3C979EBD2D337FE1DD23FFB /* BackcountryDownloader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BackcountryDownloader.entitlements; sourceTree = "<group>"; };
 		C441E747EDCACEA4C32A7E37 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
-		C69075351E2F04F18654D805 /* ModelLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLabView.swift; sourceTree = "<group>"; };
 		C80E63A5B66D3A1E7EC9AF02 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		CDF495469B5169D83AC4DF51 /* BetterAnswersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterAnswersView.swift; sourceTree = "<group>"; };
 		D40D25C47900E26CEA40A35B /* Retrieval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Retrieval.swift; sourceTree = "<group>"; };
 		E77376AD7B2DD2A7EB1C77E9 /* BatteryMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryMeter.swift; sourceTree = "<group>"; };
 		ED464DDC15C6D5A62B8300E7 /* DownloaderExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderExtension.swift; sourceTree = "<group>"; };
@@ -157,6 +157,7 @@
 				36DF151C09CBDCEF5DBF318F /* Assistant.swift */,
 				80182E3EE165B76EFF26C4CE /* BackcountryGuide.entitlements */,
 				E77376AD7B2DD2A7EB1C77E9 /* BatteryMeter.swift */,
+				CDF495469B5169D83AC4DF51 /* BetterAnswersView.swift */,
 				0C2D7913E9D6889BFB61ECAE /* BetterModel.swift */,
 				F8CA88915001E9B0D589998C /* ChatHistoryView.swift */,
 				31C9A103EE44D2CFBAC10411 /* ChatStore.swift */,
@@ -172,7 +173,6 @@
 				7149DA695D73AED47B498C66 /* Library.swift */,
 				77D7A3759C24A10B950B225A /* LibraryStore.swift */,
 				191C7C08C6C9572B7F613BFB /* LibraryView.swift */,
-				C69075351E2F04F18654D805 /* ModelLabView.swift */,
 				8489C197191008DB5D01E651 /* Onboarding.swift */,
 				7133DB1E4D740C4EB8825E4D /* Readiness.swift */,
 				D40D25C47900E26CEA40A35B /* Retrieval.swift */,
@@ -348,6 +348,7 @@
 				5DF7D1DE364DDF7641C27F10 /* ArticleView.swift in Sources */,
 				E212E3917A386B76C0B7129A /* Assistant.swift in Sources */,
 				BCD67BB2D9CFBD335A0F8661 /* BatteryMeter.swift in Sources */,
+				648F4246537284ABD1011192 /* BetterAnswersView.swift in Sources */,
 				7AD48927EFDAB7DA7051C761 /* BetterModel.swift in Sources */,
 				224D776CCD0F48DDCF3ADA84 /* ChatHistoryView.swift in Sources */,
 				840FF85B7DB3E5215AD40035 /* ChatStore.swift in Sources */,
@@ -362,7 +363,6 @@
 				74E51C8377B17200A3914585 /* Library.swift in Sources */,
 				B3075F36C3008E1B9F9E5AFB /* LibraryStore.swift in Sources */,
 				93D76144CD92E4FDCC24660A /* LibraryView.swift in Sources */,
-				130E3ACF71780FED4CA21C28 /* ModelLabView.swift in Sources */,
 				593214E42DC337A1F2972A8F /* Onboarding.swift in Sources */,
 				4CDB91697CCDC815F5D2A749 /* Readiness.swift in Sources */,
 				4A588F2DB2C0B01834348A16 /* Retrieval.swift in Sources */,

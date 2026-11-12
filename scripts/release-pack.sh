@@ -39,22 +39,9 @@ step() { printf '\n== %s\n' "$*"; }
 fail() { echo "STOPPED: $*" >&2; exit 1; }
 
 # Check the upload credentials first, so a long build doesn't end in a missing-key error.
-if [ "$UPLOAD" = 1 ]; then
-  [ -f "$ROOT/.asc.env" ] || fail "no .asc.env. Copy .asc.env.example to .asc.env and fill it in, or pass --no-upload."
-  # shellcheck disable=SC1091
-  source "$ROOT/.asc.env"
-  : "${ASC_KEY_ID:?set ASC_KEY_ID in .asc.env}" "${ASC_ISSUER_ID:?set ASC_ISSUER_ID in .asc.env}"
-  : "${ASC_APP_ID:?set ASC_APP_ID (the app Apple ID, a number) in .asc.env}"
-  KEYFILE=""
-  for d in "$ROOT/private_keys" ~/private_keys ~/.private_keys ~/.appstoreconnect/private_keys "${API_PRIVATE_KEYS_DIR:-}"; do
-    [ -n "$d" ] && [ -f "$d/AuthKey_$ASC_KEY_ID.p8" ] && KEYFILE="$d/AuthKey_$ASC_KEY_ID.p8" && break
-  done
-  [ -n "$KEYFILE" ] || fail "AuthKey_$ASC_KEY_ID.p8 not found in ~/private_keys or ~/.appstoreconnect/private_keys."
-  AUTH=(--api-key "$ASC_KEY_ID" --api-issuer "$ASC_ISSUER_ID")
-  step "Checking App Store Connect access"
-  xcrun altool --list-asset-packs --apple-id "$ASC_APP_ID" "${AUTH[@]}" \
-    || fail "App Store Connect refused the key or app ID. Check .asc.env."
-fi
+# shellcheck source=scripts/asc.sh
+source "$ROOT/scripts/asc.sh"
+[ "$UPLOAD" = 1 ] && asc_init "$ROOT"
 
 if [ "$REBUILD" = 1 ]; then
   step "Rebuilding the library (downloads resume; this can take hours)"
@@ -96,14 +83,8 @@ STATUS="not uploaded (--no-upload)"
 if [ "$UPLOAD" = 1 ]; then
   step "Uploading to App Store Connect and waiting for processing"
   LOG="$ROOT/build/asset-packs/$ID-upload.log"
-  if xcrun altool --upload-asset-pack "$AAR" --apple-id "$ASC_APP_ID" "${AUTH[@]}" --wait 2>&1 | tee "$LOG"; then
-    STATUS="uploaded; see $LOG"
-  else
-    fail "upload failed; see $LOG"
-  fi
-  step "Versions of $ID on App Store Connect"
-  xcrun altool --list-asset-pack-versions --apple-id "$ASC_APP_ID" --asset-pack-identifier "$ID" "${AUTH[@]}" \
-    | tee -a "$LOG" || true
+  asc_upload "$AAR" "$ID" "$LOG"
+  STATUS="uploaded; see $LOG"
 fi
 
 if [ -n "$HF" ]; then

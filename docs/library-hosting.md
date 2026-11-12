@@ -54,6 +54,20 @@ because Apple offers no command for them:
 1. test the new version with TestFlight;
 2. submit it for review with the next build.
 
+## The Better answers model
+
+The optional larger model (Qwen 3.5 4B, see `docs/on-device-model-comparison.md`) is a second on-demand pack,
+`answers`, released the same way:
+
+```bash
+scripts/release-model-pack.sh
+```
+
+It downloads the pinned model from Hugging Face, drops the image weights, builds `build/asset-packs/answers.aar`
+(2.3 GB) and uploads it. Pass `--no-upload` to stop after the build. If the size changes, update
+`BetterModel.estimatedDownloadBytes` and `unpackedBytes`. Then test it in TestFlight and submit it for review with
+the next build, like the library.
+
 ## One-time setup (only before your first release)
 
 1. **Python and tools:**

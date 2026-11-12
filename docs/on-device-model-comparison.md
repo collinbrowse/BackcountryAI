@@ -1,7 +1,7 @@
 # Would a bigger on-device model be worth it?
 
-**Recommendation:** Qwen 3.5 4B, as an optional "Better answers" download of about 2.4 GB. It scored 23 of 32
-against Apple's 9. Ship it only if it passes on a real iPhone (see "Prototype" below).
+**Decision:** ship Qwen 3.5 4B as an optional "Better answers" download (2.3 GB). It scored 23 of 32 against
+Apple's 9, and it passed on an 8 GB iPhone (see "On a real iPhone" below).
 
 ## Results
 
@@ -53,29 +53,42 @@ The deciding factor is memory, not download size.
 - **How it would work:** Apple's model keeps planning the searches and checking the excerpts. Only the final
   answer waits on Qwen.
 
-## Prototype: measure it on a real iPhone
+## On a real iPhone
 
-**Library › Lab: better answers (prototype)** does three things:
+Measured 2026-11-12 on an 8 GB iPhone with the app's benchmark, after the answer prompt was tightened. Medians over
+the 16 questions:
 
-- downloads Qwen 3.5 4B from Hugging Face. This works in Xcode builds.
-- can let Qwen write Scout's answers. Each answer's battery popover then shows its speed and memory use.
-- runs a **benchmark**: both models answer the 16 questions. It records time to the first word, total time,
-  words per second, peak and free memory, battery and heat, and exports a CSV.
+| | Apple's model | Qwen 3.5 4B |
+|---|---|---|
+| First words | 1.6 s | 3.3 s |
+| Full answer | 3.5 s | 9.9 s (worst 14.9 s) |
+| Answer length | 114 tokens | 131 tokens |
+| Writing speed | 60 tokens/s | 19 tokens/s |
+| Peak app memory | 2.72 GB | 3.52 GB |
+| Lowest free memory | 3.72 GB | 2.93 GB |
 
-**To run it:**
+It passed all three ship criteria: free memory stayed far above ~0.5 GB, the first word came within ~5 s, and a full
+answer took under ~30 s. Heat reached "serious" by the end of the 16-answer run, so it's worth re-checking during long
+sessions.
 
-1. In Xcode, check that Signing & Capabilities has **Increased Memory Limit**, then build to a real iPhone. MLX
-   doesn't run in the simulator.
-2. Copy the library to the phone (see `docs/library-hosting.md`, "Testing on a phone").
-3. In the app, open Lab and tap Download and load, on Wi-Fi.
-4. Unplug the phone and tap **Run benchmark**. It takes 5–15 minutes; keep the screen on.
-5. Share the CSV. Repeat on an 8 GB iPhone if you can.
+## In the app: Better answers
 
-**Ship it if:**
+**Library › Better answers** offers it as an optional download on iPhones with 8 GB or more:
 
-- free memory stays above ~0.5 GB, and iOS never stops the app;
-- the first word appears within ~5 s;
-- a full answer takes under ~30 s.
+- **Download better answers** gets the `answers` asset pack (2.3 GB). Then a **Faster / Better** switch chooses
+  which model writes Scout's answers; Better is on once the download finishes.
+- **How it works** holds the technical details: how the two models split the work, the measurements above, the
+  model and its Apache 2.0 license, this iPhone's memory, and the benchmark (both models answer the 16 questions
+  and the results export as CSV and text).
+- Once the library is in, the Scout home screen shows a "Want more accurate answers?" tip until the model is
+  downloaded or the tip is dismissed.
+- The model loads when Scout opens and unloads when the app goes to the background or memory runs low. If it can't
+  load, Apple's model answers instead. Answers it wrote show a sparkle by the battery figure.
+
+**Delivery:** `scripts/release-model-pack.sh` downloads the pinned Hugging Face revision, drops the image weights
+(`tools/strip_vision_weights.py`; MLXLLM ignores them anyway), and builds and uploads `answers.aar`. See
+`docs/library-hosting.md`. Until that pack is on App Store Connect, Xcode builds download the same model from
+Hugging Face instead; TestFlight and App Store builds say it isn't available yet.
 
 ## Reproduce the Mac comparison
 
