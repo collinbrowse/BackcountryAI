@@ -5,9 +5,9 @@ import os
 
 let log = Logger(subsystem: "com.collinbrowse.backcountryguide", category: "assistant")
 
-struct ChatMessage: Identifiable {
-    enum Role { case user, assistant }
-    let id = UUID()
+struct ChatMessage: Identifiable, Codable, Hashable {
+    enum Role: String, Codable { case user, assistant }
+    var id = UUID()
     let role: Role
     var text: String
     var status: String? = nil          // "Searching the library…" while working
@@ -20,6 +20,11 @@ struct ChatMessage: Identifiable {
     var engine: String? = nil          // PROTOTYPE: which model wrote it, with speed and memory
 
     var isFinished: Bool { role == .assistant && status == nil && !text.isEmpty }
+
+    // `status` is only meaningful while an answer is being written, so it isn't saved.
+    enum CodingKeys: String, CodingKey {
+        case id, role, text, sources, battery, batterySession, failed, question, urgent
+    }
 }
 
 @MainActor
@@ -27,7 +32,12 @@ struct ChatMessage: Identifiable {
 final class Assistant {
     var messages: [ChatMessage] = []
     var isBusy = false
+    /// The saved chat these messages belong to. Assigned when the first question is asked.
+    private(set) var conversationID: UUID?
     private var task: Task<Void, Never>?
+    private let chats: ChatStore?
+
+    init(chats: ChatStore? = nil) { self.chats = chats }
 
     // Apple's on-device model. It never uses the network.
     private let model = SystemLanguageModel(useCase: .general, guardrails: .permissiveContentTransformations)
@@ -57,6 +67,7 @@ final class Assistant {
                                     question: q, urgent: Urgency.isUrgent(q)))
         let index = messages.count - 1
         isBusy = true
+        if conversationID == nil { conversationID = UUID() }
 
         task = Task {
             let start = BatteryMeter.shared.begin()
@@ -66,6 +77,7 @@ final class Assistant {
                 messages[index].batterySession = BatteryMeter.shared.sessionSummary
                 messages[index].status = nil
                 isBusy = false
+                save()
             }
 
             // 1. Find passages. With the model: it rewrites the question into searches, then keeps only the
@@ -141,13 +153,33 @@ final class Assistant {
     /// Starts a fresh conversation with this question.
     func startNew(_ question: String, library: Library?) {
         guard !isBusy else { return }
-        messages.removeAll()
+        clear()
         ask(question, library: library)
     }
 
     func clear() {
         guard !isBusy else { return }
         messages.removeAll()
+        conversationID = nil
+    }
+
+    /// Reopens a saved chat so you can read it or keep asking.
+    func open(_ chat: Conversation) {
+        guard !isBusy else { return }
+        messages = chat.messages
+        conversationID = chat.id
+    }
+
+    /// Call after chats are deleted: if the one on screen was among them, start fresh.
+    func forget(_ ids: Set<UUID>) {
+        guard let id = conversationID, ids.contains(id) else { return }
+        clear()
+    }
+
+    /// Chats save automatically after every answer.
+    private func save() {
+        guard let conversationID else { return }
+        chats?.save(id: conversationID, messages: messages)
     }
 
     /// Builds the prompt, dropping the weakest excerpts until it fits the model's context window

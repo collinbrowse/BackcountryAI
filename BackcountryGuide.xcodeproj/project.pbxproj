@@ -11,6 +11,7 @@
 		10DD756A54DAE93815DA053E /* Scenery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A33C2F5E0E69783A0DA6F19 /* Scenery.swift */; };
 		130E3ACF71780FED4CA21C28 /* ModelLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69075351E2F04F18654D805 /* ModelLabView.swift */; };
 		1CA921C8E88469C1804AFA9E /* SavedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772495CD0720FFE7B8323511 /* SavedStore.swift */; };
+		224D776CCD0F48DDCF3ADA84 /* ChatHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8CA88915001E9B0D589998C /* ChatHistoryView.swift */; };
 		2AF20CC964E04E64EA6086C2 /* BackcountryDownloader.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 69A559113543F94C3B22D4FA /* BackcountryDownloader.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2B58D0C56A0137FCA37DFEC5 /* DownloaderExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED464DDC15C6D5A62B8300E7 /* DownloaderExtension.swift */; };
 		3C03CB6370F96EA85BAAFD04 /* FieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A26A7617598D2E5B07C18071 /* FieldView.swift */; };
@@ -20,10 +21,12 @@
 		50FF8775D0E9CE80CC67CF36 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 93256386AD9C58C4A5483A84 /* MLXLMCommon */; };
 		593214E42DC337A1F2972A8F /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8489C197191008DB5D01E651 /* Onboarding.swift */; };
 		5DF7D1DE364DDF7641C27F10 /* ArticleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B861855D2873600FA8B2685 /* ArticleView.swift */; };
+		60BF8875A4E7F5BCABB78570 /* ChatStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B034E9277B24DBB553445A2 /* ChatStoreTests.swift */; };
 		651348182D22B9C65C215F34 /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = A34040AAB0FBB81C971BFFF0 /* Tokenizers */; };
 		74E51C8377B17200A3914585 /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7149DA695D73AED47B498C66 /* Library.swift */; };
 		797AD0860DDA8B6438D5BF9A /* Guide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9762E2C10BFB12FAE8214389 /* Guide.swift */; };
 		7AD48927EFDAB7DA7051C761 /* BetterModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C2D7913E9D6889BFB61ECAE /* BetterModel.swift */; };
+		840FF85B7DB3E5215AD40035 /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31C9A103EE44D2CFBAC10411 /* ChatStore.swift */; };
 		8D9553523A6FCB3328AC054E /* Topics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0880FFD37426FE97AE97E2 /* Topics.swift */; };
 		93D76144CD92E4FDCC24660A /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191C7C08C6C9572B7F613BFB /* LibraryView.swift */; };
 		A27D8216BBCA60EA978C6F35 /* FieldCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26A2A36E38BB30C655F380D2 /* FieldCards.swift */; };
@@ -52,6 +55,13 @@
 			remoteGlobalIDString = EB64BA4F65597FC24AD5CCA5;
 			remoteInfo = BackcountryDownloader;
 		};
+		4426E042E718FEA731C3E00F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7129F65DEA934BBC981E3DFC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C5C95CEF20E23481FA41C045;
+			remoteInfo = BackcountryGuide;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -72,15 +82,18 @@
 		0C2D7913E9D6889BFB61ECAE /* BetterModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterModel.swift; sourceTree = "<group>"; };
 		0C8FF717582F4AC28051AF11 /* AnswerContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerContent.swift; sourceTree = "<group>"; };
 		191C7C08C6C9572B7F613BFB /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		1B034E9277B24DBB553445A2 /* ChatStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStoreTests.swift; sourceTree = "<group>"; };
 		26A2A36E38BB30C655F380D2 /* FieldCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCards.swift; sourceTree = "<group>"; };
 		2B861855D2873600FA8B2685 /* ArticleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleView.swift; sourceTree = "<group>"; };
 		2C36C8473527608FDB2EAAFF /* BackcountryGuide.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BackcountryGuide.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		31C9A103EE44D2CFBAC10411 /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
 		36DF151C09CBDCEF5DBF318F /* Assistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assistant.swift; sourceTree = "<group>"; };
 		46992F727F3B366781511E7C /* ConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationView.swift; sourceTree = "<group>"; };
 		4A33C2F5E0E69783A0DA6F19 /* Scenery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenery.swift; sourceTree = "<group>"; };
 		4D008E16FE7418D25C26DF5D /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		560759DB4452180FA4517DA1 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		5CF6D08B6E0C7A755880AE50 /* FieldModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldModel.swift; sourceTree = "<group>"; };
+		67EA5E6E66CE3638038B92E3 /* BackcountryGuideTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BackcountryGuideTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		69A559113543F94C3B22D4FA /* BackcountryDownloader.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = BackcountryDownloader.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7133DB1E4D740C4EB8825E4D /* Readiness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Readiness.swift; sourceTree = "<group>"; };
 		7149DA695D73AED47B498C66 /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
@@ -104,6 +117,7 @@
 		E77376AD7B2DD2A7EB1C77E9 /* BatteryMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryMeter.swift; sourceTree = "<group>"; };
 		ED464DDC15C6D5A62B8300E7 /* DownloaderExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderExtension.swift; sourceTree = "<group>"; };
 		F75D60F2F16EBCA3A199E425 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F8CA88915001E9B0D589998C /* ChatHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatHistoryView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,6 +141,7 @@
 			children = (
 				69A559113543F94C3B22D4FA /* BackcountryDownloader.appex */,
 				2C36C8473527608FDB2EAAFF /* BackcountryGuide.app */,
+				67EA5E6E66CE3638038B92E3 /* BackcountryGuideTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -141,6 +156,8 @@
 				80182E3EE165B76EFF26C4CE /* BackcountryGuide.entitlements */,
 				E77376AD7B2DD2A7EB1C77E9 /* BatteryMeter.swift */,
 				0C2D7913E9D6889BFB61ECAE /* BetterModel.swift */,
+				F8CA88915001E9B0D589998C /* ChatHistoryView.swift */,
+				31C9A103EE44D2CFBAC10411 /* ChatStore.swift */,
 				C80E63A5B66D3A1E7EC9AF02 /* ChatView.swift */,
 				4D008E16FE7418D25C26DF5D /* Components.swift */,
 				46992F727F3B366781511E7C /* ConversationView.swift */,
@@ -173,6 +190,7 @@
 			children = (
 				98CB9D56B39BA1CB4CE53A2A /* DownloaderExtension */,
 				355D144BC96758E3FDC1ED85 /* Sources */,
+				B5064FB9232F9DE9D8594E90 /* Tests */,
 				0D7A8E32F8E8A9E9FBAE815B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -187,9 +205,35 @@
 			path = DownloaderExtension;
 			sourceTree = "<group>";
 		};
+		B5064FB9232F9DE9D8594E90 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				1B034E9277B24DBB553445A2 /* ChatStoreTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		794D900B07658D5E55710737 /* BackcountryGuideTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 068BFE1B8963D1FEA8BAB774 /* Build configuration list for PBXNativeTarget "BackcountryGuideTests" */;
+			buildPhases = (
+				2C997C5C1C9F5549DF818134 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CEB7E28221D41F8A822415AE /* PBXTargetDependency */,
+			);
+			name = BackcountryGuideTests;
+			packageProductDependencies = (
+			);
+			productName = BackcountryGuideTests;
+			productReference = 67EA5E6E66CE3638038B92E3 /* BackcountryGuideTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		C5C95CEF20E23481FA41C045 /* BackcountryGuide */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D31F8DCB2B9DD1E548ED52A5 /* Build configuration list for PBXNativeTarget "BackcountryGuide" */;
@@ -241,6 +285,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					794D900B07658D5E55710737 = {
+						DevelopmentTeam = 84XX2W7G34;
+						ProvisioningStyle = Automatic;
+					};
 					C5C95CEF20E23481FA41C045 = {
 						DevelopmentTeam = 84XX2W7G34;
 						ProvisioningStyle = Automatic;
@@ -272,12 +320,21 @@
 			projectRoot = "";
 			targets = (
 				C5C95CEF20E23481FA41C045 /* BackcountryGuide */,
+				794D900B07658D5E55710737 /* BackcountryGuideTests */,
 				EB64BA4F65597FC24AD5CCA5 /* BackcountryDownloader */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		2C997C5C1C9F5549DF818134 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				60BF8875A4E7F5BCABB78570 /* ChatStoreTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B421452ED3D60F7F036AAB8C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -288,6 +345,8 @@
 				E212E3917A386B76C0B7129A /* Assistant.swift in Sources */,
 				BCD67BB2D9CFBD335A0F8661 /* BatteryMeter.swift in Sources */,
 				7AD48927EFDAB7DA7051C761 /* BetterModel.swift in Sources */,
+				224D776CCD0F48DDCF3ADA84 /* ChatHistoryView.swift in Sources */,
+				840FF85B7DB3E5215AD40035 /* ChatStore.swift in Sources */,
 				44968BF32BCBE520788870A1 /* ChatView.swift in Sources */,
 				CA0CFEDC9588EF4E1E5EE5D0 /* Components.swift in Sources */,
 				ED2A97AE46EFDC235DCBF738 /* ConversationView.swift in Sources */,
@@ -328,6 +387,11 @@
 			isa = PBXTargetDependency;
 			target = EB64BA4F65597FC24AD5CCA5 /* BackcountryDownloader */;
 			targetProxy = 3E99347A1C0BAFA7A39C6003 /* PBXContainerItemProxy */;
+		};
+		CEB7E28221D41F8A822415AE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C5C95CEF20E23481FA41C045 /* BackcountryGuide */;
+			targetProxy = 4426E042E718FEA731C3E00F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -415,6 +479,26 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
+		};
+		662DFBC6B7BA5EC92772F200 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 84XX2W7G34;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryguide.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BackcountryGuide.app/BackcountryGuide";
+			};
+			name = Release;
 		};
 		9297B31ACAD9334A4725612F /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -528,6 +612,26 @@
 			};
 			name = Debug;
 		};
+		D208FBDA7045DAE38413BD19 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 84XX2W7G34;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryguide.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BackcountryGuide.app/BackcountryGuide";
+			};
+			name = Debug;
+		};
 		F5271FBF5881ACDFDA1CEECD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -552,6 +656,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		068BFE1B8963D1FEA8BAB774 /* Build configuration list for PBXNativeTarget "BackcountryGuideTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D208FBDA7045DAE38413BD19 /* Debug */,
+				662DFBC6B7BA5EC92772F200 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		06FE506657D360EB4616BCCF /* Build configuration list for PBXProject "BackcountryGuide" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

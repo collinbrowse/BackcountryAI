@@ -2,7 +2,7 @@ import UIKit
 
 /// What one answer cost in battery. iOS only reports the battery level in whole-percent steps,
 /// so a single answer often reads as "under 1%"; the running average over many answers is more accurate.
-struct BatteryReport: Hashable, Sendable {
+struct BatteryReport: Hashable, Codable, Sendable {
     var startLevel: Int?      // percent, nil when unknown (simulator)
     var endLevel: Int?
     var seconds: Double
