@@ -174,7 +174,7 @@ struct SourceCard: View {
                     .foregroundStyle(Theme.accentDeep)
                     .frame(width: 22, height: 22)
                     .background(Theme.accent.opacity(0.16), in: .circle)
-                if passage.official { OfficialBadge() }
+                if passage.official { OfficialBadge() } else if passage.isMine { MineBadge() }
                 Spacer(minLength: 0)
             }
             Text(passage.title)
@@ -186,6 +186,17 @@ struct SourceCard: View {
         }
         .frame(width: 210, alignment: .leading)
         .card(padding: 12, radius: 18)
+    }
+}
+
+/// On passages from a document the person added themselves.
+struct MineBadge: View {
+    var body: some View {
+        Label("Yours", systemImage: "person.crop.square.filled.and.at.rectangle")
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(Theme.accentDeep)
+            .padding(.horizontal, 7).padding(.vertical, 3)
+            .background(Theme.accent.opacity(0.14), in: .capsule)
     }
 }
 

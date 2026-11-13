@@ -11,7 +11,7 @@ enum Retrieval {
 
     static let planInstructions = """
     You write keyword searches for an offline library of first-aid and survival manuals, government safety guides, \
-    repair and outdoors Q&A, and Wikipedia. Reply with 2 or 3 searches, one per line, 2 to 5 words each, and \
+    repair and outdoors Q&A, Wikipedia, and the person's own gear manuals. Reply with 2 or 3 searches, one per line, 2 to 5 words each, and \
     nothing else. Each search names the main subject of the question (the injury, machine, animal, weather or \
     task) plus words an article about it would use: the medical or technical name, or a common synonym. \
     Questions are often dictated, so a word that makes no sense may be a misheard brand: search for the kind of \

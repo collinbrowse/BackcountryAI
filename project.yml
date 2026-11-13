@@ -54,6 +54,12 @@ targets:
         BAHasManagedAssetPacks: true
         BAUsesAppleHosting: true
         UIFileSharingEnabled: true   # shows the app in Finder › iPhone › Files, so a library can be copied in
+        # "Open in BackcountryAI" from Files and other apps adds the file to the person's documents (MyDocuments).
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Document
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [com.adobe.pdf, public.image, public.plain-text, net.daringfireball.markdown,
+                                 public.rtf, public.html]
     entitlements:
       path: Sources/BackcountryAI.entitlements
       properties:

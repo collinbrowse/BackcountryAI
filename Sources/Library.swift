@@ -11,6 +11,9 @@ struct Passage: Identifiable, Hashable, Codable, Sendable {
     let official: Bool
     let text: String       // passage text, trimmed for the model
     var coverage: Double? = nil  // share of the search's words this passage contains (optional: saved passages lack it)
+
+    /// From a document the person added themselves (see MyDocuments), not from the downloaded library.
+    var isMine: Bool { sourceKey.hasPrefix(Library.minePrefix) }
 }
 
 struct Article: Sendable {
@@ -23,10 +26,26 @@ struct Article: Sendable {
 
 /// Read-only search over a Survival LLM library folder: `index.sqlite` (SQLite FTS5 over ~1,500-character
 /// passages) plus `text/<source>/NNNN.md` shards. Same format and ranking as survival-llm's library/search.py.
+/// The person's own documents (MyDocuments) are a second index in the same format; `combining` attaches it, and
+/// every public method then covers both.
 final class Library: @unchecked Sendable {
     private let locate: @Sendable (String) -> URL?
     private var db: OpaquePointer?
     private let lock = NSLock()
+    /// The person's own documents, searched along with this library. Set once, before the library is shared.
+    private(set) var mine: Library?
+
+    /// Doc and passage ids from the person's own documents start here, so an id alone says which index it's from.
+    static let mineIDBase: Int64 = 1 << 40
+    /// Source keys of the person's own documents start with this.
+    static let minePrefix = "mine-"
+
+    /// The downloaded library with the person's documents attached; either one alone if the other is missing.
+    static func combining(pack: Library?, mine: Library?) -> Library? {
+        guard let pack else { return mine }
+        pack.mine = mine
+        return pack
+    }
 
     static let official: Set<String> = ["ready-gov", "cdc-travel", "medlineplus", "nhs-medicines",
         "military-medicine", "wikem", "medical-library", "water", "post-disaster", "food-prep",
@@ -49,11 +68,14 @@ final class Library: @unchecked Sendable {
 
     /// `locate` turns a path inside the library ("index.sqlite", "text/…") into a readable file URL,
     /// so the same code reads a plain folder or Apple-hosted asset packs.
-    init(locate: @escaping @Sendable (String) -> URL?) throws {
+    /// `immutable` is for the downloaded library, which never changes while open; the person's documents do.
+    init(locate: @escaping @Sendable (String) -> URL?, immutable: Bool = true) throws {
         self.locate = locate
         guard let path = locate("index.sqlite")?.path else { throw LibraryError.cannotOpen }
-        guard sqlite3_open_v2("file:\(path)?immutable=1", &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, nil) == SQLITE_OK
-        else { throw LibraryError.cannotOpen }
+        let opened = immutable
+            ? sqlite3_open_v2("file:\(path)?immutable=1", &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, nil)
+            : sqlite3_open_v2(path, &db, SQLITE_OPEN_READONLY, nil)
+        guard opened == SQLITE_OK else { throw LibraryError.cannotOpen }
         _ = try query("SELECT 1 FROM sources LIMIT 1") { _ in () }
     }
 
@@ -72,13 +94,16 @@ final class Library: @unchecked Sendable {
     // MARK: - Public
 
     func stats() -> (articles: Int, sources: Int) {
-        (try? query("SELECT COALESCE(SUM(docs),0), COUNT(*) FROM sources WHERE done=1") { s in
+        let own = (try? query("SELECT COALESCE(SUM(docs),0), COUNT(*) FROM sources WHERE done=1") { s in
             (Int(sqlite3_column_int64(s, 0)), Int(sqlite3_column_int64(s, 1)))
         }.first) ?? (0, 0)
+        let theirs = mine?.stats() ?? (0, 0)
+        return (own.0 + theirs.0, own.1 + theirs.1)
     }
 
     func sourceLabels() -> [String] {
-        (try? query("SELECT label FROM sources WHERE done=1 ORDER BY docs DESC") { Self.text($0, 0) }) ?? []
+        (mine?.sourceLabels() ?? [])
+            + ((try? query("SELECT label FROM sources WHERE done=1 ORDER BY docs DESC") { Self.text($0, 0) }) ?? [])
     }
 
     struct SourceInfo: Identifiable, Hashable, Sendable {
@@ -89,16 +114,20 @@ final class Library: @unchecked Sendable {
         var official: Bool { Library.officialLabel.contains(key) }
     }
 
+    /// The person's own documents first, then the library's sources, largest first.
     func sources() -> [SourceInfo] {
-        (try? query("SELECT key, label, docs FROM sources WHERE done=1 AND docs>0 ORDER BY docs DESC") { s in
+        (mine?.sources() ?? []) + ((try? query("SELECT key, label, docs FROM sources WHERE done=1 AND docs>0 ORDER BY docs DESC") { s in
             SourceInfo(key: Self.text(s, 0), label: Self.text(s, 1), docs: Int(sqlite3_column_int64(s, 2)))
-        }) ?? []
+        }) ?? [])
     }
 
     /// Article titles from one source, alphabetical, for browsing. Returned as text-less passages so
     /// they open in the same article view as search hits.
     func titles(sourceKey: String, offset: Int, limit: Int) -> [Passage] {
-        (try? query("""
+        if sourceKey.hasPrefix(Self.minePrefix), let mine {
+            return mine.titles(sourceKey: sourceKey, offset: offset, limit: limit)
+        }
+        return (try? query("""
             SELECT d.id, d.title, s.label FROM docs d JOIN sources s ON s.id = d.source_id
             WHERE s.key = ? ORDER BY d.title COLLATE NOCASE LIMIT ? OFFSET ?
             """, [sourceKey, limit, offset]) { s in
@@ -119,6 +148,28 @@ final class Library: @unchecked Sendable {
     /// the share of the question's words it contains. Ranking is BM25 times coverage, so when nothing has every
     /// word, a passage with most of them beats one that only repeats the rarest word.
     func search(_ question: String, limit: Int = 5, maxChars: Int = 900, only keys: Set<String>? = nil) -> [Passage] {
+        let own = searchOwn(question, limit: limit, maxChars: maxChars, only: keys)
+        guard let mine else { return own }
+        return Self.merge(own, mine: mine.search(question, limit: limit, maxChars: maxChars, only: keys), limit: limit)
+    }
+
+    /// Library hits and hits from the person's documents in one list. The two indexes rank on different scales, so
+    /// they merge on coverage: a passage of theirs goes ahead of every library passage that covers no more of the
+    /// question's words. Each list keeps its own order.
+    static func merge(_ library: [Passage], mine: [Passage], limit: Int) -> [Passage] {
+        var out: [Passage] = [], rest = mine[...]
+        for p in library {
+            while let m = rest.first, (m.coverage ?? 0) >= (p.coverage ?? 0) {
+                out.append(m)
+                rest = rest.dropFirst()
+            }
+            out.append(p)
+        }
+        out += rest
+        return Array(out.prefix(limit))
+    }
+
+    private func searchOwn(_ question: String, limit: Int, maxChars: Int, only keys: Set<String>?) -> [Passage] {
         let words = Self.queryWords(question)
         guard !words.isEmpty else { return [] }
         let terms = words.map { "\"" + $0.replacingOccurrences(of: "\"", with: "") + "\"" }
@@ -191,6 +242,7 @@ final class Library: @unchecked Sendable {
     }
 
     func article(docID: Int64) -> Article? {
+        if docID >= Self.mineIDBase, let mine { return mine.article(docID: docID) }
         struct Row { let title, url, label, license: String; let file, off, len: Int64 }
         guard let r = (try? query("""
             SELECT d.title, COALESCE(d.url,''), s.label, COALESCE(s.license,''), d.file_id, d.offset, d.length
@@ -202,6 +254,16 @@ final class Library: @unchecked Sendable {
         let withoutHeader = body.components(separatedBy: "\n\n").dropFirst().joined(separator: "\n\n")
         return Article(title: r.title, source: r.label, url: r.url, license: r.license,
                        body: withoutHeader.isEmpty ? body : withoutHeader)
+    }
+
+    /// A passage's text as stored, headings and line breaks kept (search results carry a flattened window of it).
+    func passageText(id: Int64) -> String? {
+        if id >= Self.mineIDBase, let mine { return mine.passageText(id: id) }
+        guard let r = (try? query("""
+            SELECT d.file_id, p.offset, p.length FROM passages p JOIN docs d ON d.id = p.doc_id WHERE p.id = ?
+            """, [id]) { s in (sqlite3_column_int64(s, 0), sqlite3_column_int64(s, 1), sqlite3_column_int64(s, 2)) })?.first
+        else { return nil }
+        return readText(fileID: r.0, offset: r.1, length: r.2)
     }
 
     // MARK: - Helpers
