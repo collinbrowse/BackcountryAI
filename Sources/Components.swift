@@ -66,7 +66,7 @@ struct SearchResultRow: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(passage.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(2)
                 Spacer(minLength: 4)
-                if passage.official { OfficialBadge() }
+                if passage.official { OfficialBadge() } else if passage.isMine { MineBadge() }
             }
             Text(passage.text).font(.caption).foregroundStyle(Theme.inkSoft).lineLimit(3)
             Text(passage.source).font(.caption2.weight(.semibold)).foregroundStyle(Theme.accent)

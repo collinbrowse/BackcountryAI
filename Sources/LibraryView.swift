@@ -15,9 +15,10 @@ struct LibraryView: View {
                     ForEach(store.packs) { PackCard(pack: $0) }
                     Text("Downloads from the App Store. Use Wi-Fi; it keeps going if you leave the app, and iOS keeps the library up to date.")
                         .font(.footnote).foregroundStyle(Theme.inkSoft)
+                    MyDocumentsCard()
                     if BetterModel.isOffered { BetterAnswersCard() }
                     about
-                    if store.library != nil {
+                    if store.hasPack {
                         Button("Delete library from this iPhone", role: .destructive) { confirmDelete = true }
                             .font(.subheadline.weight(.semibold))
                             .frame(maxWidth: .infinity)
@@ -72,6 +73,78 @@ struct LibraryView: View {
                 .font(.footnote).foregroundStyle(Theme.inkSoft)
         }
         .card()
+    }
+}
+
+/// Manuals and notes the person adds themselves: searched and answered from like the library, kept on the phone.
+struct MyDocumentsCard: View {
+    @Environment(LibraryStore.self) private var store
+    @State private var picking = false
+    @State private var removing: MyDocuments.Item?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Your documents").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Theme.ink)
+            Text("Add manuals for your gear, trip notes or anything else. Scout searches them along with the library, and they never leave this iPhone.")
+                .font(.subheadline).foregroundStyle(Theme.inkSoft)
+            ForEach(store.myDocuments) { item in
+                HStack(spacing: 12) {
+                    Image(systemName: icon(item.filename)).font(.title3).foregroundStyle(Theme.accentDeep).frame(width: 28)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(item.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(2)
+                        Text("\(item.sections) \(item.sections == 1 ? "section" : "sections") · added \(item.added.formatted(date: .abbreviated, time: .omitted))")
+                            .font(.caption).foregroundStyle(Theme.inkSoft)
+                    }
+                    Spacer(minLength: 0)
+                    Button { removing = item } label: {
+                        Image(systemName: "trash").font(.subheadline).foregroundStyle(Theme.inkSoft)
+                    }
+                    .accessibilityLabel("Remove \(item.title)")
+                    .disabled(store.isImporting)
+                }
+                .padding(.vertical, 4)
+            }
+            if let status = store.importStatus {
+                HStack(spacing: 10) {
+                    ProgressView().controlSize(.small)
+                    Text(status).font(.caption.monospacedDigit()).foregroundStyle(Theme.ink).lineLimit(2)
+                    Spacer(minLength: 0)
+                    Button("Stop") { store.cancelImport() }.font(.caption.weight(.semibold))
+                }
+                .padding(10)
+                .background(Theme.cardRaised, in: .rect(cornerRadius: 12, style: .continuous))
+            }
+            ForEach(store.importErrors, id: \.self) { line in
+                Label(line, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption).foregroundStyle(Theme.danger)
+            }
+            Button { picking = true } label: { Label("Add documents", systemImage: "plus") }
+                .buttonStyle(SecondaryButtonStyle())
+            Text("PDFs (scanned ones too), photos of pages, and text, Markdown, RTF or web page files.")
+                .font(.caption).foregroundStyle(Theme.inkSoft).frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+        }
+        .card()
+        .fileImporter(isPresented: $picking, allowedContentTypes: DocumentReader.types,
+                      allowsMultipleSelection: true) { result in
+            if case let .success(urls) = result { store.importDocuments(urls) }
+        }
+        .confirmationDialog("Remove \(removing?.title ?? "this document")?", isPresented: .init(
+            get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
+            Button("Remove", role: .destructive) {
+                if let removing { store.removeDocument(removing) }
+            }
+        } message: {
+            Text("Scout won't search it any more. The original file isn't touched.")
+        }
+    }
+
+    private func icon(_ filename: String) -> String {
+        switch (filename as NSString).pathExtension.lowercased() {
+        case "pdf": "doc.richtext"
+        case "jpg", "jpeg", "png", "heic", "heif", "tiff", "gif": "photo"
+        default: "doc.text"
+        }
     }
 }
 

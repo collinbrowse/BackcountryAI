@@ -25,6 +25,8 @@ enum AppTab: Hashable { case scout, guide, saved }
 /// Chat first: the app opens on Scout. The Guide tab is for browsing the library by topic or source.
 struct RootView: View {
     @State private var router = Router()
+    @Environment(LibraryStore.self) private var store
+    @State private var showImport = false
 
     var body: some View {
         TabView(selection: $router.tab) {
@@ -44,6 +46,12 @@ struct RootView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .onOpenURL { url in  // a file opened in the app from Files or a share sheet
+            guard url.isFileURL else { return }
+            store.importDocuments([url])
+            showImport = true
+        }
+        .sheet(isPresented: $showImport) { LibraryView() }
         .environment(router)
         .tint(Theme.accent)
     }

@@ -67,11 +67,17 @@ struct ChatView: View {
                 }
                 .animation(.bouncy, value: peek.isEmpty || trimmed.count < 2)
                 .background {
-                    LinearGradient(colors: [Theme.background.opacity(0), Theme.background.opacity(0.92), Theme.background],
-                                   startPoint: .top, endPoint: .bottom)
-                        .padding(.top, -24)
-                        .ignoresSafeArea()
-                        .allowsHitTesting(false)
+                    // Solid behind the composer and library strip so nothing on the page shows through them;
+                    // only the 24 pt above fades in.
+                    VStack(spacing: 0) {
+                        LinearGradient(colors: [Theme.background.opacity(0), Theme.background],
+                                       startPoint: .top, endPoint: .bottom)
+                            .frame(height: 24)
+                        Theme.background
+                    }
+                    .padding(.top, -24)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
                 }
             }
             .navigationTitle(isEmpty ? "" : "Scout")
@@ -224,7 +230,7 @@ struct ChatView: View {
                 .padding(.horizontal, 40)
                 .padding(.top, 16)
                 .riseIn(2)
-            } else if showBetterTip {
+            } else if showBetterTip && trimmed.isEmpty {
                 betterTip.padding(.top, 16).riseIn(2)
             }
             // Three spacers below, one above: the text sits halfway between the title and dead center.

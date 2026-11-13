@@ -64,7 +64,7 @@ struct OnboardingView: View {
             .animation(.bouncy, value: step)
             .accessibilityElement()
             .accessibilityLabel("Page \(step.rawValue + 1) of \(OnboardingStep.allCases.count)")
-            if step == .pack && store.library == nil && !store.isWorking {
+            if step == .pack && !store.hasPack && !store.isWorking {
                 Button("I'll do this later", action: onFinish).buttonStyle(SecondaryButtonStyle())
             } else {
                 Button(primaryTitle, action: advance).buttonStyle(PrimaryButtonStyle())
@@ -78,7 +78,7 @@ struct OnboardingView: View {
         switch step {
         case .meet: "Nice to meet you"
         case .goodToKnow: "Got it"
-        case .pack: store.library != nil ? "Let's go" : "Continue while it downloads"
+        case .pack: store.hasPack ? "Let's go" : "Continue while it downloads"
         }
     }
 
@@ -174,7 +174,7 @@ private struct PackPage: View {
     private var essentials: LibraryPack? { store.packs.first { $0.id == "lite" } ?? store.packs.first }
 
     var body: some View {
-        OnboardingPage(mood: store.library != nil ? .happy : .idle, title: "Pack me for the trip",
+        OnboardingPage(mood: store.hasPack ? .happy : .idle, title: "Pack me for the trip",
                        subtitle: "Do this on Wi-Fi, before you lose signal.") {
             aiCard
             libraryCard
@@ -219,10 +219,10 @@ private struct PackPage: View {
             DownloadProgressCard()
         } else {
             HStack(alignment: .top, spacing: 12) {
-                stepIcon(done: store.library != nil, symbol: "books.vertical.fill")
+                stepIcon(done: store.hasPack, symbol: "books.vertical.fill")
                 VStack(alignment: .leading, spacing: 6) {
                     Text("The library").font(.headline).foregroundStyle(Theme.ink)
-                    if store.library != nil {
+                    if store.hasPack {
                         Text("\(store.articleCount.formatted()) articles installed.").font(.subheadline).foregroundStyle(Theme.moss)
                     } else if let pack = essentials {
                         Text("\(pack.title): \(pack.articles.formatted(.number.notation(.compactName))) articles, "

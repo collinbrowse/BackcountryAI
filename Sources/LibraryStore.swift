@@ -46,11 +46,23 @@ final class LibraryStore {
         case failed(String)
     }
 
+    /// Everything searchable: the downloaded library and the person's own documents, or either one alone.
     var library: Library?
+    /// Whether a downloaded (or copied-in) library is on the phone, apart from the person's documents.
+    var hasPack = false
     var installedPackID: String?
     var phase: Phase = .idle
     var packs: [LibraryPack] = PackCatalog.all
     var articleCount = 0
+
+    /// Documents the person added (see MyDocuments), newest first.
+    var myDocuments: [MyDocuments.Item] = []
+    /// What the import is doing ("Scanning page 3 of 40"), while it runs.
+    var importStatus: String?
+    /// The last import's problems, one line per file, until the next import.
+    var importErrors: [String] = []
+    private let mine = try? MyDocuments()
+    private var importWork: Task<Void, Never>?
 
     private var work: Task<Void, Never>?
     /// Live downloads by asset-pack ID: their Progress objects are how a download is cancelled.
@@ -86,14 +98,16 @@ final class LibraryStore {
 
     func open() {
         if let folder = ScreenshotMode.libraryFolder, let lib = try? Library(folder: folder) {
-            use(lib, packID: "lite")
+            use(lib, packID: "lite", mine: nil)
             return
         }
+        let mineLibrary = mine?.library()
+        myDocuments = mine?.items() ?? []
         for pack in packs.reversed()
         where pack.assetPackIDs.allSatisfy({ Self.isLocal($0) }) {
             let root = pack.id
             if let lib = try? Library(locate: { try? Self.manager.url(for: FilePath("\(root)/\($0)")) }) {
-                use(lib, packID: pack.id)
+                use(lib, packID: pack.id, mine: mineLibrary)
                 return
             }
         }
@@ -103,19 +117,75 @@ final class LibraryStore {
                 // Older GitHub downloads left a pack-id file naming which library they were.
                 let packID = (try? String(contentsOf: folder.appending(path: "pack-id"), encoding: .utf8))?
                     .trimmingCharacters(in: .whitespacesAndNewlines)
-                use(lib, packID: packID)
+                use(lib, packID: packID, mine: mineLibrary)
                 return
             }
         }
-        library = nil
-        installedPackID = nil
-        articleCount = 0
+        use(nil, packID: nil, mine: mineLibrary)
     }
 
-    private func use(_ lib: Library, packID: String?) {
-        library = lib
+    private func use(_ pack: Library?, packID: String?, mine: Library?) {
+        library = Library.combining(pack: pack, mine: mine)
+        hasPack = pack != nil
         installedPackID = packID
-        articleCount = lib.stats().articles
+        articleCount = library?.stats().articles ?? 0
+    }
+
+    // MARK: - The person's documents
+
+    var isImporting: Bool { importWork != nil }
+
+    /// Reads and indexes files picked in Files or shared to the app, one at a time, then reopens the library so
+    /// search covers them. Files picked while an import runs wait for it.
+    func importDocuments(_ urls: [URL]) {
+        guard let mine, !urls.isEmpty else { return }
+        let previous = importWork
+        if previous == nil { importErrors = [] }
+        importWork = Task {
+            await previous?.value
+            for (i, url) in urls.enumerated() {
+                if Task.isCancelled { break }
+                let name = url.deletingPathExtension().lastPathComponent
+                let prefix = urls.count > 1 ? "\(name) (\(i + 1) of \(urls.count)): " : "\(name): "
+                importStatus = prefix + "Opening"
+                let status: @Sendable (String) -> Void = { line in
+                    Task { @MainActor in
+                        if self.importStatus != nil { self.importStatus = prefix + line }
+                    }
+                }
+                do {
+                    try await Self.add(url, to: mine, status: status)
+                } catch is CancellationError {
+                    break
+                } catch {
+                    importErrors.append("\(url.lastPathComponent): \(error.localizedDescription)")
+                }
+                open()
+            }
+            importStatus = nil
+            importWork = nil
+        }
+    }
+
+    /// Off the main actor: a long PDF takes a while. Cancelling the import cancels this too.
+    @concurrent
+    private nonisolated static func add(_ url: URL, to mine: MyDocuments,
+                                        status: @escaping @Sendable (String) -> Void) async throws {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        let doc = try await DocumentReader.read(url, progress: status)
+        try Task.checkCancellation()
+        status("Indexing")
+        try mine.add(title: doc.title, filename: url.lastPathComponent, sections: doc.sections)
+    }
+
+    func cancelImport() {
+        importWork?.cancel()
+    }
+
+    func removeDocument(_ item: MyDocuments.Item) {
+        try? mine?.remove(key: item.key)
+        open()
     }
 
     /// Replaces the size estimates with what App Store Connect reports.
@@ -157,6 +227,7 @@ final class LibraryStore {
 
     func deleteLibrary() {
         library = nil
+        hasPack = false
         work = Task {
             for pack in packs {
                 for id in pack.assetPackIDs where Self.isLocal(id) {
