@@ -1,17 +1,31 @@
 import SwiftUI
 
-/// Scout, the app's mascot: a pika (a small mountain cousin of the rabbit).
-/// Drawn entirely with SwiftUI shapes so it can react to what the app is doing.
+/// Scout, the app's mascot. Two candidates are on trial: the pika (default) and a UPA-style lynx.
+/// Pick one with the `-mascot lynx` launch argument (or the "mascot" user default).
 struct Scout: View {
-    enum Mood: Equatable {
-        case idle       // breathing, blinking
-        case thinking   // searching the library / waiting for the model
-        case writing    // the answer is streaming in
-        case happy      // done, or a celebration
-        case alert      // an emergency question
-        case sleepy     // nothing installed yet
-    }
+    typealias Mood = MascotMood
+    var mood: Mood = .idle
+    var size: CGFloat = 120
+    @AppStorage("mascot") private var mascot = "pika"
 
+    var body: some View {
+        if mascot == "lynx" { LynxScout(mood: mood, size: size) } else { PikaScout(mood: mood, size: size) }
+    }
+}
+
+enum MascotMood: Equatable, CaseIterable {
+    case idle       // breathing, blinking
+    case thinking   // searching the library / waiting for the model
+    case writing    // the answer is streaming in
+    case happy      // done, or a celebration
+    case alert      // an emergency question
+    case sleepy     // nothing installed yet
+}
+
+/// The pika: a small mountain cousin of the rabbit.
+/// Drawn entirely with SwiftUI shapes so it can react to what the app is doing.
+struct PikaScout: View {
+    typealias Mood = MascotMood
     var mood: Mood = .idle
     var size: CGFloat = 120
 

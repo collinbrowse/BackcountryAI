@@ -26,18 +26,22 @@ struct BackcountryAIApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(store)
-                .environment(assistant)
-                .environment(chats)
-                .environment(saved)
-                .environment(field)
-                .tint(Theme.accent)
-                .fullScreenCover(isPresented: .constant(needsOnboarding)) {
-                    OnboardingView { completedOnboarding = true }
-                        .environment(store)
-                        .environment(assistant)
-                }
+            if MascotGallery.isOn { MascotGallery() } else { app }
         }
+    }
+
+    private var app: some View {
+        RootView()
+            .environment(store)
+            .environment(assistant)
+            .environment(chats)
+            .environment(saved)
+            .environment(field)
+            .tint(Theme.accent)
+            .fullScreenCover(isPresented: .constant(needsOnboarding)) {
+                OnboardingView { completedOnboarding = true }
+                    .environment(store)
+                    .environment(assistant)
+            }
     }
 }
