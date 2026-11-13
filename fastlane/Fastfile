@@ -158,7 +158,6 @@ platform :ios do
       build_app(project: PROJECT, scheme: "BackcountryAI", configuration: "Release", clean: true,
                 output_directory: "build/release", output_name: "BackcountryAI.ipa",
                 xcargs: "#{XCFLAGS} #{signing_flags} CURRENT_PROJECT_VERSION=#{number} #{codesign_flags}".strip,
-                export_xcargs: signing_flags,
                 export_options: { method: "app-store", signingStyle: "automatic", teamID: TEAM_ID,
                                   manageAppVersionAndBuildNumber: false })
     end
