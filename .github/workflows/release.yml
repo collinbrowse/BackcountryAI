@@ -22,6 +22,8 @@ jobs:
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+      CI_SIGNING_P12_BASE64: ${{ secrets.CI_SIGNING_P12_BASE64 }}
+      CI_SIGNING_P12_PASSWORD: ${{ secrets.CI_SIGNING_P12_PASSWORD }}
       REVIEW_FIRST_NAME: ${{ secrets.REVIEW_FIRST_NAME }}
       REVIEW_LAST_NAME: ${{ secrets.REVIEW_LAST_NAME }}
       REVIEW_PHONE: ${{ secrets.REVIEW_PHONE }}
