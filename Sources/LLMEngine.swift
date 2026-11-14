@@ -107,6 +107,32 @@ extension LLMEngine {
     }
 }
 
+/// Makes a prompt fit an engine's context: drops the weakest excerpts (the last ones) until the instructions,
+/// prompt and answer all fit, counted with that engine's own tokenizer and chat template.
+enum PromptFit {
+    /// Slack for what the count can miss, such as the tokens that open the answer's turn.
+    static let overheadTokens = 200
+
+    /// - Parameters:
+    ///   - minimum: never drop below this many excerpts; an answer from too little is worse than a tight fit.
+    ///   - messages: builds the conversation from the excerpts that are kept.
+    static func fit<Source: Sendable>(_ sources: [Source], minimum: Int = 2, engine: any LLMEngine, config: GenerationConfig,
+                            messages: @Sendable ([Source]) -> [LLMMessage]) async -> (sources: [Source], messages: [LLMMessage]) {
+        let window = await engine.contextTokens(for: config)
+        var kept = sources
+        while true {
+            let built = messages(kept)
+            let counted = await engine.tokenCount(built)
+            // Without a tokenizer, guess high: about three characters to a token.
+            let tokens = counted ?? built.reduce(0) { $0 + $1.content.count } / 3
+            LLMLog.note("\(engine.name): context \(window), prompt \(tokens) tokens (counted: \(counted != nil)), "
+                + "answer up to \(config.maxTokens), \(kept.count) excerpts")
+            if tokens + config.maxTokens + overheadTokens <= window || kept.count <= minimum { return (kept, built) }
+            kept.removeLast()
+        }
+    }
+}
+
 /// Cuts a streamed answer at the first stop sequence. Text that could be the start of one is held back until
 /// it's clear whether it is, so a stop sequence never flashes on screen.
 struct StopSequenceFilter {

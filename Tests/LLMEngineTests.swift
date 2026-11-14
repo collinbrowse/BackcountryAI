@@ -215,3 +215,33 @@ struct MemoryBudgetTests {
         #expect(throws: LLMError.self) { try qwen4B.check(availableBytes: 0) }
     }
 }
+
+struct PromptFitTests {
+    /// MockEngine counts one token per word.
+    private func fit(_ excerpts: [String], context: Int, maxTokens: Int = 10) async -> [String] {
+        let engine = MockEngine(pieces: [])
+        let config = GenerationConfig(maxTokens: maxTokens, contextTokens: context)
+        return await PromptFit.fit(excerpts, engine: engine, config: config) { kept in
+            [.system("be brief"), .user(kept.joined(separator: " "))]
+        }.sources
+    }
+
+    private let excerpts = (1...5).map { _ in Array(repeating: "word", count: 100).joined(separator: " ") }
+
+    @Test func keepsEverythingThatFits() async {
+        #expect(await fit(excerpts, context: 502 + 10 + PromptFit.overheadTokens).count == 5)
+    }
+
+    @Test func dropsTheLastExcerptsUntilItFits() async {
+        // Room for the instructions, three excerpts, the answer and the overhead, but not four.
+        #expect(await fit(excerpts, context: 302 + 10 + PromptFit.overheadTokens).count == 3)
+    }
+
+    @Test func leavesRoomForTheAnswer() async {
+        #expect(await fit(excerpts, context: 502 + 10 + PromptFit.overheadTokens, maxTokens: 110).count == 4)
+    }
+
+    @Test func neverDropsBelowTwoExcerpts() async {
+        #expect(await fit(excerpts, context: 50).count == 2)
+    }
+}

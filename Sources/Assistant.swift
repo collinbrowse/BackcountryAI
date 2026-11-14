@@ -145,14 +145,18 @@ final class Assistant {
             messages[index].status = better.isActive && !better.isReady
                 ? "Getting better answers ready…" : "Writing an answer on this phone…"
             do {
-                let prompt = try await fittingPrompt(question: q, sources: &sources,
-                                                     previous: previous, previousAnswer: previousAnswer)
-                messages[index].sources = sources
                 // Better answers: the larger model writes the answer when it's on. If it can't load, Apple's does.
                 let useBetter = better.isActive ? await better.ensureLoaded() : false
                 let engine: any LLMEngine = useBetter ? better.engine : apple
                 messages[index].status = "Writing an answer on this phone…"
-                let request: [LLMMessage] = [.system(Retrieval.instructions), .user(prompt)]
+                // Drop the weakest excerpts until the prompt fits this model, by its own token count.
+                let fitted = await PromptFit.fit(sources, engine: engine, config: .answers) { kept in
+                    [.system(Retrieval.instructions),
+                     .user(Retrieval.prompt(question: q, sources: kept, previous: previous, previousAnswer: previousAnswer))]
+                }
+                sources = fitted.sources
+                messages[index].sources = sources
+                let request = fitted.messages
                 let show: @MainActor (String) -> Void = { text in
                     self.messages[index].status = nil
                     self.messages[index].text = text
@@ -249,36 +253,5 @@ final class Assistant {
     private func save() {
         guard let conversationID else { return }
         chats?.save(id: conversationID, messages: messages, topic: topic)
-    }
-
-    /// Exact token counts need iOS 26.4. Before that the callers estimate from the text's length.
-    private func tokens(inInstructions text: String) async -> Int? {
-        guard #available(iOS 26.4, *) else { return nil }
-        return try? await model.tokenCount(for: Instructions(text))
-    }
-
-    private func tokens(inPrompt text: String) async -> Int? {
-        guard #available(iOS 26.4, *) else { return nil }
-        return try? await model.tokenCount(for: text)
-    }
-
-    /// Builds the prompt, dropping the weakest excerpts until it fits the model's context window
-    /// with room left for the answer.
-    private func fittingPrompt(question: String, sources: inout [Passage], previous: String?,
-                               previousAnswer: String?) async throws -> String {
-        let reserve = 900  // tokens for the answer plus overhead
-        // Guard against a not-yet-loaded model reporting a tiny window, which would drop every source.
-        let window = max(model.contextSize, 4096)
-        let instructionTokens = await tokens(inInstructions: Retrieval.instructions) ?? 250
-        while true {
-            let prompt = Retrieval.prompt(question: question, sources: sources, previous: previous,
-                                     previousAnswer: previousAnswer)
-            let counted = await tokens(inPrompt: prompt)
-            let n = sources.count
-            let tokens = counted ?? prompt.count / 3
-            log.notice("context \(window) instructions \(instructionTokens) prompt \(tokens) (counted: \(counted != nil)) sources \(n)")
-            if instructionTokens + tokens + reserve <= window || sources.count <= 2 { return prompt }
-            sources.removeLast()
-        }
     }
 }
