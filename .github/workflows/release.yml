@@ -30,6 +30,7 @@ jobs:
       REVIEW_EMAIL: ${{ secrets.REVIEW_EMAIL }}
       APP_SITE_URL: ${{ vars.APP_SITE_URL }}
       TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_GROUPS }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # writes the tester-facing "What to Test" notes
     steps:
       - uses: actions/checkout@v4
         with:
