@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BAAppGroupID</key>
-	<string>group.com.collinbrowse.backcountryai</string>
+	<string>$(APP_GROUP_ID)</string>
 	<key>BAHasManagedAssetPacks</key>
 	<true/>
 	<key>BAUsesAppleHosting</key>

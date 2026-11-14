@@ -11,17 +11,19 @@ enum Onboarding {
 }
 
 enum OnboardingStep: Int, CaseIterable, Identifiable {
-    case meet, goodToKnow, pack
+    case meet, goodToKnow, pack, documents
     var id: Int { rawValue }
 }
 
-/// Three short pages: meet Scout, the honest caveats (everyone sees the battery one), and setup.
+/// Four short pages: meet Scout, the honest caveats (everyone sees the battery one), the downloads, and the
+/// person's own documents.
 struct OnboardingView: View {
     var isReplay = false
     var onFinish: () -> Void
 
     @Environment(LibraryStore.self) private var store
     @State private var step: OnboardingStep = .meet
+    @State private var better = BetterModel.shared
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -43,6 +45,7 @@ struct OnboardingView: View {
                     MeetPage().tag(OnboardingStep.meet)
                     GoodToKnowPage().tag(OnboardingStep.goodToKnow)
                     PackPage().tag(OnboardingStep.pack)
+                    DocumentsPage().tag(OnboardingStep.documents)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 bottomBar
@@ -64,8 +67,10 @@ struct OnboardingView: View {
             .animation(.bouncy, value: step)
             .accessibilityElement()
             .accessibilityLabel("Page \(step.rawValue + 1) of \(OnboardingStep.allCases.count)")
-            if step == .pack && !store.hasPack && !store.isWorking {
-                Button("I'll do this later", action: onFinish).buttonStyle(SecondaryButtonStyle())
+            if step == .pack && !packStarted {
+                Button("I'll do this later", action: advance).buttonStyle(SecondaryButtonStyle())
+            } else if step == .documents && store.myDocuments.isEmpty && !store.isImporting {
+                Button("Skip for now", action: onFinish).buttonStyle(SecondaryButtonStyle())
             } else {
                 Button(primaryTitle, action: advance).buttonStyle(PrimaryButtonStyle())
             }
@@ -78,9 +83,14 @@ struct OnboardingView: View {
         switch step {
         case .meet: "Nice to meet you"
         case .goodToKnow: "Got it"
-        case .pack: store.hasPack ? "Let's go" : "Continue while it downloads"
+        case .pack: packDownloading ? "Continue while it downloads" : "Next"
+        case .documents: "Let's go"
         }
     }
+
+    private var modelDownloading: Bool { if case .downloading = better.state { true } else { false } }
+    private var packDownloading: Bool { store.isWorking || modelDownloading }
+    private var packStarted: Bool { store.hasPack || better.isDownloaded || packDownloading }
 
     private func advance() {
         guard let next = OnboardingStep(rawValue: step.rawValue + 1) else { return onFinish() }
@@ -145,7 +155,7 @@ private struct GoodToKnowPage: View {
             point("sos", Theme.danger, "Emergencies: call 911 first",
                   "No signal? On iPhone 14 or later, calling 911 offers Emergency SOS via satellite. The red SOS button is always on the home screen.")
             point("battery.25percent", Theme.sun, "Answers use real battery",
-                  "I think on this iPhone's chip, which works hard while I write. Searching and reading the library is instant and nearly free, saved answers cost nothing, and you'll see what each answer used. Carry a battery pack.")
+                  "I think on this iPhone's chip, which works hard while I write. Searching and reading the library is instant and nearly free, and so is rereading a saved chat. Carry a battery pack.")
         }
     }
 
@@ -170,14 +180,22 @@ private struct PackPage: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
     @State private var problem: String?? = nil
+    @State private var better = BetterModel.shared
 
     private var essentials: LibraryPack? { store.packs.first { $0.id == "lite" } ?? store.packs.first }
+    private var needsGuides: Bool { !store.hasPack && !store.isWorking }
+    /// The larger model is the default wherever it runs; only phones that can't run it skip it.
+    private var needsModel: Bool { BetterModel.isSupported && better.state == .notDownloaded }
+    private var modelDownloading: Bool { if case .downloading = better.state { true } else { false } }
+    private var isFailed: Bool { if case .failed = store.phase { true } else { false } }
 
     var body: some View {
-        OnboardingPage(mood: store.hasPack ? .happy : .idle, title: "Pack me for the trip",
+        OnboardingPage(mood: store.hasPack && better.isDownloaded ? .happy : .idle, title: "Pack me for the trip",
                        subtitle: "Do this on Wi-Fi, before you lose signal.") {
             aiCard
             libraryCard
+            if BetterModel.isOffered { modelCard }
+            downloadButtons
             Label("Then try me in Airplane Mode, so you know I work before you need me.", systemImage: "airplane")
                 .font(.footnote).foregroundStyle(Theme.inkSoft)
         }
@@ -188,6 +206,7 @@ private struct PackPage: View {
                 try? await Task.sleep(for: .seconds(2))
             }
         }
+        .task { await better.refreshSize() }
     }
 
     private var aiCard: some View {
@@ -220,20 +239,16 @@ private struct PackPage: View {
         } else {
             HStack(alignment: .top, spacing: 12) {
                 stepIcon(done: store.hasPack, symbol: "books.vertical.fill")
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("The library").font(.headline).foregroundStyle(Theme.ink)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Offline field guides").font(.headline).foregroundStyle(Theme.ink)
                     if store.hasPack {
-                        Text("\(store.articleCount.formatted()) articles installed.").font(.subheadline).foregroundStyle(Theme.moss)
+                        Text("Ready. \(store.articleCount.formatted()) articles on this iPhone.").font(.subheadline).foregroundStyle(Theme.moss)
                     } else if let pack = essentials {
-                        Text("\(pack.title): \(pack.articles.formatted(.number.notation(.compactName))) articles, "
-                             + String(format: "%.1f GB download.", Double(pack.downloadBytes) / 1e9)
-                             + " You can pick a bigger one later.")
+                        Text("First aid, survival, weather and park safety guides, "
+                             + "\(pack.articles.formatted(.number.notation(.compactName))) articles. "
+                             + "With no signal, this is what I look things up in, so my answers come from real sources. "
+                             + Self.gb(pack.downloadBytes) + ".")
                             .font(.subheadline).foregroundStyle(Theme.inkSoft)
-                        Button { store.install(pack) } label: {
-                            Label("Download \(pack.title)", systemImage: "arrow.down")
-                        }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .padding(.top, 4)
                     }
                 }
                 Spacer(minLength: 0)
@@ -242,7 +257,71 @@ private struct PackPage: View {
         }
     }
 
-    private var isFailed: Bool { if case .failed = store.phase { true } else { false } }
+    private var modelCard: some View {
+        HStack(alignment: .top, spacing: 12) {
+            stepIcon(done: better.isDownloaded, symbol: "brain.head.profile")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Larger AI model").font(.headline).foregroundStyle(Theme.ink)
+                switch better.state {
+                case .downloading(let f):
+                    ProgressView(value: f) {
+                        Text(f > 0 ? "Downloading " + f.formatted(.percent.precision(.fractionLength(0)))
+                                   : "Starting the download…")
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                    }
+                    .tint(Theme.accent)
+                    Button("Cancel", role: .cancel) { better.cancelDownload() }.font(.subheadline.weight(.semibold))
+                case .failed(let message) where !better.isDownloaded:
+                    Text(message).font(.subheadline).foregroundStyle(Theme.danger)
+                    Button("Try again") { better.download() }.font(.subheadline.weight(.semibold))
+                default:
+                    if better.isDownloaded {
+                        Text("Ready. It writes my answers.").font(.subheadline).foregroundStyle(Theme.moss)
+                    } else {
+                        Text("Writes my answers, with more accurate, specific steps than Apple's built-in model. "
+                             + "It runs on this iPhone too. " + Self.gb(better.downloadBytes) + ".")
+                            .font(.subheadline).foregroundStyle(Theme.inkSoft)
+                        if !BetterModel.isSupported {
+                            Text("Needs a real iPhone; the simulator can't run it.").font(.caption).foregroundStyle(Theme.inkSoft)
+                        }
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .card(padding: 14)
+        .animation(.bouncy, value: better.state)
+    }
+
+    /// One button gets everything. The guides alone are for phones short on space.
+    @ViewBuilder private var downloadButtons: some View {
+        if needsGuides, let pack = essentials {
+            VStack(spacing: 6) {
+                Button {
+                    store.install(pack)
+                    if needsModel { better.download() }
+                } label: {
+                    Label(needsModel ? "Download both · " + Self.gb(pack.downloadBytes + better.downloadBytes)
+                                     : "Download guides · " + Self.gb(pack.downloadBytes),
+                          systemImage: "arrow.down")
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                if needsModel {
+                    Button("Short on space? Get just the guides (\(Self.gb(pack.downloadBytes)))") { store.install(pack) }
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Theme.accentDeep)
+                        .padding(.vertical, 6)
+                }
+            }
+        } else if needsModel {
+            Button { better.download() } label: {
+                Label("Download the model · " + Self.gb(better.downloadBytes), systemImage: "arrow.down")
+            }
+            .buttonStyle(PrimaryButtonStyle())
+        }
+    }
+
+    private static func gb(_ bytes: Int64) -> String { String(format: "%.1f GB", Double(bytes) / 1e9) }
 
     private func stepIcon(done: Bool, symbol: String) -> some View {
         Image(systemName: done ? "checkmark" : symbol)
@@ -251,6 +330,16 @@ private struct PackPage: View {
             .frame(width: 38, height: 38)
             .background(done ? AnyShapeStyle(Theme.moss) : AnyShapeStyle(Theme.accent.opacity(0.14)), in: .circle)
             .contentTransition(.symbolEffect(.replace))
+    }
+}
+
+/// The person's own manuals and notes, searched along with the guides.
+private struct DocumentsPage: View {
+    var body: some View {
+        OnboardingPage(mood: .idle, title: "Add your manuals",
+                       subtitle: "Your snowmobile manual, a mountain bike repair guide, the trip plan. I index them and search them along with the library.") {
+            MyDocumentsCard()
+        }
     }
 }
 

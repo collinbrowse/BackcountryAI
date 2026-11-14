@@ -16,6 +16,9 @@ enum Retrieval {
     task) plus words an article about it would use: the medical or technical name, or a common synonym. \
     Questions are often dictated, so a word that makes no sense may be a misheard brand: search for the kind of \
     product instead (a water filter, a stove).
+    If the message asks for no information or help at all (a greeting, thanks, a reaction like "ok", a question \
+    about you or how to use this app, or a request that has nothing to do with the outdoors, safety, gear or \
+    vehicles), reply with only: CHAT
     """
 
     static let pickInstructions = """
@@ -27,7 +30,8 @@ enum Retrieval {
     """
 
     /// The model's searches for a question. Empty if the model fails, so search falls back to the question alone.
-    static func searches(for question: String, previous: String?, model: SystemLanguageModel) async -> [String] {
+    /// Nil when the message is small talk, with nothing to look up.
+    static func searches(for question: String, previous: String?, model: SystemLanguageModel) async -> [String]? {
         var prompt = ""
         if let previous { prompt += "Their previous question, for context: \(previous)\n" }
         prompt += "Question: \(question)"
@@ -35,6 +39,8 @@ enum Retrieval {
         guard let reply = try? await session.respond(to: prompt, options: GenerationOptions(temperature: 0,
                                                                                             maximumResponseTokens: 80))
         else { return [] }
+        if reply.content.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+            .uppercased() == "CHAT" { return nil }
         return reply.content.split(whereSeparator: \.isNewline).compactMap { line in
             // Tolerate "1. ", "- ", quotes and trailing periods.
             let s = line.replacing(/^\s*(\d+[.)]|[-*•])\s*/, with: "")
@@ -70,7 +76,14 @@ enum Retrieval {
         let session = LanguageModelSession(model: model, instructions: pickInstructions)
         guard let reply = try? await session.respond(to: prompt, options: GenerationOptions(temperature: 0,
                                                                                             maximumResponseTokens: 300))
-        else { return Array(candidates.filter { ($0.coverage ?? 0) >= 0.99 }.prefix(3)) }
+        else {
+            // The model couldn't check them (its guardrails refuse some medical prompts). Keep the candidates that
+            // matched every word, or else the person's own documents that matched most of them: their manual is
+            // why they added it, and dropping it leaves an emergency answer with no source at all.
+            let exact = candidates.filter { ($0.coverage ?? 0) >= 0.99 }
+            if !exact.isEmpty { return Array(exact.prefix(3)) }
+            return Array(candidates.filter { $0.isMine && ($0.coverage ?? 0) >= 0.6 }.prefix(2))
+        }
         var helps = Set<Int>()
         for line in reply.content.split(whereSeparator: \.isNewline) {
             guard let m = line.firstMatch(of: /^\W*(\d+)/), let n = Int(m.1), (1...candidates.count).contains(n)
@@ -98,6 +111,9 @@ enum Retrieval {
     If you don't know a specific fact (a model's oil type, a dose, whether a plant is edible), say so in one \
     sentence instead of making it up. Don't list things you don't know about their situation.
     If none of the excerpts helped, start the answer with "Not from the library:". Never end with that phrase.
+    You have no internet: no live weather, forecasts, news, maps or locations. If they ask for those, say so in one \
+    sentence, give what general guidance fits, and suggest saving a forecast or map (a screenshot or PDF) to Your \
+    documents in the Offline library before they lose signal, so you can read it later.
     Only when the question describes someone hurt, sick or in danger right now: make the urgent first action and \
     calling or texting 911 or using an SOS/satellite messenger the first sentence and step. Otherwise never mention \
     911, SOS or emergency help.

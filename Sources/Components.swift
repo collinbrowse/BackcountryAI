@@ -223,17 +223,21 @@ struct SuggestionChip: View {
     let title: String
     var symbol: String? = nil
     var tint: Color = Theme.accent
+    /// Smaller and muted: an outline only, for suggestions that shouldn't compete with what's above them.
+    var quiet = false
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: quiet ? 5 : 6) {
             if let symbol {
-                Image(systemName: symbol).font(.footnote.weight(.bold)).foregroundStyle(tint)
+                Image(systemName: symbol).font(quiet ? .caption : .footnote.weight(.bold))
+                    .foregroundStyle(quiet ? Theme.inkSoft : tint)
             }
-            Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(1)
+            Text(title).font(quiet ? .footnote : .subheadline.weight(.semibold))
+                .foregroundStyle(quiet ? Theme.inkSoft : Theme.ink).lineLimit(1)
         }
-        .padding(.horizontal, 14).padding(.vertical, 10)
-        .background(Theme.card, in: .capsule)
+        .padding(.horizontal, quiet ? 12 : 14).padding(.vertical, quiet ? 7 : 10)
+        .background(quiet ? .clear : Theme.card, in: .capsule)
         .overlay(Capsule().strokeBorder(Theme.hairline))
-        .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+        .shadow(color: .black.opacity(quiet ? 0 : 0.05), radius: 4, y: 2)
     }
 }
 

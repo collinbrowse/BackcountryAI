@@ -29,9 +29,10 @@
 		63142D1529C2188B9431242E /* ChatHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D45A62A7AD51C7B3A544297A /* ChatHistoryView.swift */; };
 		64226778A58ED1D8AEFE6E91 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 316FF0EDBCCFCD9DA5409B11 /* MLXLMCommon */; };
 		64EF816937442A0D946CAC86 /* BetterAnswersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAD88F9F6682F14F7CFC161F /* BetterAnswersView.swift */; };
+		7B8AFC664D26FE0D76CD00F9 /* SmallTalkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2596B2C4B8B35997159A3828 /* SmallTalkTests.swift */; };
 		86F1582355E8BF70F98DC667 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548DE6B9FE8E7C373C2B8A9D /* ScreenshotTests.swift */; };
+		934DC0B97BA3199F67B38A83 /* ChatTopic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63DC928DB6689422E3B6E182 /* ChatTopic.swift */; };
 		974861887A20ECB963801743 /* BackcountryAIDownloader.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = BD667E04C0051E16486FE321 /* BackcountryAIDownloader.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		9AB3B09C1DF45EC43F6447F8 /* SavedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA066571DB5FACD9ED3561EF /* SavedStore.swift */; };
 		9FE7C4A8DAFD5DCE64A8B771 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B3A2A2F462FD4938C9F542C2 /* Assets.xcassets */; };
 		A4BDCE89643F6CD0227711B6 /* ArticleFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93458C3BEDEB68865D0F6B21 /* ArticleFocus.swift */; };
 		A71225C1FC2DD934F1C3ADB5 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 257B84C1E273DD9A008815CB /* LibraryStore.swift */; };
@@ -53,6 +54,7 @@
 		E7E9A03186A4DD046371FA41 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ABBE1F3C02C35A8F3BF9B14 /* Components.swift */; };
 		EECCD0649B062D3010EDDF21 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E2FCEB63DA5A32DF75AC4C /* RootView.swift */; };
 		FB54A705D3A27C3BE8C311E2 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33402F18AAC47699E4874BF3 /* Theme.swift */; };
+		FDC0B15406C6A04AB59BA8B9 /* SmallTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22157751EF56CB7B70325F39 /* SmallTalk.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,8 +99,10 @@
 		04DC41F7EFB9713FC4A2FC58 /* BetterModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterModel.swift; sourceTree = "<group>"; };
 		07C170B2A80F7AD29D23464A /* BackcountryAI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BackcountryAI.entitlements; sourceTree = "<group>"; };
 		1F63C609C46ABCCF50E17B7F /* Guide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guide.swift; sourceTree = "<group>"; };
+		22157751EF56CB7B70325F39 /* SmallTalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallTalk.swift; sourceTree = "<group>"; };
 		2242DE11CF60CEAFC08F5AAF /* Topics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Topics.swift; sourceTree = "<group>"; };
 		257B84C1E273DD9A008815CB /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
+		2596B2C4B8B35997159A3828 /* SmallTalkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallTalkTests.swift; sourceTree = "<group>"; };
 		28226CA2C5F7E6BB53EDD03D /* MyDocumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDocumentsTests.swift; sourceTree = "<group>"; };
 		288F28E1048C15C4D37806AE /* Scout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scout.swift; sourceTree = "<group>"; };
 		29EB26B6688735C4051BAD92 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
@@ -110,6 +114,7 @@
 		42B5939B841C74D05BA27BA2 /* BackcountryAIDownloader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BackcountryAIDownloader.entitlements; sourceTree = "<group>"; };
 		548DE6B9FE8E7C373C2B8A9D /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		5F077B8D8244B95DE7FEC499 /* ScreenshotMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotMode.swift; sourceTree = "<group>"; };
+		63DC928DB6689422E3B6E182 /* ChatTopic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTopic.swift; sourceTree = "<group>"; };
 		6ABBE1F3C02C35A8F3BF9B14 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		6F18AFE66894FD8D276154C3 /* ChatStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStoreTests.swift; sourceTree = "<group>"; };
 		7F06188766C444410068466F /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
@@ -128,7 +133,6 @@
 		B2917396594C68CE8683BDAD /* Scenery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenery.swift; sourceTree = "<group>"; };
 		B3A2A2F462FD4938C9F542C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B526919DD2B6F8CC38923DFB /* BackcountryAITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BackcountryAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		BA066571DB5FACD9ED3561EF /* SavedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedStore.swift; sourceTree = "<group>"; };
 		BD667E04C0051E16486FE321 /* BackcountryAIDownloader.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = BackcountryAIDownloader.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C01D18C23AC53F830B410AD3 /* Assistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assistant.swift; sourceTree = "<group>"; };
 		CAD88F9F6682F14F7CFC161F /* BetterAnswersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterAnswersView.swift; sourceTree = "<group>"; };
@@ -165,6 +169,7 @@
 			children = (
 				6F18AFE66894FD8D276154C3 /* ChatStoreTests.swift */,
 				28226CA2C5F7E6BB53EDD03D /* MyDocumentsTests.swift */,
+				2596B2C4B8B35997159A3828 /* SmallTalkTests.swift */,
 				FE27F1E117DAD1C471B65ED0 /* UrgencyTests.swift */,
 			);
 			path = Tests;
@@ -225,6 +230,7 @@
 				04DC41F7EFB9713FC4A2FC58 /* BetterModel.swift */,
 				D45A62A7AD51C7B3A544297A /* ChatHistoryView.swift */,
 				E5199F5BD2B7EBF0CB5B8EEC /* ChatStore.swift */,
+				63DC928DB6689422E3B6E182 /* ChatTopic.swift */,
 				7F06188766C444410068466F /* ChatView.swift */,
 				6ABBE1F3C02C35A8F3BF9B14 /* Components.swift */,
 				B12170F4C61C9F65E0D6EC6F /* ConversationView.swift */,
@@ -243,11 +249,11 @@
 				A7C38A1055E1D6375CFDA5D1 /* Readiness.swift */,
 				88AD4D7689E5BF0291897070 /* Retrieval.swift */,
 				F2E2FCEB63DA5A32DF75AC4C /* RootView.swift */,
-				BA066571DB5FACD9ED3561EF /* SavedStore.swift */,
 				B007F631D908B95A1C6969D5 /* SavedViews.swift */,
 				B2917396594C68CE8683BDAD /* Scenery.swift */,
 				288F28E1048C15C4D37806AE /* Scout.swift */,
 				5F077B8D8244B95DE7FEC499 /* ScreenshotMode.swift */,
+				22157751EF56CB7B70325F39 /* SmallTalk.swift */,
 				33402F18AAC47699E4874BF3 /* Theme.swift */,
 				2242DE11CF60CEAFC08F5AAF /* Topics.swift */,
 			);
@@ -434,6 +440,7 @@
 			files = (
 				5EF8299C1D08D9696967A88B /* ChatStoreTests.swift in Sources */,
 				4173B82BDB5298A953A26762 /* MyDocumentsTests.swift in Sources */,
+				7B8AFC664D26FE0D76CD00F9 /* SmallTalkTests.swift in Sources */,
 				59975BBA6D8C41480AC2080E /* UrgencyTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -452,6 +459,7 @@
 				AE27980426CC7BB9A640F910 /* BetterModel.swift in Sources */,
 				63142D1529C2188B9431242E /* ChatHistoryView.swift in Sources */,
 				5252BD525AAEA9CE9DEC6741 /* ChatStore.swift in Sources */,
+				934DC0B97BA3199F67B38A83 /* ChatTopic.swift in Sources */,
 				2B1B63302EAEF834739830E7 /* ChatView.swift in Sources */,
 				E7E9A03186A4DD046371FA41 /* Components.swift in Sources */,
 				0C4940CE9212E51E7C752AD5 /* ConversationView.swift in Sources */,
@@ -469,11 +477,11 @@
 				E09BEF2824E172AE33243CE2 /* Readiness.swift in Sources */,
 				21552C8A4CC7B18E3E58E829 /* Retrieval.swift in Sources */,
 				EECCD0649B062D3010EDDF21 /* RootView.swift in Sources */,
-				9AB3B09C1DF45EC43F6447F8 /* SavedStore.swift in Sources */,
 				B4E889E30FBCFA36A1DE6D64 /* SavedViews.swift in Sources */,
 				DE10A27E5010C9E664396023 /* Scenery.swift in Sources */,
 				35DE7160777842A72B2E8E8F /* Scout.swift in Sources */,
 				A995B5CD74705786910EACF5 /* ScreenshotMode.swift in Sources */,
+				FDC0B15406C6A04AB59BA8B9 /* SmallTalk.swift in Sources */,
 				FB54A705D3A27C3BE8C311E2 /* Theme.swift in Sources */,
 				BBFB3869513556DB4842C01A /* Topics.swift in Sources */,
 			);
@@ -658,6 +666,7 @@
 		4795B36504D4B4F597930A67 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_GROUP_ID = group.com.collinbrowse.backcountryai;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/BackcountryAI.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -727,6 +736,7 @@
 		B8AA1A3520E714F60F018650 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_GROUP_ID = group.com.collinbrowse.backcountryai;
 				CODE_SIGN_ENTITLEMENTS = DownloaderExtension/BackcountryAIDownloader.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -768,6 +778,7 @@
 		F365B3208105AB703D8949C3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_GROUP_ID = group.com.collinbrowse.backcountryai.dev;
 				CODE_SIGN_ENTITLEMENTS = DownloaderExtension/BackcountryAIDownloader.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -779,7 +790,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryai.downloader;
+				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryai.dev.downloader;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -789,6 +800,7 @@
 		FD72D4D3F61A602541A1FEC5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_GROUP_ID = group.com.collinbrowse.backcountryai.dev;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/BackcountryAI.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -798,7 +810,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sources/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BackcountryAI;
+				INFOPLIST_KEY_CFBundleDisplayName = "BC-AI Dev";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -808,7 +820,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryai;
+				PRODUCT_BUNDLE_IDENTIFIER = com.collinbrowse.backcountryai.dev;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;

@@ -136,8 +136,6 @@ struct ArticleView: View {
                 Text("\(n).").font(.body.weight(.bold)).foregroundStyle(Theme.accentDeep)
                 Text(Inline.render(t, citations: false)).fixedSize(horizontal: false, vertical: true)
             }
-        case .notFromLibrary:
-            EmptyView()
         }
     }
 

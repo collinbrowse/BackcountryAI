@@ -14,10 +14,13 @@ struct BetterAnswersCard: View {
                     .font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Theme.ink)
                     .labelStyle(.titleAndIcon)
                 Spacer()
-                if better.isActive {
-                    Label("On", systemImage: "checkmark.circle.fill")
-                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.moss)
-                } else if !better.isDownloaded {
+                if better.isDownloaded {
+                    // On: the larger model writes answers. Off: Apple's built-in model does; the download stays.
+                    Toggle("Better answers", isOn: $better.useForAnswers)
+                        .labelsHidden()
+                        .tint(Theme.moss)
+                        .disabled(!BetterModel.isSupported)
+                } else {
                     Text("Optional").font(.caption2.weight(.bold)).foregroundStyle(Theme.accentDeep)
                         .padding(.horizontal, 7).padding(.vertical, 3)
                         .background(Theme.accent.opacity(0.14), in: .capsule)
@@ -70,17 +73,7 @@ struct BetterAnswersCard: View {
             Button { better.download() } label: { Label("Try again", systemImage: "arrow.clockwise") }
                 .buttonStyle(SecondaryButtonStyle())
         default:
-            if better.isDownloaded {
-                Picker("Answers", selection: $better.useForAnswers) {
-                    Text("Faster").tag(false)
-                    Text("Better").tag(true)
-                }
-                .pickerStyle(.segmented)
-                Text(better.useForAnswers
-                     ? "Scout uses the larger model. Answers take about 10 seconds and use more battery."
-                     : "Scout uses Apple's built-in model. Answers take about 3 seconds. The download stays on this iPhone.")
-                    .font(.caption).foregroundStyle(Theme.inkSoft)
-            } else {
+            if !better.isDownloaded {
                 Button { better.download() } label: { Label("Download better answers", systemImage: "arrow.down") }
                     .buttonStyle(SecondaryButtonStyle())
                     .disabled(!BetterModel.isSupported)
@@ -125,7 +118,7 @@ struct BetterAnswersDetailsView: View {
                 device
                 benchmark
                 if better.isDownloaded {
-                    Button("Remove better answers from this iPhone", role: .destructive) { confirmDelete = true }
+                    Button("Remove \(BetterModel.displayName) from this iPhone", role: .destructive) { confirmDelete = true }
                         .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity)
                 }
@@ -139,7 +132,7 @@ struct BetterAnswersDetailsView: View {
             memoryNow = MemoryProbe.footprintGB
             availableNow = MemoryProbe.availableGB
         }
-        .confirmationDialog("Remove better answers?", isPresented: $confirmDelete, titleVisibility: .visible) {
+        .confirmationDialog("Remove \(BetterModel.displayName)?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Remove", role: .destructive) { better.delete() }
         } message: {
             Text("Scout goes back to Apple's built-in model. You'll need Wi-Fi to download it again.")
@@ -160,15 +153,21 @@ struct BetterAnswersDetailsView: View {
     private var measured: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("What we measured").font(.headline)
-            Text("16 backcountry questions with the same library passages. Each answer was scored 0 (wrong or unsafe), 1 (vague) or 2 (right and specific). Times and memory are from an 8 GB iPhone.")
+            Text("16 backcountry questions with the same library passages. Each answer was scored 0 (wrong or unsafe), 1 (vague) or 2 (right and specific), and each model's 16 scores were added up, out of 32 points. Times and memory are from an 8 GB iPhone.")
                 .font(.footnote).foregroundStyle(Theme.inkSoft)
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
                 GridRow {
                     Text("")
                     Text("Built-in").font(.caption.weight(.bold)).foregroundStyle(Theme.inkSoft)
                     Text("Better").font(.caption.weight(.bold)).foregroundStyle(Theme.inkSoft)
+                    Text("")
                 }
-                compare("Answer quality", "9 of 32", "23 of 32")
+                GridRow {
+                    Text("Answer quality").foregroundStyle(Theme.inkSoft)
+                    Text("9 pts").monospacedDigit()
+                    Text("23 pts").monospacedDigit().fontWeight(.semibold)
+                    Text("32 pts possible").font(.caption).foregroundStyle(Theme.inkSoft)
+                }
                 compare("First words", "1.6 s", "3.3 s")
                 compare("Full answer", "3.5 s", "10 s")
                 compare("Memory in use", "part of iOS", "3.4 GB")
@@ -184,7 +183,7 @@ struct BetterAnswersDetailsView: View {
     private var modelInfo: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("The model").font(.headline)
-            row("Name", "Qwen 3.5 4B")
+            row("Name", BetterModel.displayName)
             row("Made by", "Qwen team, Alibaba Cloud")
             row("Format", "4-bit, text only, MLX")
             row("Download", String(format: "%.1f GB", Double(better.downloadBytes) / 1e9))
@@ -239,6 +238,14 @@ struct BetterAnswersDetailsView: View {
         }
     }
 
+    /// Why the benchmark can't run here, if it can't.
+    private var benchmarkBlocker: String? {
+        if !BetterModel.isSupported { return "This device can't run \(BetterModel.displayName), so it can't run the benchmark." }
+        if store.library == nil { return "Download the field guides first to run the benchmark." }
+        if !better.isDownloaded { return "Download \(BetterModel.displayName) first to run the benchmark." }
+        return nil
+    }
+
     private var benchmark: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Compare on this iPhone").font(.headline)
@@ -247,13 +254,12 @@ struct BetterAnswersDetailsView: View {
             if bench.isRunning {
                 ProgressView(value: bench.progress) { Text(bench.status).font(.footnote) }
                 Button("Stop", role: .cancel) { bench.stop() }
+            } else if let blocker = benchmarkBlocker {
+                // Instead of a button that can't be tapped: why it can't run.
+                Text(blocker).font(.footnote).foregroundStyle(Theme.danger)
             } else {
                 Button("Run benchmark") { bench.run(library: store.library) }
                     .buttonStyle(SecondaryButtonStyle())
-                    .disabled(store.library == nil)
-                if store.library == nil {
-                    Text("Download the library first.").font(.footnote).foregroundStyle(Theme.danger)
-                }
             }
             ForEach(bench.summaries, id: \.self) { Text($0).font(.footnote.monospacedDigit()) }
             if !bench.results.isEmpty {
@@ -360,7 +366,7 @@ final class LabBenchmark {
                 if Task.isCancelled { return }
                 status = "Searching the library \(i + 1)/\(Self.questions.count)"
                 progress = Double(i) / Double(Self.questions.count * 3)
-                let searches = await Retrieval.searches(for: q, previous: nil, model: apple)
+                let searches = await Retrieval.searches(for: q, previous: nil, model: apple) ?? []
                 let candidates = await Task.detached { Retrieval.candidates(question: q, searches: searches, library: library) }.value
                 let picked = await Retrieval.pick(question: q, from: candidates, model: apple)
                 prompts.append((q, Retrieval.prompt(question: q, sources: picked, previous: nil, previousAnswer: nil)))

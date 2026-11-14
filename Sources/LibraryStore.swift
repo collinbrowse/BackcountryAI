@@ -54,6 +54,8 @@ final class LibraryStore {
     var phase: Phase = .idle
     var packs: [LibraryPack] = PackCatalog.all
     var articleCount = 0
+    /// Articles in the downloaded field guides alone, without the person's own documents.
+    var guideArticleCount: Int { max(0, articleCount - myDocuments.reduce(0) { $0 + $1.sections }) }
 
     /// Documents the person added (see MyDocuments), newest first.
     var myDocuments: [MyDocuments.Item] = []
@@ -204,6 +206,11 @@ final class LibraryStore {
         switch phase { case .idle, .failed: false; default: true }
     }
 
+    /// How far the library download is, while it's downloading.
+    var downloadFraction: Double? {
+        if case let .downloading(f, _) = phase { f } else { nil }
+    }
+
     func install(_ pack: LibraryPack) {
         guard !isWorking else { return }
         phase = .preparing
@@ -333,14 +340,20 @@ final class LibraryStore {
         return "The download didn't finish (\(error.localizedDescription)). Check Wi-Fi and try again."
     }
 
+    /// Fixed-width numbers (padded with figure spaces, which are as wide as a digit) so the text after each number
+    /// doesn't shift as the download moves along. Shown in a monospaced-digit font.
     nonisolated static func progressText(done: Int64, total: Int64, rate: Double) -> String {
-        let f = ByteCountFormatter()
-        f.countStyle = .file
-        var s = "\(f.string(fromByteCount: done)) of \(f.string(fromByteCount: total))"
+        func pad(_ text: String, _ width: Int) -> String {
+            String(repeating: "\u{2007}", count: max(0, width - text.count)) + text
+        }
+        let totalGB = String(format: "%.2f", Double(total) / 1e9)
+        var s = "\(pad(String(format: "%.2f", Double(done) / 1e9), totalGB.count)) of \(totalGB) GB"
         if rate > 0 {
+            s += " · \(pad(String(format: "%.1f", rate / 1e6), 4)) MB/s"
             let left = Double(total - done) / rate
-            s += " · \(f.string(fromByteCount: Int64(rate)))/s"
-            if left.isFinite { s += " · " + (left > 90 ? "\(Int(left / 60)) min left" : "\(Int(left)) s left") }
+            if left.isFinite {
+                s += " · " + (left > 90 ? "\(pad("\(Int(left / 60))", 2)) min left" : "\(pad("\(Int(left))", 2)) s left")
+            }
         }
         return s
     }

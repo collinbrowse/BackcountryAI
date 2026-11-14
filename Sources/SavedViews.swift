@@ -1,83 +1,122 @@
 import SwiftUI
 
-struct SavedRow: View {
-    let item: SavedAnswer
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "bookmark.fill")
-                .foregroundStyle(Theme.sun)
-                .frame(width: 36, height: 36)
-                .background(Theme.sun.opacity(0.15), in: .circle)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.question).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink).lineLimit(2)
-                Text(item.date, format: .relative(presentation: .named)).font(.caption).foregroundStyle(Theme.inkSoft)
-            }
-            .multilineTextAlignment(.leading)
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right").font(.caption.weight(.bold)).foregroundStyle(Theme.inkSoft)
-        }
-        .card(padding: 12, radius: 18)
-    }
-}
-
+/// Chats the person saved from the chat's top bar.
 struct SavedListView: View {
-    @Environment(SavedStore.self) private var saved
+    @Environment(ChatStore.self) private var chats
 
     var body: some View {
         List {
-            ForEach(saved.items) { item in
-                NavigationLink(value: Route.saved(item)) {
+            ForEach(chats.saved) { chat in
+                NavigationLink(value: Route.savedChat(chat.id)) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(item.question).font(.subheadline.weight(.semibold)).lineLimit(2)
-                        Text(item.date, format: .dateTime.month().day().year()).font(.caption).foregroundStyle(.secondary)
+                        Text(chat.title).font(.subheadline.weight(.semibold)).lineLimit(2)
+                        Text(subtitle(chat)).font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 .listRowBackground(Theme.card)
+                .swipeActions {
+                    Button { chats.setSaved(chat.id, false) } label: { Label("Unsave", systemImage: "bookmark.slash") }
+                        .tint(Theme.sun)
+                }
             }
-            .onDelete { idx in idx.map { saved.items[$0] }.forEach(saved.remove) }
         }
         .scrollContentBackground(.hidden)
         .background(Theme.background)
         .overlay {
-            if saved.items.isEmpty {
+            if chats.saved.isEmpty {
                 ContentUnavailableView("Nothing saved yet", systemImage: "bookmark",
-                                       description: Text("Tap Save under an answer to keep it. Saved answers open instantly and use no battery."))
+                                       description: Text("Tap the bookmark at the top of a chat to keep it here. Open it later to reread it or keep asking."))
             }
         }
-        .navigationTitle("Saved answers")
+        .navigationTitle("Saved")
+    }
+
+    private func subtitle(_ chat: Conversation) -> String {
+        let n = chat.questionCount
+        return (n > 1 ? "\(n) questions · " : "") + chat.updated.formatted(.dateTime.month().day().year())
     }
 }
 
-struct SavedAnswerView: View {
-    let item: SavedAnswer
-    @Environment(SavedStore.self) private var saved
+/// A saved chat to reread, with a way back into it.
+struct SavedChatView: View {
+    let chatID: UUID
+    @Environment(ChatStore.self) private var chats
+    @Environment(Assistant.self) private var assistant
+    @Environment(Router.self) private var router
     @Environment(\.dismiss) private var dismiss
     @State private var openArticle: Passage?
+    @State private var confirmDelete = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                UserBubble(text: item.question)
-                if Urgency.isUrgent(item.question) { SOSBanner() }
-                AnswerBody(text: item.answer) { n in
-                    if item.sources.indices.contains(n - 1) { openArticle = item.sources[n - 1] }
+        if let chat = chats.conversation(chatID) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    ForEach(chat.messages) { m in
+                        if m.role == .user { UserBubble(text: m.text) }
+                        else { AssistantTurn(message: m, isLive: false, open: { openArticle = $0 }) }
+                    }
                 }
-                if !item.sources.isEmpty { SourceCarousel(sources: item.sources) { openArticle = $0 } }
+                .padding(16)
             }
-            .padding(16)
-        }
-        .background(Theme.background)
-        .navigationTitle("Saved")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(role: .destructive) {
-                    saved.remove(item)
+            .background(Theme.background)
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    assistant.open(chat)
+                    router.showChat()
+                } label: {
+                    Label("Keep asking", systemImage: "bubble.left.and.text.bubble.right")
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(assistant.isBusy)
+                .padding(.horizontal, 16).padding(.bottom, 8)
+            }
+            .navigationTitle("Saved")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
+                        .tint(Theme.danger)
+                }
+            }
+            .confirmationDialog("Delete this chat?", isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button("Delete", role: .destructive) {
+                    chats.delete(chatID)
+                    assistant.forget([chatID])
                     dismiss()
-                } label: { Label("Remove", systemImage: "bookmark.slash") }
+                }
+            } message: {
+                Text("It's removed from Saved and your chat history.")
             }
+            .sheet(item: $openArticle) { ArticleView(passage: $0) }
+        } else {
+            ContentUnavailableView("This chat was deleted", systemImage: "bookmark.slash")
         }
-        .sheet(item: $openArticle) { ArticleView(passage: $0) }
+    }
+}
+
+/// The SOS button for a top bar, with its sheet. On the chat list and the Guide; a chat has it in its menu.
+struct SOSToolbarButton: View {
+    @Environment(Router.self) private var router
+    @State private var showing = false
+
+    var body: some View {
+        Button { showing = true } label: {
+            // An HStack, not a Label: toolbars drop a Label's title and recolor it.
+            HStack(spacing: 4) {
+                Image(systemName: "staroflife.fill").font(.caption.weight(.bold))
+                Text("SOS")
+            }
+            .font(.system(.subheadline, design: .rounded).weight(.heavy))
+            .foregroundStyle(Theme.danger)
+            .fixedSize()
+            .padding(.horizontal, 6)
+        }
+        .tint(Theme.danger)
+        .accessibilityLabel("Emergency help")
+        .sheet(isPresented: $showing) {
+            SOSSheet(ask: { showing = false; router.ask($0.question) },
+                     openField: { showing = false; router.showField() })
+        }
     }
 }
 
