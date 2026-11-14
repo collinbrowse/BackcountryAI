@@ -7,6 +7,7 @@ struct BackcountryAIApp: App {
     @State private var assistant: Assistant
     @State private var field = FieldStore()
     init() {
+        LLMLog.note(MemoryProbe.report("launch"))
         let store = LibraryStore()
         let chats = ChatStore()
         chats.importLegacySavedAnswers()

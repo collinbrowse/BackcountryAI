@@ -51,6 +51,7 @@
 		E09BEF2824E172AE33243CE2 /* Readiness.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C38A1055E1D6375CFDA5D1 /* Readiness.swift */; };
 		E163EBFB5559E968A1F159DE /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29EB26B6688735C4051BAD92 /* App.swift */; };
 		E37E8E77D18F25C6C2C19401 /* HuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = 171CEF4A01749CD4AB4A4597 /* HuggingFace */; };
+		E736B17BD12E8D46E8D8A277 /* MemoryProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE928A4AFF107A9275C3D1A4 /* MemoryProbe.swift */; };
 		E7E9A03186A4DD046371FA41 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ABBE1F3C02C35A8F3BF9B14 /* Components.swift */; };
 		EECCD0649B062D3010EDDF21 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E2FCEB63DA5A32DF75AC4C /* RootView.swift */; };
 		FB54A705D3A27C3BE8C311E2 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33402F18AAC47699E4874BF3 /* Theme.swift */; };
@@ -144,6 +145,7 @@
 		E1371E559B12B2A43689C2EA /* GuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideView.swift; sourceTree = "<group>"; };
 		E1670D0781CA9A4F75D81CBE /* MyDocuments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDocuments.swift; sourceTree = "<group>"; };
 		E5199F5BD2B7EBF0CB5B8EEC /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
+		EE928A4AFF107A9275C3D1A4 /* MemoryProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryProbe.swift; sourceTree = "<group>"; };
 		F2E2FCEB63DA5A32DF75AC4C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		FE27F1E117DAD1C471B65ED0 /* UrgencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UrgencyTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -244,6 +246,7 @@
 				DAD60B3D6B2F613DC51ED644 /* Library.swift */,
 				257B84C1E273DD9A008815CB /* LibraryStore.swift */,
 				404F44B81DA7BD32E9088A36 /* LibraryView.swift */,
+				EE928A4AFF107A9275C3D1A4 /* MemoryProbe.swift */,
 				E1670D0781CA9A4F75D81CBE /* MyDocuments.swift */,
 				AAF4905B9A3EBCF719428534 /* Onboarding.swift */,
 				A7C38A1055E1D6375CFDA5D1 /* Readiness.swift */,
@@ -472,6 +475,7 @@
 				CFB9944DB1427D4425BF5FDE /* Library.swift in Sources */,
 				A71225C1FC2DD934F1C3ADB5 /* LibraryStore.swift in Sources */,
 				508247AFEB4ADA3179E12F4E /* LibraryView.swift in Sources */,
+				E736B17BD12E8D46E8D8A277 /* MemoryProbe.swift in Sources */,
 				341B643A84A78C5CFF547723 /* MyDocuments.swift in Sources */,
 				3016AF4260781089F26E68C0 /* Onboarding.swift in Sources */,
 				E09BEF2824E172AE33243CE2 /* Readiness.swift in Sources */,

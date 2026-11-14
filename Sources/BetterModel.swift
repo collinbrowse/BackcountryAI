@@ -292,23 +292,6 @@ final class BetterModel {
     }
 }
 
-/// How much memory the app is using and how much more iOS will allow before it stops the app.
-enum MemoryProbe {
-    static var footprintGB: Double {
-        var info = task_vm_info_data_t()
-        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
-        let r = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
-            }
-        }
-        return r == KERN_SUCCESS ? Double(info.phys_footprint) / 1e9 : 0
-    }
-
-    static var availableGB: Double { Double(os_proc_available_memory()) / 1e9 }
-    static var deviceGB: Double { Double(ProcessInfo.processInfo.physicalMemory) / 1e9 }
-}
-
 // The adapters MLXHuggingFace's macros would generate, written out so the app doesn't depend on package macros.
 
 /// Downloads model files from Hugging Face into the app's cache.
