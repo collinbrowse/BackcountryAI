@@ -43,6 +43,10 @@ final class BetterModel {
     nonisolated let engine: MLXEngine
     private var loadTask: Task<Void, Never>?
     private var unloadTask: Task<Void, Never>?
+    /// A load that was cancelled but hasn't wound down yet. The next load waits for it, so two never overlap.
+    private var cancelledLoad: Task<Void, Never>?
+    /// Which load is current. A cancelled one that finishes late must not touch the state.
+    private var loadID = 0
     private var downloadTask: Task<Void, Never>?
     private var progress: Progress?
     private nonisolated static var manager: AssetPackManager { .shared }
@@ -77,7 +81,14 @@ final class BetterModel {
         let center = NotificationCenter.default
         for name in [UIApplication.didEnterBackgroundNotification, UIApplication.didReceiveMemoryWarningNotification] {
             center.addObserver(forName: name, object: nil, queue: .main) { _ in
-                MainActor.assumeIsolated { BetterModel.shared.unload() }
+                MainActor.assumeIsolated {
+                    let model = BetterModel.shared
+                    guard model.state == .ready || model.state == .loading else { return }
+                    LLMLog.note(name == UIApplication.didReceiveMemoryWarningNotification
+                        ? "memory warning: unloading. " + MemoryProbe.report("warning")
+                        : "app left the foreground: unloading")
+                    model.unload()
+                }
             }
         }
         // A critically hot phone gives the model's memory and the GPU back; Apple's model answers until it cools.
@@ -215,23 +226,27 @@ final class BetterModel {
         guard folder != nil else { return }
         #endif
         state = folder != nil || Self.hubDownloaded ? .loading : .downloading(0)
-        loadTask = Task {
-            defer { loadTask = nil }
+        loadID += 1
+        let id = loadID
+        loadTask = Task { [cancelledLoad] in
+            await cancelledLoad?.value
             await unloadTask?.value  // an unload still in progress finishes first, or it would undo this load
+            let result: State
             do {
                 try await engine.load()
                 if folder == nil { UserDefaults.standard.set(true, forKey: "betterModel.downloaded") }
-                state = .ready
+                result = .ready
             } catch is CancellationError {  // unloaded while it was loading
-                state = isDownloaded ? .onDisk : .notDownloaded
+                result = isDownloaded ? .onDisk : .notDownloaded
             } catch LLMError.notEnoughMemory {
                 // Not an error to show: Apple's model answers this one, and the next question tries again.
-                state = isDownloaded ? .onDisk : .notDownloaded
-            } catch where Task.isCancelled {
-                state = isDownloaded ? .onDisk : .notDownloaded
+                result = isDownloaded ? .onDisk : .notDownloaded
             } catch {
-                state = .failed("Couldn't load better answers (\(error.localizedDescription)).")
+                result = .failed("Couldn't load better answers (\(error.localizedDescription)).")
             }
+            guard id == loadID else { return }  // unloaded meanwhile: a newer load or the unload owns the state
+            state = result
+            loadTask = nil
         }
     }
 
@@ -248,6 +263,9 @@ final class BetterModel {
     func unload() {
         guard state == .ready || state == .loading else { return }
         loadTask?.cancel()
+        if let loadTask { cancelledLoad = loadTask }
+        loadTask = nil
+        loadID += 1
         state = isDownloaded ? .onDisk : .notDownloaded
         // Stops an answer in progress first: iOS ends apps that use the GPU in the background.
         unloadTask = Task { [previous = unloadTask] in
