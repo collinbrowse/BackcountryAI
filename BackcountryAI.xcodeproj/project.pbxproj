@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		074ED443B8DFF3125FC2E775 /* LLMEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7CCB8958B0742472D64165 /* LLMEngineTests.swift */; };
 		0C4940CE9212E51E7C752AD5 /* ConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12170F4C61C9F65E0D6EC6F /* ConversationView.swift */; };
 		1A961770E8B159D24B31105B /* ArticleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDF56E6658D070F01861580F /* ArticleView.swift */; };
 		1C581AE33CDA8EAE6DA122C8 /* GuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1371E559B12B2A43689C2EA /* GuideView.swift */; };
@@ -41,6 +42,7 @@
 		B4E889E30FBCFA36A1DE6D64 /* SavedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B007F631D908B95A1C6969D5 /* SavedViews.swift */; };
 		B638057DF80B55F8716718F6 /* DocumentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8F8A6F2AC1382277325D176 /* DocumentReader.swift */; };
 		BBFB3869513556DB4842C01A /* Topics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2242DE11CF60CEAFC08F5AAF /* Topics.swift */; };
+		CB50A73E77DC9C4B94144517 /* LLMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DB1D2D176A084C1FCB89D25 /* LLMEngine.swift */; };
 		CB52E6FED628755987B3788E /* FieldModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3ABD1A6AA84BAC16BF8AE8B /* FieldModel.swift */; };
 		CD83D1530D09E2CB6CF26806 /* FieldCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1F5E1A60D2FF802D01E85F /* FieldCards.swift */; };
 		CFB9944DB1427D4425BF5FDE /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAD60B3D6B2F613DC51ED644 /* Library.swift */; };
@@ -113,10 +115,12 @@
 		3FC6E0D4E4CC6AC3F9A29403 /* BackcountryAIUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BackcountryAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		404F44B81DA7BD32E9088A36 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		42B5939B841C74D05BA27BA2 /* BackcountryAIDownloader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BackcountryAIDownloader.entitlements; sourceTree = "<group>"; };
+		4DB1D2D176A084C1FCB89D25 /* LLMEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMEngine.swift; sourceTree = "<group>"; };
 		548DE6B9FE8E7C373C2B8A9D /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		5F077B8D8244B95DE7FEC499 /* ScreenshotMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotMode.swift; sourceTree = "<group>"; };
 		63DC928DB6689422E3B6E182 /* ChatTopic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTopic.swift; sourceTree = "<group>"; };
 		6ABBE1F3C02C35A8F3BF9B14 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		6B7CCB8958B0742472D64165 /* LLMEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMEngineTests.swift; sourceTree = "<group>"; };
 		6F18AFE66894FD8D276154C3 /* ChatStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStoreTests.swift; sourceTree = "<group>"; };
 		7F06188766C444410068466F /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		80413D2B42C15DD33735EB20 /* BatteryMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryMeter.swift; sourceTree = "<group>"; };
@@ -170,6 +174,7 @@
 			isa = PBXGroup;
 			children = (
 				6F18AFE66894FD8D276154C3 /* ChatStoreTests.swift */,
+				6B7CCB8958B0742472D64165 /* LLMEngineTests.swift */,
 				28226CA2C5F7E6BB53EDD03D /* MyDocumentsTests.swift */,
 				2596B2C4B8B35997159A3828 /* SmallTalkTests.swift */,
 				FE27F1E117DAD1C471B65ED0 /* UrgencyTests.swift */,
@@ -246,6 +251,7 @@
 				DAD60B3D6B2F613DC51ED644 /* Library.swift */,
 				257B84C1E273DD9A008815CB /* LibraryStore.swift */,
 				404F44B81DA7BD32E9088A36 /* LibraryView.swift */,
+				4DB1D2D176A084C1FCB89D25 /* LLMEngine.swift */,
 				EE928A4AFF107A9275C3D1A4 /* MemoryProbe.swift */,
 				E1670D0781CA9A4F75D81CBE /* MyDocuments.swift */,
 				AAF4905B9A3EBCF719428534 /* Onboarding.swift */,
@@ -442,6 +448,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5EF8299C1D08D9696967A88B /* ChatStoreTests.swift in Sources */,
+				074ED443B8DFF3125FC2E775 /* LLMEngineTests.swift in Sources */,
 				4173B82BDB5298A953A26762 /* MyDocumentsTests.swift in Sources */,
 				7B8AFC664D26FE0D76CD00F9 /* SmallTalkTests.swift in Sources */,
 				59975BBA6D8C41480AC2080E /* UrgencyTests.swift in Sources */,
@@ -472,6 +479,7 @@
 				E057EED4732E8F4EA9BB051E /* FieldView.swift in Sources */,
 				DBBA37E2DFFB2FE9768359BF /* Guide.swift in Sources */,
 				1C581AE33CDA8EAE6DA122C8 /* GuideView.swift in Sources */,
+				CB50A73E77DC9C4B94144517 /* LLMEngine.swift in Sources */,
 				CFB9944DB1427D4425BF5FDE /* Library.swift in Sources */,
 				A71225C1FC2DD934F1C3ADB5 /* LibraryStore.swift in Sources */,
 				508247AFEB4ADA3179E12F4E /* LibraryView.swift in Sources */,
