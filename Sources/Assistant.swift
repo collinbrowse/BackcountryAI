@@ -18,12 +18,14 @@ struct ChatMessage: Identifiable, Codable, Hashable {
     var question = ""                  // for assistant messages: what they answer
     var urgent = false                 // the question sounds like an emergency
     var engine: String? = nil          // set when the larger model wrote it: its speed and memory (not saved)
+    var casual: Bool? = nil            // a chat reply to small talk ("hi", "thanks"): no steps, no sources
+    var isCasual: Bool { casual == true }
 
     var isFinished: Bool { role == .assistant && status == nil && !text.isEmpty }
 
     // `status` is only meaningful while an answer is being written, so it isn't saved.
     enum CodingKeys: String, CodingKey {
-        case id, role, text, sources, battery, batterySession, failed, question, urgent
+        case id, role, text, sources, battery, batterySession, failed, question, urgent, casual
     }
 }
 
@@ -34,6 +36,8 @@ final class Assistant {
     var isBusy = false
     /// The saved chat these messages belong to. Assigned when the first question is asked.
     private(set) var conversationID: UUID?
+    /// The chat's short name, once its first real question is answered (see ChatTopic).
+    private(set) var topic: String?
     private var task: Task<Void, Never>?
     private let chats: ChatStore?
 
@@ -64,8 +68,9 @@ final class Assistant {
         let previous = messages.last(where: { $0.role == .user })?.text
         let previousAnswer = messages.last(where: { $0.role == .assistant && !$0.failed })?.text
         messages.append(ChatMessage(role: .user, text: q))
-        messages.append(ChatMessage(role: .assistant, text: "", status: "Searching the library…",
-                                    question: q, urgent: Urgency.isUrgent(q)))
+        let obviousSmallTalk = SmallTalk.isObvious(q)
+        messages.append(ChatMessage(role: .assistant, text: "", status: obviousSmallTalk ? "…" : "Searching the library…",
+                                    question: q, urgent: !obviousSmallTalk && Urgency.isUrgent(q)))
         let index = messages.count - 1
         isBusy = true
         if conversationID == nil { conversationID = UUID() }
@@ -79,6 +84,9 @@ final class Assistant {
                 messages[index].status = nil
                 isBusy = false
                 save()
+                if topic == nil, !messages[index].isCasual, !messages[index].failed {
+                    Task { await self.nameChat(q) }
+                }
             }
 
             if let script = ScreenshotMode.script(for: q) {
@@ -92,9 +100,15 @@ final class Assistant {
             //    candidates that help (see Retrieval). Without it: plain keyword search.
             var sources: [Passage] = []
             let problem = availabilityProblem
+            if obviousSmallTalk {
+                return await chat(q, at: index, previous: previous, previousAnswer: previousAnswer)
+            }
             if let library {
                 if problem == nil {
-                    let searches = await Retrieval.searches(for: q, previous: previous, model: model)
+                    guard let searches = await Retrieval.searches(for: q, previous: previous, model: model) else {
+                        messages[index].urgent = false
+                        return await chat(q, at: index, previous: previous, previousAnswer: previousAnswer)
+                    }
                     log.notice("searches: \(searches.joined(separator: " | "))")
                     let candidates = await Task.detached(priority: .userInitiated) {
                         Retrieval.candidates(question: q, searches: searches, library: library)
@@ -158,6 +172,28 @@ final class Assistant {
         }
     }
 
+    /// A short chat reply to small talk, from Apple's model (or a fixed line without it). No library, no steps.
+    private func chat(_ message: String, at index: Int, previous: String?, previousAnswer: String?) async {
+        messages[index].casual = true
+        messages[index].status = "…"
+        guard availabilityProblem == nil else {
+            messages[index].text = SmallTalk.offlineReply
+            return
+        }
+        let session = LanguageModelSession(model: model, instructions: SmallTalk.instructions)
+        let prompt = SmallTalk.prompt(message, previous: previous, previousAnswer: previousAnswer)
+        do {
+            for try await snapshot in session.streamResponse(to: prompt, options: GenerationOptions(temperature: 0.7,
+                                                                                                    maximumResponseTokens: 200)) {
+                try Task.checkCancellation()
+                messages[index].status = nil
+                messages[index].text = snapshot.content
+            }
+        } catch {
+            if messages[index].text.isEmpty { messages[index].text = SmallTalk.offlineReply }
+        }
+    }
+
     func stop() { task?.cancel() }
 
     /// Starts a fresh conversation with this question.
@@ -171,6 +207,7 @@ final class Assistant {
         guard !isBusy else { return }
         messages.removeAll()
         conversationID = nil
+        topic = nil
     }
 
     /// Reopens a saved chat so you can read it or keep asking.
@@ -178,6 +215,17 @@ final class Assistant {
         guard !isBusy else { return }
         messages = chat.messages
         conversationID = chat.id
+        topic = chat.topic
+    }
+
+    /// Names the chat after its first real question. Fast: a few words from Apple's model.
+    private func nameChat(_ question: String) async {
+        guard let id = conversationID else { return }
+        let name = availabilityProblem == nil ? await ChatTopic.make(for: question, model: model)
+                                              : ChatTopic.fallback(question)
+        guard conversationID == id, topic == nil else { return }
+        topic = name
+        save()
     }
 
     /// Call after chats are deleted: if the one on screen was among them, start fresh.
@@ -189,7 +237,7 @@ final class Assistant {
     /// Chats save automatically after every answer.
     private func save() {
         guard let conversationID else { return }
-        chats?.save(id: conversationID, messages: messages)
+        chats?.save(id: conversationID, messages: messages, topic: topic)
     }
 
     /// Exact token counts need iOS 26.4. Before that the callers estimate from the text's length.

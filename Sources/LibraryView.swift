@@ -10,13 +10,12 @@ struct LibraryView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     status
-                    if store.isWorking || isFailed { DownloadProgressCard() }
                     if store.packs.count > 1 { Text("Choose a library").sectionLabel() }
                     ForEach(store.packs) { PackCard(pack: $0) }
+                    if BetterModel.isOffered { BetterAnswersCard() }
                     Text("Downloads from the App Store. Use Wi-Fi; it keeps going if you leave the app, and iOS keeps the library up to date.")
                         .font(.footnote).foregroundStyle(Theme.inkSoft)
                     MyDocumentsCard()
-                    if BetterModel.isOffered { BetterAnswersCard() }
                     about
                     if store.hasPack {
                         Button("Delete library from this iPhone", role: .destructive) { confirmDelete = true }
@@ -46,18 +45,25 @@ struct LibraryView: View {
 
     private var status: some View {
         HStack(spacing: 14) {
-            Scout(mood: store.library == nil ? .sleepy : .happy, size: 74)
+            Scout(mood: store.hasPack ? .happy : store.isWorking ? .idle : .sleepy, size: 74)
             VStack(alignment: .leading, spacing: 4) {
-                if store.library != nil {
-                    Text(store.articleCount.formatted())
+                if store.hasPack {
+                    Text(store.guideArticleCount.formatted())
                         .font(.system(size: 30, weight: .bold, design: .rounded))
                         .foregroundStyle(Theme.ink)
                         .contentTransition(.numericText())
-                    Text("articles on this iPhone. No signal needed.")
+                    Text(store.myDocuments.isEmpty ? "articles on this iPhone. No signal needed."
+                         : "articles on this iPhone, plus your documents. No signal needed.")
+                        .font(.subheadline).foregroundStyle(Theme.inkSoft)
+                } else if store.isWorking {
+                    Text("Downloading").font(.system(.title2, design: .rounded).weight(.bold)).foregroundStyle(Theme.ink)
+                    Text("It keeps going if you close this or leave the app.")
                         .font(.subheadline).foregroundStyle(Theme.inkSoft)
                 } else {
-                    Text("No library yet").font(.system(.title2, design: .rounded).weight(.bold)).foregroundStyle(Theme.ink)
-                    Text("Scout answers from it, so download one before your trip.")
+                    Text("No field guides yet").font(.system(.title2, design: .rounded).weight(.bold)).foregroundStyle(Theme.ink)
+                    Text(store.myDocuments.isEmpty
+                         ? "Scout answers from them, so download them before your trip."
+                         : "Scout can search your documents, but download the guides for first aid, survival and more before your trip.")
                         .font(.subheadline).foregroundStyle(Theme.inkSoft)
                 }
             }
@@ -85,7 +91,7 @@ struct MyDocumentsCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Your documents").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Theme.ink)
-            Text("Add manuals for your gear, trip notes or anything else. Scout searches them along with the library, and they never leave this iPhone.")
+            Text("Add manuals for your gear, trip notes or anything else. Scout indexes them and searches them along with the library, and they never leave this iPhone.")
                 .font(.subheadline).foregroundStyle(Theme.inkSoft)
             ForEach(store.myDocuments) { item in
                 HStack(spacing: 12) {
@@ -176,8 +182,11 @@ struct PackCard: View {
                 if !installed { stat("arrow.down.circle", "\(gb(pack.downloadBytes)) download") }
                 stat("iphone", "\(gb(pack.unpackedBytes)) on phone")
             }
-            if !installed {
-                let label = Label(store.library == nil || store.packs.count == 1 ? "Download" : "Switch to \(pack.title)",
+            if store.isWorking || isFailed {
+                DownloadProgressCard(framed: false)
+            }
+            if !installed && !store.isWorking {
+                let label = Label(isFailed ? "Try again" :store.library == nil || store.packs.count == 1 ? "Download" : "Switch to \(pack.title)",
                               systemImage: "arrow.down")
                 Group {
                     if pack.id == "lite" {
@@ -199,6 +208,8 @@ struct PackCard: View {
         }
     }
 
+    private var isFailed: Bool { if case .failed = store.phase { true } else { false } }
+
     private func stat(_ symbol: String, _ text: String) -> some View {
         Label(text, systemImage: symbol)
             .font(.caption.weight(.semibold))
@@ -214,6 +225,8 @@ struct PackCard: View {
 
 /// Download progress, shared by the library screen and onboarding.
 struct DownloadProgressCard: View {
+    /// False inside another card (the pack it belongs to), so it isn't a card of its own.
+    var framed = true
     @Environment(LibraryStore.self) private var store
 
     var body: some View {
@@ -246,7 +259,14 @@ struct DownloadProgressCard: View {
                 Button("Cancel", role: .cancel) { store.cancel() }.font(.subheadline.weight(.semibold))
             }
         }
-        .card()
+        .modifier(CardIf(on: framed))
+    }
+
+    private struct CardIf: ViewModifier {
+        let on: Bool
+        func body(content: Content) -> some View {
+            if on { content.card() } else { content }
+        }
     }
 
     private var isFailed: Bool { if case .failed = store.phase { true } else { false } }

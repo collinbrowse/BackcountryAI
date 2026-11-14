@@ -41,7 +41,7 @@ enum ScreenshotMode {
     }
 
     /// Fills chat history and Saved from the scripts, with sources found in the demo library.
-    @MainActor static func seed(chats: ChatStore, saved: SavedStore, library: Library?) {
+    @MainActor static func seed(chats: ChatStore, library: Library?) {
         guard isOn else { return }
         chats.deleteAll()
         for (i, s) in scripts.enumerated().reversed() {
@@ -51,9 +51,7 @@ enum ScreenshotMode {
                 ChatMessage(role: .user, text: s.question),
                 ChatMessage(role: .assistant, text: s.answer, sources: sources, question: s.question),
             ])
-            if s.saved, !saved.isSaved(question: s.question, answer: s.answer) {
-                saved.toggle(question: s.question, answer: s.answer, sources: sources)
-            }
+            if s.saved { chats.setSaved(id, true) }
         }
     }
 

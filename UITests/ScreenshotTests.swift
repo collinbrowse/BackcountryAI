@@ -36,6 +36,7 @@ final class ScreenshotTests: XCTestCase {
         scrollToTop()
         snap("01_answer")
 
+        app.buttons["More"].tap()
         app.buttons["Emergency help"].tap()
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 5))
         snap("02_sos")
@@ -60,6 +61,7 @@ final class ScreenshotTests: XCTestCase {
         snap("06_saved")
 
         app.tabBars.buttons["Scout"].tap()
+        app.buttons["More"].tap()
         app.buttons["New chat"].tap()
         ask(Self.water)
         waitForAnswer()
@@ -90,7 +92,7 @@ final class ScreenshotTests: XCTestCase {
         sleep(2)
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
-        app.tabBars.buttons["Scout"].tap()
+        app.tabBars.buttons["Guide"].tap()
         app.buttons["Emergency help"].tap()
         sleep(3)
         NSLog("PREVIEW_MARK end")

@@ -206,8 +206,8 @@ These were filled in from reading the code. Change the file if any is wrong:
   `MEDICAL` invites stricter review.
 - `fastlane/review_notes.txt`: what App Review is told about the app.
 - `fastlane/metadata/copyright.txt`: `2026 Collin Browse`.
-- `Sources/Assets.xcassets/AppIcon.appiconset/AppIcon.png` is a generated placeholder icon
-  (`scripts/make-app-icon.swift`). Replace the PNG with a designed 1024×1024 icon, no transparency.
+- The app icon is `Sources/Assets.xcassets/AppIcon.appiconset`: `AppIcon.png` (green) and `AppIcon-Dark.png`
+  (navy, shown in Dark Mode), each 1024×1024 with square corners and no transparency. iOS rounds the corners.
 - `docs/library-hosting.md` still lists two open questions before a first release: the NHS and CDC Yellow Book
   terms.
 

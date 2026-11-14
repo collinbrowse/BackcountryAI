@@ -19,6 +19,8 @@ final class BetterModel {
     static let shared = BetterModel()
     static let assetPackID = "answers"
     static let modelID = "mlx-community/Qwen3.5-4B-MLX-4bit"
+    /// The model's name as people see it.
+    static let displayName = "Qwen 3.5 4B"
     /// From scripts/release-model-pack.sh; App Store Connect's figure replaces it once known.
     static let estimatedDownloadBytes: Int64 = 2_261_254_682
     static let unpackedBytes: Int64 = 2_394_053_774

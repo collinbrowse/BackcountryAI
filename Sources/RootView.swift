@@ -6,6 +6,8 @@ enum AppTab: Hashable { case scout, guide, saved }
 /// Lets any screen hand a question to Scout: switches to the chat tab and starts it there.
 @MainActor @Observable final class Router {
     var tab: AppTab = .scout
+    /// The Scout tab's stack: your chats underneath, the open chat pushed on top. The app opens on a chat.
+    var chatPath: [ChatRoute] = [.chat]
     /// A question waiting for the chat tab to send it.
     var pending: String?
     /// Set to open Field mode in the Guide tab (from the SOS sheet).
@@ -13,7 +15,15 @@ enum AppTab: Hashable { case scout, guide, saved }
 
     func ask(_ question: String) {
         pending = question
-        withAnimation(.bouncy) { tab = .scout }
+        showChat()
+    }
+
+    /// Switches to Scout with the current chat on screen.
+    func showChat() {
+        withAnimation(.bouncy) {
+            tab = .scout
+            chatPath = [.chat]
+        }
     }
 
     func showField() {
@@ -31,7 +41,10 @@ struct RootView: View {
     var body: some View {
         TabView(selection: $router.tab) {
             Tab("Scout", systemImage: "bubble.left.and.text.bubble.right.fill", value: AppTab.scout) {
-                ChatView()
+                NavigationStack(path: $router.chatPath) {
+                    ChatListView()
+                        .navigationDestination(for: ChatRoute.self) { _ in ChatView() }
+                }
             }
             Tab("Guide", systemImage: "book.pages.fill", value: AppTab.guide) {
                 GuideView()
@@ -40,7 +53,7 @@ struct RootView: View {
                 NavigationStack {
                     SavedListView()
                         .navigationDestination(for: Route.self) { route in
-                            if case let .saved(item) = route { SavedAnswerView(item: item) }
+                            if case let .savedChat(id) = route { SavedChatView(chatID: id) }
                         }
                 }
             }
@@ -57,6 +70,8 @@ struct RootView: View {
     }
 }
 
+enum ChatRoute: Hashable { case chat }
+
 enum Route: Hashable {
-    case saved(SavedAnswer)
+    case savedChat(UUID)
 }

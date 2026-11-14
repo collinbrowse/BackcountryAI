@@ -8,14 +8,15 @@ struct ChatView: View {
     @Environment(LibraryStore.self) private var store
     @Environment(Assistant.self) private var assistant
     @Environment(Router.self) private var router
+    @Environment(ChatStore.self) private var chats
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
+    @Environment(\.displayScale) private var displayScale
 
     @State private var draft = ""
     @State private var peek: [Passage] = []
     @State private var openArticle: Passage?
     @State private var showLibrary = false
-    @State private var showHistory = false
     @State private var showSOS = false
     @State private var showHowItWorks = false
     @State private var showOfflineTip = false
@@ -29,18 +30,17 @@ struct ChatView: View {
     @AppStorage(Readiness.askedKey) private var asked = false
     @AppStorage(Readiness.offlineKey) private var testedOffline = false
     @AppStorage(Readiness.celebratedKey) private var celebrated = false
-    @AppStorage("betterAnswers.tipDismissed") private var betterTipDismissed = false
 
     private var trimmed: String { draft.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var isEmpty: Bool { assistant.messages.isEmpty }
     private var aiReady: Bool { aiProblem == .some(nil) }
     private var readiness: [Readiness.Item] {
-        Readiness.items(libraryReady: store.library != nil, aiReady: aiReady, asked: asked, offline: testedOffline)
+        Readiness.items(libraryReady: store.hasPack, aiReady: aiReady, asked: asked, offline: testedOffline)
     }
     private var readyCount: Int { readiness.filter(\.done).count }
 
     var body: some View {
-        NavigationStack {
+        Group {
             ScrollViewReader { proxy in
                 ScrollView {
                     Group {
@@ -80,13 +80,11 @@ struct ChatView: View {
                     .allowsHitTesting(false)
                 }
             }
-            .navigationTitle(isEmpty ? "" : "Scout")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
             .overlay { ConfettiBurst(trigger: confetti) }
         }
         .sheet(isPresented: $showLibrary) { LibraryView() }
-        .sheet(isPresented: $showHistory) { ChatHistoryView() }
         .sheet(isPresented: $showReadiness) {
             ReadinessSheet(items: readiness) { item in
                 showReadiness = false
@@ -125,63 +123,128 @@ struct ChatView: View {
     // MARK: Toolbar
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) { statusPill }
-        ToolbarItem(placement: .topBarTrailing) {
-            Button { showSOS = true } label: {
-                Text("SOS")
-                    .font(.system(.subheadline, design: .rounded).weight(.heavy))
-                    .foregroundStyle(.white)
-                    .fixedSize()
-                    .padding(.horizontal, 14).padding(.vertical, 8)
-                    .background(Theme.danger, in: .capsule)
-            }
-            .buttonStyle(SquishyButtonStyle(scale: 0.9))
-            .accessibilityLabel("Emergency help")
+        // Only when the library needs attention; when it's ready, its status is in the menu.
+        // Only while something is downloading: a ring that fills, with a red "!" if another download stopped.
+        if downloads.active {
+            ToolbarItem(placement: .topBarLeading) { statusPill }
         }
-        .sharedBackgroundVisibility(.hidden)
-        ToolbarItem(placement: .topBarTrailing) {
-            Button { showHistory = true } label: { Image(systemName: "clock.arrow.circlepath") }
-                .disabled(assistant.isBusy)
-                .accessibilityLabel("Chat history")
+        // The chat's topic once it has one ("Scout" until then), up to two lines. ChatTopic keeps it short enough
+        // that it never gets cut off.
+        if !isEmpty {
+            ToolbarItem(placement: .principal) {
+                Text(assistant.topic ?? "Scout")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.ink)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .contentTransition(.opacity)
+                    .animation(.easeInOut, value: assistant.topic)
+                    .accessibilityAddTraits(.isHeader)
+            }
         }
         ToolbarItem(placement: .topBarTrailing) {
-            if isEmpty {
-                Menu { menuItems } label: { Image(systemName: "ellipsis") }
-                    .accessibilityLabel("More")
-            } else {
-                Menu { menuItems } label: { Image(systemName: "square.and.pencil") } primaryAction: { newChat() }
-                    .disabled(assistant.isBusy)
-                    .accessibilityLabel("New chat")
+            Menu { menuItems } label: {
+                // A stopped download that isn't showing in the top bar: a small red "!" up and to the right.
+                Image(systemName: "ellipsis")
+                    .overlay(alignment: .topTrailing) {
+                        if downloads.stopped > 0 && !downloads.active {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.system(size: 10, weight: .bold))
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(.white, Theme.danger)
+                                .offset(x: 8, y: -9)
+                        }
+                    }
             }
+            .accessibilityLabel(downloads.stopped > 0 ? "More, \(downloads.stoppedText)" : "More")
         }
     }
 
+    /// Everything else in the top bar: this chat's actions first, then the app's.
     @ViewBuilder private var menuItems: some View {
-        Button { showReadiness = true } label: {
-            Label("Trail-ready checklist · \(readyCount)/\(readiness.count)", systemImage: "checklist")
+        Section {
+            Button(role: .destructive) { showSOS = true } label: { Label("Emergency help", systemImage: "staroflife.fill") }
         }
-        Button { showHistory = true } label: { Label("Chat history", systemImage: "clock.arrow.circlepath") }
-        Button { showLibrary = true } label: { Label("Offline library", systemImage: "books.vertical") }
-        Button { showHowItWorks = true } label: { Label("How Scout works", systemImage: "questionmark.circle") }
+        Section {
+            Button { newChat() } label: { Label("New chat", systemImage: "square.and.pencil") }
+                .disabled(isEmpty || assistant.isBusy)
+            if !isEmpty {
+                let isSaved = chats.isSaved(assistant.conversationID)
+                Button {
+                    if let id = assistant.conversationID { chats.setSaved(id, !isSaved) }
+                } label: {
+                    Label(isSaved ? "Unsave chat" : "Save chat", systemImage: isSaved ? "bookmark.slash" : "bookmark")
+                }
+                .disabled(chats.conversation(assistant.conversationID ?? UUID()) == nil)
+            }
+        }
+        Section {
+            Button { showReadiness = true } label: {
+                Label("Trail-ready checklist · \(readyCount)/\(readiness.count)", systemImage: "checklist")
+            }
+            Button { showLibrary = true } label: {
+                Text("Offline library")
+                if let text = libraryStatus.text { Text(text) }
+                libraryMenuIcon
+            }
+            Button { showHowItWorks = true } label: { Label("How Scout works", systemImage: "questionmark.circle") }
+        }
     }
 
-    private var statusPill: some View {
-        let online = NetworkMonitor.shared.isOnline
-        let (text, symbol, tint): (String, String, Color) =
-            store.library == nil ? ("No library yet", "books.vertical", Theme.danger)
-            : online ? ("Offline-ready", "checkmark.circle.fill", Theme.pine)
+    private var downloads: Downloads { Downloads(store: store, better: BetterModel.shared) }
+
+    /// The menu row's subtitle. Ready means the field guides are on the phone: the person's own documents alone
+    /// don't make Scout trail-ready.
+    /// Text only when there's something the ring can't say: a stopped download, missing guides, or "ready".
+    /// While downloading with nothing wrong, the ring says it all and there's no text.
+    private var libraryStatus: (text: String?, symbol: String, tint: Color) {
+        let d = downloads
+        if d.stopped > 0 { return (d.stoppedText, "exclamationmark.circle", Theme.danger) }
+        if d.active { return (nil, "arrow.down.circle", Theme.accent) }
+        if !store.hasPack { return ("No field guides", "arrow.down.circle", Theme.danger) }
+        return NetworkMonitor.shared.isOnline
+            ? ("Ready offline", "checkmark.circle.fill", Theme.pine)
             : ("No signal · still works", "antenna.radiowaves.left.and.right.slash", Theme.pine)
-        return Button { showLibrary = true } label: {
-            HStack(spacing: 5) {
-                Image(systemName: symbol)
-                Text(text)
+    }
+
+    /// The menu row's icon. Menus don't redraw while open, so while downloading this is a picture of the ring at
+    /// the moment the menu opened; opening it again draws a fresh one.
+    private var libraryMenuIcon: Image {
+        let d = downloads
+        guard d.active || d.stopped > 0 else { return Image(systemName: libraryStatus.symbol) }
+        // Drawn as a picture so the menu keeps its colors: the ring, or a red "!" for a stopped download.
+        let renderer = ImageRenderer(content: Group {
+            if d.active {
+                DownloadRing(fraction: d.fraction ?? 0, alert: d.stopped > 0, lineWidth: 3)
+            } else {
+                Image(systemName: "exclamationmark.circle.fill").resizable()
+                    .symbolRenderingMode(.palette).foregroundStyle(.white, Theme.danger)
             }
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(tint)
-                .lineLimit(1)
-                .fixedSize()
-                .padding(.horizontal, 6)
         }
+            .frame(width: 22, height: 22).padding(1))
+        renderer.scale = displayScale
+        guard let image = renderer.uiImage else { return Image(systemName: libraryStatus.symbol) }
+        return Image(uiImage: image).renderingMode(.original)
+    }
+
+    /// Top bar status while downloading: just the ring, filling as it goes, with a red "!" if another download
+    /// stopped. Opens the library.
+    private var statusPill: some View {
+        let d = downloads
+        return Button { showLibrary = true } label: {
+            DownloadRing(fraction: d.fraction, alert: d.stopped > 0, lineWidth: 3)
+                .frame(width: 22, height: 22)
+                .padding(.horizontal, 4)
+        }
+        .accessibilityLabel("Offline library: " + [downloadLabel, d.stopped > 0 ? d.stoppedText : nil]
+            .compactMap { $0 }.joined(separator: ", "))
+    }
+
+    /// "Downloading 34%" across everything downloading, or "Starting download" before progress arrives.
+    private var downloadLabel: String {
+        guard let f = downloads.fraction else { return "Starting download" }
+        return "Downloading " + f.formatted(.percent.precision(.fractionLength(0)))
     }
 
     // MARK: Welcome
@@ -199,7 +262,7 @@ struct ChatView: View {
 
     private var welcomeMood: Scout.Mood {
         if confetti > 0 && readyCount == readiness.count { return .happy }
-        if store.library == nil && !store.isWorking { return .sleepy }
+        if !store.hasPack && !store.isWorking { return .sleepy }
         if focused || !trimmed.isEmpty { return .thinking }
         return .idle
     }
@@ -222,16 +285,28 @@ struct ChatView: View {
                 .padding(.horizontal, 36)
                 .padding(.top, 8)
                 .riseIn(1)
-            if store.library == nil {
+            if downloads.active {
                 Button { showLibrary = true } label: {
-                    Label("Get the library", systemImage: "arrow.down.circle.fill")
+                    HStack(spacing: 10) {
+                        DownloadRing(fraction: downloads.fraction, alert: downloads.stopped > 0).frame(width: 18, height: 18)
+                        Text(downloadLabel).monospacedDigit().contentTransition(.numericText())
+                        Image(systemName: "chevron.right").font(.caption.weight(.bold)).foregroundStyle(Theme.inkSoft)
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.accentDeep)
+                    .padding(.horizontal, 16).padding(.vertical, 10)
+                    .background(Theme.accent.opacity(0.12), in: .capsule)
+                }
+                .padding(.top, 16)
+                .riseIn(2)
+            } else if !store.hasPack {
+                Button { showLibrary = true } label: {
+                    Label("Get the field guides", systemImage: "arrow.down.circle.fill")
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(.horizontal, 40)
                 .padding(.top, 16)
                 .riseIn(2)
-            } else if showBetterTip && trimmed.isEmpty {
-                betterTip.padding(.top, 16).riseIn(2)
             }
             // Three spacers below, one above: the text sits halfway between the title and dead center.
             Spacer(minLength: 0)
@@ -242,31 +317,12 @@ struct ChatView: View {
         .containerRelativeFrame(.vertical)
     }
 
-    /// Once the library is in, point out the optional larger model, until it's downloaded or dismissed.
-    private var showBetterTip: Bool {
-        BetterModel.isOffered && BetterModel.shared.state == .notDownloaded && !betterTipDismissed
-    }
-
-    private var betterTip: some View {
-        HStack(spacing: 4) {
-            Button { showLibrary = true } label: {
-                Label("Want more accurate answers?", systemImage: "sparkles")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Theme.accentDeep)
-                    .padding(.leading, 14).padding(.vertical, 9)
-            }
-            Button { withAnimation { betterTipDismissed = true } } label: {
-                Image(systemName: "xmark").font(.caption.weight(.bold)).foregroundStyle(Theme.inkSoft)
-                    .padding(.horizontal, 12).padding(.vertical, 9)
-            }
-            .accessibilityLabel("Hide this tip")
-        }
-        .background(Theme.card.opacity(0.9), in: .capsule)
-        .overlay(Capsule().strokeBorder(Theme.hairline))
-    }
-
     private var introText: String {
-        if store.library == nil {
+        if !store.hasPack && store.isWorking {
+            return "I'm Scout. I answer from a library that lives on this phone, so I work with no signal. "
+                + "It's downloading now, and keeps going even if you leave the app."
+        }
+        if !store.hasPack {
             return "I'm Scout. I answer from a library that lives on this phone, so I work with no signal. "
                 + "Download it once, before you head out."
         }
@@ -289,7 +345,7 @@ struct ChatView: View {
                 .id(m.id)
                 .transition(.asymmetric(insertion: .opacity.combined(with: .offset(y: 16)), removal: .opacity))
             }
-            if let last = assistant.messages.last, last.isFinished, !assistant.isBusy, !last.failed {
+            if let last = assistant.messages.last, last.isFinished, !assistant.isBusy, !last.failed, !last.isCasual {
                 followUps(for: last).transition(.opacity.combined(with: .offset(y: 8)))
             }
             Color.clear.frame(height: 260)  // lets the newest question scroll to the top
@@ -304,18 +360,26 @@ struct ChatView: View {
         let replies: [(String, String)] = m.urgent
             ? [("What if it gets worse?", "exclamationmark.triangle"), ("Should we evacuate?", "figure.walk.motion"),
                ("What do I tell 911?", "phone")]
-            : [("Explain step 1 more", "text.magnifyingglass"), ("What if that doesn't work?", "arrow.triangle.branch"),
+            : AnswerBlock.parse(m.text).contains(where: { if case .step = $0 { true } else { false } })
+            ? [("Explain step 1 more", "text.magnifyingglass"), ("What if that doesn't work?", "arrow.triangle.branch"),
                ("What gear helps?", "backpack")]
-        return VStack(alignment: .leading, spacing: 8) {
-            Text("Keep going").sectionLabel()
-            FlowLayout {
+            // No steps to follow up on: suggestions that fit a short answer.
+            : [("Tell me more", "text.magnifyingglass"), ("What should I watch out for?", "eye"),
+               ("What gear helps?", "backpack")]
+        // One quiet, sideways-scrolling row: there to tap, without competing with the answer.
+        return ScrollView(.horizontal) {
+            HStack(spacing: 8) {
                 ForEach(Array(replies.enumerated()), id: \.offset) { i, r in
-                    Button { send(r.0) } label: { SuggestionChip(title: r.0, symbol: r.1) }
+                    Button { send(r.0) } label: { SuggestionChip(title: r.0, symbol: r.1, quiet: true) }
                         .buttonStyle(SquishyButtonStyle(scale: 0.92))
                         .riseIn(i)
                 }
             }
+            .padding(.horizontal, 16)
         }
+        .scrollIndicators(.hidden)
+        .padding(.horizontal, -16)  // run edge to edge, past the thread's margins
+        .accessibilityLabel("Suggested follow-ups")
     }
 
     private func isLive(_ m: ChatMessage) -> Bool {
@@ -438,4 +502,59 @@ struct ChatView: View {
             try? await Task.sleep(for: .seconds(3))
         }
     }
+}
+
+/// A small progress ring for the library download: fills with the fraction, spins before there is one.
+struct DownloadRing: View {
+    let fraction: Double?
+    /// Another download stopped: a red "!" in the middle.
+    var alert = false
+    var lineWidth: CGFloat = 2.5
+    @State private var spin = false
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(Theme.accent.opacity(0.25), lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: fraction.map { max($0, 0.03) } ?? 0.25)
+                .stroke(Theme.accent, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(fraction == nil && spin ? 270 : -90))
+                .animation(fraction == nil ? .linear(duration: 1).repeatForever(autoreverses: false) : .easeOut,
+                           value: spin)
+                .animation(.easeOut, value: fraction)
+            if alert {
+                Image(systemName: "exclamationmark")
+                    .font(.system(size: 10, weight: .black))
+                    .foregroundStyle(Theme.danger)
+            }
+        }
+        .onAppear { spin = true }
+    }
+}
+
+/// Everything downloading or stopped (the field guides and the larger model), as one status.
+@MainActor
+struct Downloads {
+    /// Progress across the active downloads, weighted by size; nil while one is still starting.
+    var fraction: Double?
+    var active = false
+    var stopped = 0
+
+    init(store: LibraryStore, better: BetterModel) {
+        var parts: [(f: Double?, bytes: Double)] = []
+        if !store.hasPack && store.isWorking {
+            let bytes = Double(store.packs.first?.downloadBytes ?? 1)
+            parts.append((store.downloadFraction, bytes))
+        }
+        if case let .downloading(f) = better.state { parts.append((f, Double(better.downloadBytes))) }
+        if case .failed = store.phase { stopped += 1 }
+        if case .failed = better.state, !better.isDownloaded { stopped += 1 }
+        active = !parts.isEmpty
+        if active, !parts.contains(where: { $0.f == nil }) {
+            let total = parts.reduce(0) { $0 + $1.bytes }
+            fraction = parts.reduce(0) { $0 + ($1.f ?? 0) * $1.bytes } / max(total, 1)
+        }
+    }
+
+    var stoppedText: String { stopped == 1 ? "1 download stopped" : "\(stopped) downloads stopped" }
 }

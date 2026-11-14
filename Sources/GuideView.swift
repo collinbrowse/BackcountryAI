@@ -52,6 +52,7 @@ struct GuideView: View {
             .scrollDismissesKeyboard(.interactively)
             .background(Theme.background)
             .navigationTitle("Guide")
+            .toolbar { ToolbarItem(placement: .topBarLeading) { SOSToolbarButton() } }
             .searchable(text: $query, prompt: "Search \(store.articleCount.formatted()) articles")
             .navigationDestination(for: Topic.self) { TopicView(topic: $0) }
             .navigationDestination(for: Library.SourceInfo.self) { SourceView(info: $0) }

@@ -20,8 +20,7 @@ struct AssistantTurn: View {
     let message: ChatMessage
     let isLive: Bool
     var open: (Passage) -> Void
-    @Environment(SavedStore.self) private var saved
-    @State private var showBattery = false
+    @Environment(LibraryStore.self) private var store
 
     private var mood: Scout.Mood {
         if message.status != nil { return .thinking }
@@ -30,19 +29,57 @@ struct AssistantTurn: View {
         return message.failed ? .idle : .happy
     }
 
+    /// No library source backs this answer: said once, in the line beside Scout, not inside the answer.
+    private var isGeneral: Bool {
+        message.isFinished && (message.sources.isEmpty || AnswerBlock.isGeneral(message.text))
+    }
+
+    private static let noGuides = "Note that field guides have not been downloaded yet"
+
     private var headline: String {
-        if let status = message.status { return status }
+        if let status = message.status { return message.isCasual ? "" : status }
         if isLive { return "Writing…" }
         if message.failed { return "I couldn't write an answer" }
-        if message.urgent { return "Act fast. Here's what to do." }
-        return message.sources.isEmpty ? "The library doesn't cover this" : "Here's what I found"
+        if message.urgent {
+            // Still say when no library source backs it: it matters most in an emergency.
+            if isGeneral { return store.hasPack ? "Act fast. Not from the library." : Self.noGuides }
+            return "Act fast. Here's what to do."
+        }
+        if isGeneral {
+            // Say why when it's fixable: without the field guides, only the person's own documents are searched.
+            return store.hasPack ? "General guidance, not from the library"
+                : Self.noGuides
+        }
+        return "Here's what I found"
     }
 
     var body: some View {
+        if message.isCasual && message.status == nil { casualReply } else { answer }
+    }
+
+    /// Small talk: Scout just talks, like any chat app.
+    private var casualReply: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Scout(mood: isLive ? .writing : .happy, size: 36)
+            Text(message.text)
+                .font(.body)
+                .foregroundStyle(Theme.ink)
+                .padding(.top, 6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
+        }
+    }
+
+    private var answer: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
                 Scout(mood: mood, size: 46)
-                Text(headline)
+                HStack(spacing: 5) {
+                    if isGeneral && !isLive {
+                        Image(systemName: "info.circle").foregroundStyle(Theme.sun)
+                    }
+                    Text(headline)
+                }
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .foregroundStyle(Theme.inkSoft)
                     .contentTransition(.opacity)
@@ -64,17 +101,10 @@ struct AssistantTurn: View {
         .animation(.bouncy, value: message.isFinished)
     }
 
+    /// Share, and how long the answer took. Saving is for the whole chat, from the top bar.
     private var footer: some View {
-        let isSaved = saved.isSaved(question: message.question, answer: message.text)
-        return HStack(spacing: 8) {
+        HStack(spacing: 8) {
             if !message.failed {
-                Button {
-                    saved.toggle(question: message.question, answer: message.text, sources: message.sources)
-                } label: {
-                    Label(isSaved ? "Saved" : "Save", systemImage: isSaved ? "bookmark.fill" : "bookmark")
-                        .contentTransition(.symbolEffect(.replace))
-                }
-                .sensoryFeedback(.impact(weight: .light), trigger: isSaved)
                 ShareLink(item: message.question + "\n\n" + message.text) {
                     Label("Share", systemImage: "square.and.arrow.up")
                 }
@@ -85,24 +115,8 @@ struct AssistantTurn: View {
                     .accessibilityLabel("Written with better answers")
             }
             if let b = message.battery {
-                Button { showBattery = true } label: {
-                    Label(b.short, systemImage: "bolt.fill")
-                }
-                .popover(isPresented: $showBattery) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Battery for this answer").font(.headline)
-                        Text(b.summary)
-                        if let s = message.batterySession { Text(s) }
-                        if let e = message.engine { Text(e) }
-                        if b.lowPowerMode { Text("Low Power Mode is on, so answers may be slower.") }
-                        Text("iOS reports battery in 1% steps, so single answers often read under 1%.")
-                            .foregroundStyle(.secondary)
-                    }
-                    .font(.footnote)
-                    .padding()
-                    .frame(width: 290, alignment: .leading)
-                    .presentationCompactAdaptation(.popover)
-                }
+                Label(String(format: "%.0fs", b.seconds), systemImage: "timer")
+                    .accessibilityLabel(String(format: "Took %.0f seconds", b.seconds))
             }
         }
         .labelStyle(.titleAndIcon)
@@ -115,6 +129,9 @@ struct AssistantTurn: View {
 
 /// Shown at the top of answers to questions that sound life-threatening.
 struct SOSBanner: View {
+    @Environment(\.openURL) private var openURL
+    @State private var confirmCall = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("If a life may be at risk, get help first", systemImage: "sos")
@@ -122,12 +139,19 @@ struct SOSBanner: View {
             Text("No cell signal? On iPhone 14 or later, call 911 anyway to start Emergency SOS via satellite.")
                 .font(.footnote)
                 .opacity(0.9)
-            Link(destination: URL(string: "tel://911")!) {
+            // Two confirmations before a real emergency call: this one, then iOS's own "Call 911?".
+            Button { confirmCall = true } label: {
                 Label("Call 911", systemImage: "phone.fill")
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(Theme.danger)
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(.white, in: .capsule)
+            }
+            .alert("Call 911 now?", isPresented: $confirmCall) {
+                Button("Call 911", role: .destructive) { openURL(URL(string: "tel://911")!) }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This places a real emergency call. Use it when someone needs help now.")
             }
         }
         .foregroundStyle(.white)
