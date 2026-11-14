@@ -10,6 +10,3 @@ gem "logger"
 gem "mutex_m"
 gem "nkf"
 gem "ostruct"
-
-# Writes the TestFlight "What to Test" notes from the commits (fastlane/testflight_notes.rb).
-gem "anthropic", "~> 2.8"

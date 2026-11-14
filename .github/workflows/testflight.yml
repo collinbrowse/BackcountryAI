@@ -19,12 +19,16 @@ jobs:
       CI_SIGNING_P12_BASE64: ${{ secrets.CI_SIGNING_P12_BASE64 }}
       CI_SIGNING_P12_PASSWORD: ${{ secrets.CI_SIGNING_P12_PASSWORD }}
       TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_GROUPS }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # writes the tester-facing "What to Test" notes
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}   # tester-facing "What to Test" notes, on your Claude subscription
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # release notes come from the commits since the last v* tag
       - uses: ./.github/actions/setup
+      - name: Install Claude Code (writes the TestFlight notes)
+        run: |
+          command -v claude >/dev/null || [ -x "$HOME/.local/bin/claude" ] || curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: bundle exec fastlane test
       - run: bundle exec fastlane beta
       - uses: actions/upload-artifact@v4

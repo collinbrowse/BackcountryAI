@@ -1,8 +1,13 @@
 # TestFlight "What to Test" notes, written for testers rather than developers.
 #
 # The commit messages since the last release are rewritten by Claude into plain-language bullets ("Added …, which
-# lets you …", "Fixed a bug where …"), with build, CI and refactoring changes left out. Needs ANTHROPIC_API_KEY;
-# without it, or if the request fails, a generic note is used so the upload never fails over release notes.
+# lets you …", "Fixed a bug where …"), with build, CI and refactoring changes left out. It runs the Claude Code CLI
+# signed in with your Claude subscription (CLAUDE_CODE_OAUTH_TOKEN, from `claude setup-token`), so it uses the
+# subscription rather than API credits. Without the token, or if Claude fails, a generic note is used so the
+# upload never fails over release notes.
+require "open3"
+require "timeout"
+require "tmpdir"
 
 module TestflightNotes
   MODEL = "claude-opus-5-5"
@@ -41,31 +46,37 @@ module TestflightNotes
   def self.generate(commit_log)
     return FALLBACK if commit_log.to_s.strip.empty?
 
-    if ENV["ANTHROPIC_API_KEY"].to_s.strip.empty?
-      FastlaneCore::UI.important("ANTHROPIC_API_KEY isn't set, so TestFlight gets generic notes. Add it as a GitHub secret (docs/release.md).")
+    unless ENV["CLAUDE_CODE_OAUTH_TOKEN"].to_s.strip != "" || ENV["TESTFLIGHT_NOTES_LOCAL"] == "1"
+      warn_ci("CLAUDE_CODE_OAUTH_TOKEN isn't set, so TestFlight gets generic notes. See docs/release.md.")
       return FALLBACK
     end
 
-    require "anthropic"
-    message = Anthropic::Client.new(timeout: 120).beta.messages.create(
-      model: MODEL,
-      max_tokens: 4000,
-      output_config: { effort: :medium },
-      system_: PROMPT,
-      messages: [{ role: "user", content: "Commits in this build, newest first:\n\n#{commit_log}" }],
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: :default
-    )
-    unless message.stop_reason == :end_turn
-      FastlaneCore::UI.important("Claude stopped with #{message.stop_reason} while writing the TestFlight notes; using generic notes.")
+    # No tools, no settings, no MCP servers, and run outside the repo so no CLAUDE.md is picked up: Claude
+    # only reads the commits it's given and writes text.
+    command = ["claude", "-p", "--model", MODEL, "--effort", "medium", "--tools", "",
+               "--system-prompt", PROMPT, "--setting-sources", "", "--strict-mcp-config",
+               "--no-session-persistence", "--output-format", "text"]
+    out, err, status = Dir.mktmpdir do |dir|
+      Timeout.timeout(300) do
+        Open3.capture3(*command, chdir: dir,
+                       stdin_data: "Commits in this build, newest first:\n\n#{commit_log}")
+      end
+    end
+    unless status.success?
+      warn_ci("Claude Code exited with #{status.exitstatus} while writing the TestFlight notes " \
+              "(#{(err.strip.empty? ? out : err).strip[0, 300]}); using generic notes.")
       return FALLBACK
     end
 
-    text = message.content.select { |b| b.type == :text }.map(&:text).join.strip
+    text = out.force_encoding("UTF-8").scrub.strip
     return FALLBACK if text.empty?
     text.length > LIMIT ? text[0, LIMIT - 1].sub(/\n[^\n]*\z/, "") + "\n…" : text
-  rescue StandardError => e
-    FastlaneCore::UI.important("Couldn't write the TestFlight notes with Claude (#{e.class}: #{e.message}); using generic notes.")
+  rescue StandardError, Timeout::Error => e
+    warn_ci("Couldn't write the TestFlight notes with Claude (#{e.class}: #{e.message}); using generic notes.")
     FALLBACK
+  end
+
+  def self.warn_ci(message)
+    FastlaneCore::UI.important(message)
   end
 end

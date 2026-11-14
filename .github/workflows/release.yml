@@ -30,7 +30,7 @@ jobs:
       REVIEW_EMAIL: ${{ secrets.REVIEW_EMAIL }}
       APP_SITE_URL: ${{ vars.APP_SITE_URL }}
       TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_GROUPS }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # writes the tester-facing "What to Test" notes
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}   # tester-facing "What to Test" notes, on your Claude subscription
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,6 +45,10 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - uses: ./.github/actions/setup
+      - name: Install Claude Code (writes the TestFlight notes)
+        run: |
+          command -v claude >/dev/null || [ -x "$HOME/.local/bin/claude" ] || curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: bundle exec fastlane release submit:${{ inputs.submit }}
       - uses: actions/upload-artifact@v4
         if: always()
