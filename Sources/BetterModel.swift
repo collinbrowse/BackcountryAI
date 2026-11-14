@@ -82,6 +82,7 @@ final class BetterModel {
         for name in [UIApplication.didEnterBackgroundNotification, UIApplication.didReceiveMemoryWarningNotification] {
             center.addObserver(forName: name, object: nil, queue: .main) { _ in
                 MainActor.assumeIsolated {
+                    SearchModels.shared.unload()  // the search models' memory too; they reload when next needed
                     let model = BetterModel.shared
                     guard model.state == .ready || model.state == .loading else { return }
                     LLMLog.note(name == UIApplication.didReceiveMemoryWarningNotification
@@ -148,6 +149,7 @@ final class BetterModel {
     func download() {
         guard Self.isSupported, !isDownloaded, downloadTask == nil else { return }
         state = .downloading(0)
+        let started = ContinuousClock.now
         downloadTask = Task {
             defer { downloadTask = nil; progress = nil }
             do {
@@ -166,12 +168,18 @@ final class BetterModel {
                     return
                 }
                 #endif
+                // A download that fails at once (no pack, no network) would flash "Starting the download…" for
+                // a frame and snap back. Let it read for a moment so the change is a calm hand-off, not a flicker.
+                try? await Task.sleep(until: started + Self.minimumAttempt, clock: .continuous)
                 state = .failed(Self.isMissingPack(error)
                     ? "Better answers aren't available from the App Store yet."
                     : "The download didn't finish (\(error.localizedDescription)). Check Wi-Fi and try again.")
             }
         }
     }
+
+    /// The shortest time a download attempt stays on screen before it reports failing.
+    static let minimumAttempt: Duration = .seconds(1.4)
 
     func cancelDownload() {
         progress?.cancel()

@@ -74,6 +74,12 @@ struct SavedChatView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
+                    ShareLink(item: ChatTranscript.text(title: chat.topic, messages: chat.messages),
+                              preview: SharePreview(chat.title)) {
+                        Label("Share chat", systemImage: "square.and.arrow.up")
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
                         .tint(Theme.danger)
                 }

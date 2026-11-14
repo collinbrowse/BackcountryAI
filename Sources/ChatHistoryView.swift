@@ -107,13 +107,18 @@ struct ChatListView: View {
             ToolbarItem(placement: .topBarLeading) { SOSToolbarButton() }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    Button { withAnimation { selecting = true } } label: { Label("Select", systemImage: "checkmark.circle") }
-                    Button(role: .destructive) { pending = .all(chats.conversations.count) } label: {
-                        Label("Delete All Chats", systemImage: "trash")
+                    if !chats.conversations.isEmpty {
+                        Section {
+                            Button { withAnimation { selecting = true } } label: {
+                                Label("Select", systemImage: "checkmark.circle")
+                            }
+                            Button(role: .destructive) { pending = .all(chats.conversations.count) } label: {
+                                Label("Delete All Chats", systemImage: "trash")
+                            }
+                        }
                     }
-                } label: { Image(systemName: "ellipsis") }
-                .disabled(chats.conversations.isEmpty)
-                .accessibilityLabel("More")
+                    AppMenuSection()
+                } label: { AppMenuLabel() }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { newChat() } label: { Image(systemName: "square.and.pencil") }
