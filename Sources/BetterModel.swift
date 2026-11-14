@@ -79,6 +79,14 @@ final class BetterModel {
                 MainActor.assumeIsolated { BetterModel.shared.unload() }
             }
         }
+        // A critically hot phone gives the model's memory and the GPU back; Apple's model answers until it cools.
+        center.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated {
+                let heat = ProcessInfo.processInfo.thermalState
+                LLMLog.note("thermal state: \(ThermalPolicy.name(heat))")
+                if !ThermalPolicy.allowsLargeModel(heat) { BetterModel.shared.unload() }
+            }
+        }
     }
 
     /// MLX needs a real GPU; the simulator can't run it. Apple Intelligence iPhones all have 8 GB or more.
@@ -197,7 +205,8 @@ final class BetterModel {
 
     /// Loads it into memory ahead of the next question, so the answer doesn't wait. Only when it's in use.
     func warmUp() {
-        guard isActive, state != .ready else { return }
+        guard isActive, state != .ready,
+              ThermalPolicy.allowsPreloading(ProcessInfo.processInfo.thermalState) else { return }
         prepare()
     }
 

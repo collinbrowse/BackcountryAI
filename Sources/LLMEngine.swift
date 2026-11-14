@@ -107,6 +107,36 @@ extension LLMEngine {
     }
 }
 
+/// What to do about heat. The larger model runs the GPU hard; Apple's model is far lighter.
+enum ThermalPolicy {
+    /// Answers are this short at most while the phone is hot (a typical answer is about 130 tokens).
+    static let hotMaxTokens = 400
+
+    /// Whether the larger model may write answers. Not when the phone is critically hot: Apple's model does.
+    static func allowsLargeModel(_ state: ProcessInfo.ThermalState) -> Bool { state != .critical }
+
+    /// Whether to load the model ahead of a question. Not while the phone is already hot.
+    static func allowsPreloading(_ state: ProcessInfo.ThermalState) -> Bool { state == .nominal || state == .fair }
+
+    /// The config to answer with at this temperature: shorter answers once the phone is seriously hot.
+    static func adjusted(_ config: GenerationConfig, for state: ProcessInfo.ThermalState) -> GenerationConfig {
+        guard state == .serious || state == .critical else { return config }
+        var config = config
+        config.maxTokens = min(config.maxTokens, hotMaxTokens)
+        return config
+    }
+
+    static func name(_ state: ProcessInfo.ThermalState) -> String {
+        switch state {
+        case .nominal: "nominal"
+        case .fair: "fair"
+        case .serious: "serious"
+        case .critical: "critical"
+        @unknown default: "unknown"
+        }
+    }
+}
+
 /// Makes a prompt fit an engine's context: drops the weakest excerpts (the last ones) until the instructions,
 /// prompt and answer all fit, counted with that engine's own tokenizer and chat template.
 enum PromptFit {

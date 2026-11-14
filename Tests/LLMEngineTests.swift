@@ -245,3 +245,30 @@ struct PromptFitTests {
         #expect(await fit(excerpts, context: 50).count == 2)
     }
 }
+
+struct ThermalPolicyTests {
+    @Test func coolPhonesAnswerAsConfigured() {
+        for state in [ProcessInfo.ThermalState.nominal, .fair] {
+            #expect(ThermalPolicy.adjusted(.answers, for: state) == .answers)
+            #expect(ThermalPolicy.allowsLargeModel(state))
+            #expect(ThermalPolicy.allowsPreloading(state))
+        }
+    }
+
+    @Test func seriousHeatShortensAnswersButKeepsTheModel() {
+        let config = ThermalPolicy.adjusted(.answers, for: .serious)
+        #expect(config.maxTokens == ThermalPolicy.hotMaxTokens)
+        #expect(config.contextTokens == GenerationConfig.answers.contextTokens)
+        #expect(ThermalPolicy.allowsLargeModel(.serious))
+        #expect(!ThermalPolicy.allowsPreloading(.serious))
+    }
+
+    @Test func criticalHeatPausesTheLargeModel() {
+        #expect(!ThermalPolicy.allowsLargeModel(.critical))
+        #expect(!ThermalPolicy.allowsPreloading(.critical))
+    }
+
+    @Test func neverLengthensAnAlreadyShortAnswer() {
+        #expect(ThermalPolicy.adjusted(GenerationConfig(maxTokens: 100), for: .critical).maxTokens == 100)
+    }
+}

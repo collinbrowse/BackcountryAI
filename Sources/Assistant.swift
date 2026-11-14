@@ -146,11 +146,19 @@ final class Assistant {
                 ? "Getting better answers ready…" : "Writing an answer on this phone…"
             do {
                 // Better answers: the larger model writes the answer when it's on. If it can't load, Apple's does.
-                let useBetter = better.isActive ? await better.ensureLoaded() : false
+                // A hot phone gets shorter answers, and a critically hot one gets Apple's lighter model.
+                let heat = ProcessInfo.processInfo.thermalState
+                let config = ThermalPolicy.adjusted(.answers, for: heat)
+                if heat == .serious || heat == .critical {
+                    LLMLog.note("phone is hot (\(ThermalPolicy.name(heat))): answers up to \(config.maxTokens) tokens, "
+                        + "larger model \(ThermalPolicy.allowsLargeModel(heat) ? "allowed" : "paused")")
+                }
+                let useBetter = better.isActive && ThermalPolicy.allowsLargeModel(heat)
+                    ? await better.ensureLoaded() : false
                 let engine: any LLMEngine = useBetter ? better.engine : apple
                 messages[index].status = "Writing an answer on this phone…"
                 // Drop the weakest excerpts until the prompt fits this model, by its own token count.
-                let fitted = await PromptFit.fit(sources, engine: engine, config: .answers) { kept in
+                let fitted = await PromptFit.fit(sources, engine: engine, config: config) { kept in
                     [.system(Retrieval.instructions),
                      .user(Retrieval.prompt(question: q, sources: kept, previous: previous, previousAnswer: previousAnswer))]
                 }
@@ -162,7 +170,7 @@ final class Assistant {
                     self.messages[index].text = text
                 }
                 do {
-                    let stats = try await engine.answer(request, config: .answers, onText: show)
+                    let stats = try await engine.answer(request, config: config, onText: show)
                     if useBetter {
                         messages[index].engine = String(format: "Written with better answers: first words in %.1f s, %.0f tokens/s, %.1f GB memory",
                                                         stats.secondsToFirstToken, stats.tokensPerSecond,
@@ -174,7 +182,7 @@ final class Assistant {
                     LLMLog.note("better answers gave up (\(error.localizedDescription)); Apple's model answers")
                     messages[index].text = ""
                     messages[index].status = "Writing an answer on this phone…"
-                    try await apple.answer(request, config: .answers, onText: show)
+                    try await apple.answer(request, config: config, onText: show)
                 }
                 if !messages[index].text.isEmpty { Readiness.recordAnswer() }
             } catch is CancellationError {
