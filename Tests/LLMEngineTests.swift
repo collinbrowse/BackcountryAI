@@ -272,3 +272,32 @@ struct ThermalPolicyTests {
         #expect(ThermalPolicy.adjusted(GenerationConfig(maxTokens: 100), for: .critical).maxTokens == 100)
     }
 }
+
+struct ModelCatalogTests {
+    private let mib: Int64 = 1_048_576
+
+    @Test func an8GBiPhoneGetsQwen4B() {
+        // Measured on an iPhone 17: 7672 MiB of memory, 6144 MiB allowed to the app.
+        #expect(ModelCatalog.best(deviceBytes: 7672 * mib, appLimitBytes: 6144 * mib)?.assetPackID == "answers")
+    }
+
+    @Test func a6GBiPhoneGetsNothingYet() {
+        #expect(ModelCatalog.best(deviceBytes: 5700 * mib, appLimitBytes: 4096 * mib) == nil)
+    }
+
+    @Test func aLowAppLimitRulesItOutEvenWithEnoughMemory() {
+        #expect(ModelCatalog.best(deviceBytes: 7672 * mib, appLimitBytes: 3072 * mib) == nil)
+    }
+
+    @Test func theSimulatorGetsNothing() {
+        #expect(ModelCatalog.best(deviceBytes: 64_000 * mib, appLimitBytes: nil) == nil)
+    }
+
+    @Test func everyModelRecordsItsLicenseAndPinnedRevision() {
+        for spec in ModelCatalog.all {
+            #expect(!spec.license.isEmpty)
+            #expect(spec.revision.count == 40)
+            #expect(spec.downloadBytes > 0 && spec.weightsBytes > 0)
+        }
+    }
+}

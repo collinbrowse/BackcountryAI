@@ -50,6 +50,7 @@
 		CFB9944DB1427D4425BF5FDE /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAD60B3D6B2F613DC51ED644 /* Library.swift */; };
 		DB35C50E8F6E47AB666D2572 /* DownloaderExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9205C2A0C2BC6F282A7A21 /* DownloaderExtension.swift */; };
 		DBBA37E2DFFB2FE9768359BF /* Guide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F63C609C46ABCCF50E17B7F /* Guide.swift */; };
+		DC28DD57A0837690517640C3 /* ModelCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 434F920B077D092A3A98BFA6 /* ModelCatalog.swift */; };
 		DE10A27E5010C9E664396023 /* Scenery.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2917396594C68CE8683BDAD /* Scenery.swift */; };
 		E057EED4732E8F4EA9BB051E /* FieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99492452F59C5C8ECFCCE65 /* FieldView.swift */; };
 		E09BEF2824E172AE33243CE2 /* Readiness.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C38A1055E1D6375CFDA5D1 /* Readiness.swift */; };
@@ -117,6 +118,7 @@
 		3FC6E0D4E4CC6AC3F9A29403 /* BackcountryAIUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BackcountryAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		404F44B81DA7BD32E9088A36 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		42B5939B841C74D05BA27BA2 /* BackcountryAIDownloader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BackcountryAIDownloader.entitlements; sourceTree = "<group>"; };
+		434F920B077D092A3A98BFA6 /* ModelCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCatalog.swift; sourceTree = "<group>"; };
 		4DB1D2D176A084C1FCB89D25 /* LLMEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMEngine.swift; sourceTree = "<group>"; };
 		548DE6B9FE8E7C373C2B8A9D /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		5F077B8D8244B95DE7FEC499 /* ScreenshotMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotMode.swift; sourceTree = "<group>"; };
@@ -259,6 +261,7 @@
 				4DB1D2D176A084C1FCB89D25 /* LLMEngine.swift */,
 				EE928A4AFF107A9275C3D1A4 /* MemoryProbe.swift */,
 				D06459A89039CDAB71FBF0E3 /* MLXEngine.swift */,
+				434F920B077D092A3A98BFA6 /* ModelCatalog.swift */,
 				E1670D0781CA9A4F75D81CBE /* MyDocuments.swift */,
 				AAF4905B9A3EBCF719428534 /* Onboarding.swift */,
 				A7C38A1055E1D6375CFDA5D1 /* Readiness.swift */,
@@ -492,6 +495,7 @@
 				508247AFEB4ADA3179E12F4E /* LibraryView.swift in Sources */,
 				8D473AFA2484842F4C838E6E /* MLXEngine.swift in Sources */,
 				E736B17BD12E8D46E8D8A277 /* MemoryProbe.swift in Sources */,
+				DC28DD57A0837690517640C3 /* ModelCatalog.swift in Sources */,
 				341B643A84A78C5CFF547723 /* MyDocuments.swift in Sources */,
 				3016AF4260781089F26E68C0 /* Onboarding.swift in Sources */,
 				E09BEF2824E172AE33243CE2 /* Readiness.swift in Sources */,

@@ -191,7 +191,7 @@ struct BetterAnswersDetailsView: View {
             HStack {
                 Text("License").foregroundStyle(Theme.inkSoft)
                 Spacer()
-                Link("Apache 2.0", destination: URL(string: "https://www.apache.org/licenses/LICENSE-2.0")!)
+                Link(BetterModel.spec.license, destination: BetterModel.spec.licenseURL)
             }
             .font(.subheadline)
         }

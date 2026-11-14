@@ -13,13 +13,15 @@ import UIKit
 @Observable
 final class BetterModel {
     static let shared = BetterModel()
-    static let assetPackID = "answers"
-    static let modelID = "mlx-community/Qwen3.5-4B-MLX-4bit"
+    /// The model it offers. One today; ModelCatalog chooses by the phone's memory.
+    static let spec = ModelCatalog.qwen35_4B
+    static let assetPackID = spec.assetPackID
+    static let modelID = spec.hubID
     /// The model's name as people see it.
-    static let displayName = "Qwen 3.5 4B"
+    static let displayName = spec.displayName
     /// From scripts/release-model-pack.sh; App Store Connect's figure replaces it once known.
-    static let estimatedDownloadBytes: Int64 = 2_261_254_682
-    static let unpackedBytes: Int64 = 2_394_053_774
+    static let estimatedDownloadBytes = spec.downloadBytes
+    static let unpackedBytes = spec.weightsBytes
 
     enum State: Equatable {
         case notDownloaded
@@ -48,10 +50,9 @@ final class BetterModel {
     private init() {
         engine = MLXEngine(
             name: Self.displayName,
-            weightsBytes: Self.unpackedBytes,
-            extraEOSTokens: ["<|im_end|>"],
-            // Qwen 3.x thinks out loud first unless the chat template is told not to.
-            templateContext: ["enable_thinking": false],
+            weightsBytes: Self.spec.weightsBytes,
+            extraEOSTokens: Self.spec.extraEOSTokens,
+            templateContext: Self.spec.templateContext,
             source: {
                 await MainActor.run {
                     if let folder = BetterModel.packFolder { return .folder(folder) }
@@ -89,14 +90,10 @@ final class BetterModel {
         }
     }
 
-    /// MLX needs a real GPU; the simulator can't run it. Apple Intelligence iPhones all have 8 GB or more.
-    static var isSupported: Bool {
-        #if targetEnvironment(simulator)
-        false
-        #else
-        ProcessInfo.processInfo.physicalMemory >= 7_000_000_000
-        #endif
-    }
+    /// Whether this iPhone can run it: enough memory, and enough of it allowed to one app. MLX also needs a real
+    /// GPU, which the simulator doesn't have.
+    static let isSupported = ModelCatalog.best(deviceBytes: MemoryProbe.deviceBytes,
+                                               appLimitBytes: MemoryProbe.ceilingBytes) != nil
 
     /// Whether to offer it at all. The simulator shows it (without the download) so the screens can be checked.
     static var isOffered: Bool {
