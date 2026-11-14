@@ -55,7 +55,7 @@ actor FoundationEngine: LLMEngine {
                     text = filter.text
                     continuation.yield(.text(text))
                 }
-                if #available(iOS 26.4, *) {
+                if #available(iOS 26.4, macOS 26.4, *) {
                     stats.promptTokens = (try? await model.tokenCount(for: prompt)) ?? 0
                     stats.answerTokens = (try? await model.tokenCount(for: text)) ?? 0
                 }
@@ -74,7 +74,7 @@ actor FoundationEngine: LLMEngine {
 
     /// Exact counts need iOS 26.4. Before that the callers estimate from the text's length.
     func tokenCount(_ messages: [LLMMessage]) async -> Int? {
-        guard #available(iOS 26.4, *) else { return nil }
+        guard #available(iOS 26.4, macOS 26.4, *) else { return nil }
         let (instructions, prompt) = Self.split(messages)
         guard let a = try? await model.tokenCount(for: Instructions(instructions)),
               let b = try? await model.tokenCount(for: prompt) else { return nil }

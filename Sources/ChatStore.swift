@@ -109,3 +109,28 @@ final class ChatStore {
         try? JSONEncoder().encode(conversations).write(to: file, options: .atomic)
     }
 }
+
+/// A whole chat as plain text, for sharing: each question, its answer, and the sources the answer cites.
+enum ChatTranscript {
+    static func text(title: String?, messages: [ChatMessage]) -> String {
+        var parts: [String] = []
+        if let title { parts.append(title) }
+        for m in messages {
+            switch m.role {
+            case .user:
+                parts.append("Q: " + m.text)
+            case .assistant:
+                guard !m.text.isEmpty else { continue }
+                var a = "Scout: " + m.text
+                if !m.sources.isEmpty {
+                    a += "\n\nSources:\n" + m.sources.enumerated()
+                        .map { "[\($0.offset + 1)] \($0.element.title) (\($0.element.source))" }
+                        .joined(separator: "\n")
+                }
+                parts.append(a)
+            }
+        }
+        parts.append("From Scout, an offline field guide. Check anything important against the original sources.")
+        return parts.joined(separator: "\n\n")
+    }
+}

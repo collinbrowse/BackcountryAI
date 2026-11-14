@@ -1,0 +1,11 @@
+# Python packages for the answer-quality tools (docs/answer-quality.md), installed into the project venv:
+#   .venv/bin/pip install -r tools/requirements.txt
+# The library build has its own list in docs/library-hosting.md.
+
+# tools/grade-answers and the Claude steps of tools/train-answers. Needs a release with server-side fallbacks
+# (`fallbacks=` on client.beta.messages.create); any current one has it.
+anthropic
+
+# tools/train-answers/train.sh, answer_mlx.py and the eval: LoRA training and generation on Apple silicon.
+# 0.32.2 is the version checked to load Qwen 3.5 (model_type qwen3_5) text-only and to LoRA/fuse its 4-bit layers.
+mlx-lm==0.32.2

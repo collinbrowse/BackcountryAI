@@ -3,8 +3,6 @@ import FoundationModels
 import Observation
 import os
 
-let log = Logger(subsystem: "com.collinbrowse.backcountryai", category: "assistant")
-
 struct ChatMessage: Identifiable, Codable, Hashable {
     enum Role: String, Codable { case user, assistant }
     var id = UUID()
@@ -20,12 +18,14 @@ struct ChatMessage: Identifiable, Codable, Hashable {
     var engine: String? = nil          // set when the larger model wrote it: its speed and memory (not saved)
     var casual: Bool? = nil            // a chat reply to small talk ("hi", "thanks"): no steps, no sources
     var isCasual: Bool { casual == true }
+    var kind: Retrieval.Kind? = nil    // what the question needed (troubleshooting answers end with a question)
+    var choices: [String]? = nil       // tap-to-answer replies to the question a troubleshooting answer ends with
 
     var isFinished: Bool { role == .assistant && status == nil && !text.isEmpty }
 
     // `status` is only meaningful while an answer is being written, so it isn't saved.
     enum CodingKeys: String, CodingKey {
-        case id, role, text, sources, battery, batterySession, failed, question, urgent, casual
+        case id, role, text, sources, battery, batterySession, failed, question, urgent, casual, kind, choices
     }
 }
 
@@ -74,6 +74,7 @@ final class Assistant {
         guard !q.isEmpty, !isBusy else { return }
         let previous = messages.last(where: { $0.role == .user })?.text
         let previousAnswer = messages.last(where: { $0.role == .assistant && !$0.failed })?.text
+        let history = Self.history(from: messages)
         messages.append(ChatMessage(role: .user, text: q))
         let obviousSmallTalk = SmallTalk.isObvious(q)
         messages.append(ChatMessage(role: .assistant, text: "", status: obviousSmallTalk ? "…" : "Searching the library…",
@@ -110,18 +111,29 @@ final class Assistant {
             if obviousSmallTalk {
                 return await chat(q, at: index, previous: previous, previousAnswer: previousAnswer)
             }
+            var kind = Retrieval.Kind.guess(q)
             if let library {
                 if problem == nil {
-                    guard let searches = await Retrieval.searches(for: q, previous: previous, model: model) else {
+                    guard let plan = await Retrieval.plan(for: q, history: history, model: model) else {
                         messages[index].urgent = false
                         return await chat(q, at: index, previous: previous, previousAnswer: previousAnswer)
                     }
-                    log.notice("searches: \(searches.joined(separator: " | "))")
+                    kind = plan.kind
+                    log.notice("kind \(plan.kind.rawValue) searches: \(plan.searches.joined(separator: " | "))")
+                    // Meaning-based search, when the library has its vectors (see SearchModels). A follow-up is
+                    // searched with the question before it, so "should I go uphill?" still knows they're lost.
+                    // Leave room for the answer model if it still has to load after the search models.
+                    let answers = BetterModel.shared
+                    SearchModels.shared.reserveBytes = answers.isActive && !answers.isReady
+                        ? ModelCatalog.qwen35_4B.budget.neededBytes : 300_000_000
+                    let context = ([history.last?.question].compactMap { $0 } + [q]).joined(separator: " ")
+                    let dense = await SearchModels.shared.denseSearch(context, library: library)
                     let candidates = await Task.detached(priority: .userInitiated) {
-                        Retrieval.candidates(question: q, searches: searches, library: library)
+                        Retrieval.candidates(question: q, searches: plan.searches, dense: dense, library: library)
                     }.value
                     messages[index].status = "Reading what it found…"
-                    sources = await Retrieval.pick(question: q, from: candidates, model: model)
+                    sources = await Retrieval.pick(question: q, history: history, from: candidates, model: model,
+                                                   scorer: SearchModels.shared.scorer)
                 } else {
                     sources = await Task.detached(priority: .userInitiated) {
                         var hits = library.search(q, limit: 5)
@@ -132,6 +144,7 @@ final class Assistant {
                     }.value
                 }
             }
+            messages[index].kind = kind
             messages[index].sources = sources
             log.notice("using \(sources.count) passages")
 
@@ -158,16 +171,19 @@ final class Assistant {
                 let engine: any LLMEngine = useBetter ? better.engine : apple
                 messages[index].status = "Writing an answer on this phone…"
                 // Drop the weakest excerpts until the prompt fits this model, by its own token count.
-                let fitted = await PromptFit.fit(sources, engine: engine, config: config) { kept in
+                let fitted = await PromptFit.fit(sources, engine: engine, config: config) { [kind] kept in
                     [.system(Retrieval.instructions),
-                     .user(Retrieval.prompt(question: q, sources: kept, previous: previous, previousAnswer: previousAnswer))]
+                     .user(Retrieval.prompt(question: q, sources: kept, history: history, kind: kind))]
                 }
                 sources = fitted.sources
                 messages[index].sources = sources
                 let request = fitted.messages
+                // A troubleshooting answer's closing "Ask: … [A | B]" line becomes tap-to-answer chips.
                 let show: @MainActor (String) -> Void = { text in
+                    let split = Clarify.split(text)
                     self.messages[index].status = nil
-                    self.messages[index].text = text
+                    self.messages[index].text = split.text
+                    self.messages[index].choices = split.choices.isEmpty ? nil : split.choices
                 }
                 do {
                     let stats = try await engine.answer(request, config: config, onText: show)
@@ -193,6 +209,13 @@ final class Assistant {
                     + (sources.isEmpty ? "" : " The library matches are below. Tap one to read it.")
             }
         }
+    }
+
+    /// The conversation so far, oldest first: the last few answered questions (not small talk or failures).
+    static func history(from messages: [ChatMessage], limit: Int = 3) -> [Retrieval.Turn] {
+        messages.filter { $0.role == .assistant && !$0.failed && !$0.isCasual && !$0.question.isEmpty && !$0.text.isEmpty }
+            .suffix(limit)
+            .map { Retrieval.Turn(question: $0.question, answer: $0.text) }
     }
 
     /// A short chat reply to small talk, from Apple's model (or a fixed line without it). No library, no steps.

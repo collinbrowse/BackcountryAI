@@ -1,5 +1,6 @@
 import SwiftUI
 import Observation
+import UIKit
 
 /// Kept in a reference so scrolling only redraws the backdrop, not the whole home screen.
 @MainActor @Observable final class ScrollOffset { var y: CGFloat = 0 }
@@ -258,5 +259,136 @@ struct FilterChip: View {
         }
         .overlay(Capsule().strokeBorder(selected ? .clear : Theme.hairline))
         .animation(.bouncy, value: selected)
+    }
+}
+
+// MARK: - The app's ••• menu
+
+/// The app-wide part of the ••• menu, the same on the chat list and in a chat: the trail-ready checklist, the
+/// offline library and how Scout works. RootView presents what they open, so they work from either screen.
+struct AppMenuSection: View {
+    @Environment(LibraryStore.self) private var store
+    @Environment(Assistant.self) private var assistant
+    @Environment(Router.self) private var router
+    @Environment(\.displayScale) private var displayScale
+
+    var body: some View {
+        let items = Readiness.current(libraryReady: store.hasPack, aiReady: assistant.availabilityProblem == nil)
+        Section {
+            Button { router.sheet = .readiness } label: {
+                Label("Trail-ready checklist · \(items.filter(\.done).count)/\(items.count)", systemImage: "checklist")
+            }
+            Button { router.sheet = .library } label: {
+                Text("Offline library")
+                if let text = libraryStatus.text { Text(text) }
+                libraryMenuIcon
+            }
+            Button { router.showHowItWorks = true } label: { Label("How Scout works", systemImage: "questionmark.circle") }
+        }
+    }
+
+    private var downloads: Downloads { Downloads(store: store, better: BetterModel.shared) }
+
+    /// The menu row's subtitle. Ready means the field guides are on the phone: the person's own documents alone
+    /// don't make Scout trail-ready.
+    /// Text only when there's something the ring can't say: a stopped download, missing guides, or "ready".
+    /// While downloading with nothing wrong, the ring says it all and there's no text.
+    private var libraryStatus: (text: String?, symbol: String) {
+        let d = downloads
+        if d.stopped > 0 { return (d.stoppedText, "exclamationmark.circle") }
+        if d.active { return (nil, "arrow.down.circle") }
+        if !store.hasPack { return ("No field guides", "arrow.down.circle") }
+        return NetworkMonitor.shared.isOnline
+            ? ("Ready offline", "checkmark.circle.fill")
+            : ("No signal · still works", "antenna.radiowaves.left.and.right.slash")
+    }
+
+    /// The menu row's icon. Menus don't redraw while open, so while downloading this is a picture of the ring at
+    /// the moment the menu opened; opening it again draws a fresh one.
+    private var libraryMenuIcon: Image {
+        let d = downloads
+        guard d.active || d.stopped > 0 else { return Image(systemName: libraryStatus.symbol) }
+        // Drawn as a picture so the menu keeps its colors: the ring, or a red "!" for a stopped download.
+        let renderer = ImageRenderer(content: Group {
+            if d.active {
+                DownloadRing(fraction: d.fraction ?? 0, alert: d.stopped > 0, lineWidth: 3)
+            } else {
+                Image(systemName: "exclamationmark.circle.fill").resizable()
+                    .symbolRenderingMode(.palette).foregroundStyle(.white, Theme.danger)
+            }
+        }
+            .frame(width: 22, height: 22).padding(1))
+        renderer.scale = displayScale
+        guard let image = renderer.uiImage else { return Image(systemName: libraryStatus.symbol) }
+        return Image(uiImage: image).renderingMode(.original)
+    }
+}
+
+/// The ••• button's face: a small red "!" up and to the right while a download is stopped and nothing is
+/// downloading (a download in progress shows its own ring in the chat's top bar).
+struct AppMenuLabel: View {
+    @Environment(LibraryStore.self) private var store
+
+    var body: some View {
+        let d = Downloads(store: store, better: BetterModel.shared)
+        Image(systemName: "ellipsis")
+            .overlay(alignment: .topTrailing) {
+                if d.stopped > 0 && !d.active {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, Theme.danger)
+                        .offset(x: 8, y: -9)
+                }
+            }
+            .accessibilityLabel(d.stopped > 0 ? "More, \(d.stoppedText)" : "More")
+    }
+}
+
+/// What the app menu opens: the library, the trail-ready checklist and the "How Scout works" tour. Attached once,
+/// in RootView, so the menu works the same from the chat list and from a chat.
+struct AppSheets: ViewModifier {
+    @Environment(Router.self) private var router
+    @Environment(LibraryStore.self) private var store
+    @Environment(Assistant.self) private var assistant
+    @Environment(\.openURL) private var openURL
+    @AppStorage(Readiness.askedKey) private var asked = false
+    @AppStorage(Readiness.offlineKey) private var testedOffline = false
+    @State private var showOfflineTip = false
+
+    func body(content: Content) -> some View {
+        @Bindable var router = router
+        content
+            .sheet(item: $router.sheet) { sheet in
+                switch sheet {
+                case .library: LibraryView()
+                case .readiness:
+                    ReadinessSheet(items: Readiness.items(libraryReady: store.hasPack,
+                                                          aiReady: assistant.availabilityProblem == nil,
+                                                          asked: asked, offline: testedOffline)) { item in
+                        router.sheet = nil
+                        act(item)
+                    }
+                }
+            }
+            .fullScreenCover(isPresented: $router.showHowItWorks) {
+                OnboardingView(isReplay: true) { router.showHowItWorks = false }
+            }
+            .alert("Test it in Airplane Mode", isPresented: $showOfflineTip) {
+                Button("OK") {}
+            } message: {
+                Text("Swipe down from the top-right corner, turn on Airplane Mode, then ask Scout anything. "
+                     + "If you get an answer, you're set for the backcountry.")
+            }
+    }
+
+    private func act(_ item: Readiness.Item) {
+        switch item.id {
+        // Wait for the checklist to finish closing before opening the next thing.
+        case "library": Task { try? await Task.sleep(for: .milliseconds(400)); router.sheet = .library }
+        case "ai": if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+        case "asked": router.ask(Topic.camp[1].question)
+        default: Task { try? await Task.sleep(for: .milliseconds(400)); showOfflineTip = true }
+        }
     }
 }

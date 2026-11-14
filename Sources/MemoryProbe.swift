@@ -16,7 +16,13 @@ enum MemoryProbe {
     }
 
     /// What the app can still allocate before iOS stops it. Zero in the simulator, which has no limit.
-    static var availableBytes: Int64 { Int64(os_proc_available_memory()) }
+    static var availableBytes: Int64 {
+        #if os(macOS)
+        deviceBytes  // the Mac tools (ScoutTools): macOS sets no per-app limit
+        #else
+        Int64(os_proc_available_memory())
+        #endif
+    }
     static var deviceBytes: Int64 { Int64(ProcessInfo.processInfo.physicalMemory) }
     /// The most memory iOS lets this app hold: what it uses now plus what it may still take. Nil in the simulator.
     static var ceilingBytes: Int64? {

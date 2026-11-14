@@ -12,6 +12,9 @@ enum AppTab: Hashable { case scout, guide, saved }
     var pending: String?
     /// Set to open Field mode in the Guide tab (from the SOS sheet).
     var openField = false
+    /// What the app menu has open (see AppSheets).
+    var sheet: AppSheet?
+    var showHowItWorks = false
 
     func ask(_ question: String) {
         pending = question
@@ -36,7 +39,6 @@ enum AppTab: Hashable { case scout, guide, saved }
 struct RootView: View {
     @State private var router = Router()
     @Environment(LibraryStore.self) private var store
-    @State private var showImport = false
 
     var body: some View {
         TabView(selection: $router.tab) {
@@ -62,15 +64,21 @@ struct RootView: View {
         .onOpenURL { url in  // a file opened in the app from Files or a share sheet
             guard url.isFileURL else { return }
             store.importDocuments([url])
-            showImport = true
+            router.sheet = .library
         }
-        .sheet(isPresented: $showImport) { LibraryView() }
+        .modifier(AppSheets())
         .environment(router)
         .tint(Theme.accent)
     }
 }
 
 enum ChatRoute: Hashable { case chat }
+
+/// The sheets the app menu opens.
+enum AppSheet: String, Identifiable {
+    case library, readiness
+    var id: String { rawValue }
+}
 
 enum Route: Hashable {
     case savedChat(UUID)
