@@ -10,7 +10,7 @@ actor MLXEngine: LLMEngine {
     /// Where the weights are: a folder on the phone, or a Hugging Face repository to download first.
     enum Source: Sendable {
         case folder(URL)
-        case hub(String)
+        case hub(String, revision: String = "main")
     }
 
     nonisolated let name: String
@@ -63,7 +63,7 @@ actor MLXEngine: LLMEngine {
         Memory.cacheLimit = 256 * 1024 * 1024
         let configuration = switch source {
         case .folder(let url): ModelConfiguration(directory: url, extraEOSTokens: extraEOSTokens)
-        case .hub(let id): ModelConfiguration(id: id, extraEOSTokens: extraEOSTokens)
+        case .hub(let id, let revision): ModelConfiguration(id: id, revision: revision, extraEOSTokens: extraEOSTokens)
         }
         let progress = onDownloadProgress
         let loaded = try await loadModelContainer(
@@ -199,8 +199,12 @@ actor MLXEngine: LLMEngine {
         await cancel()
         generation = nil
         guard container != nil else { return }
+        let before = MemoryProbe.footprintBytes
         container = nil
         Memory.clearCache()
+        LLMLog.note("\(name): unloaded, freed \((before - MemoryProbe.footprintBytes) / 1_048_576) MiB. "
+            + "MLX active \(Memory.activeMemory / 1_048_576) MiB, cache \(Memory.cacheMemory / 1_048_576) MiB. "
+            + MemoryProbe.report("after unload"))
     }
 }
 
