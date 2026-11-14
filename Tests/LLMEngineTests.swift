@@ -193,3 +193,25 @@ struct LLMEngineContractTests {
         #expect(await !engine.isLoaded)
     }
 }
+
+struct MemoryBudgetTests {
+    private let qwen4B = MemoryBudget(weightsBytes: 2_394_053_774)
+
+    @Test func needsWeightsPlusWorkingRoomAndAReserve() {
+        #expect(qwen4B.neededBytes == 2_394_053_774 + 900_000_000 + 300_000_000)
+    }
+
+    @Test func loadsWithTheMemoryAnIPhone17HasAtLaunch() throws {
+        try qwen4B.check(availableBytes: 6139 * 1_048_576)  // measured: 6144 MiB limit, 6139 MiB free
+    }
+
+    @Test func refusesWhenTooLittleIsFree() {
+        #expect(throws: LLMError.notEnoughMemory(neededBytes: qwen4B.neededBytes, availableBytes: 3_000_000_000)) {
+            try qwen4B.check(availableBytes: 3_000_000_000)
+        }
+    }
+
+    @Test func refusesInTheSimulatorWhereNothingIsReported() {
+        #expect(throws: LLMError.self) { try qwen4B.check(availableBytes: 0) }
+    }
+}

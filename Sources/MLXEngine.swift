@@ -14,6 +14,7 @@ actor MLXEngine: LLMEngine {
     }
 
     nonisolated let name: String
+    private let weightsBytes: Int64
     private let source: @Sendable () async -> Source?
     private let extraEOSTokens: Set<String>
     private let templateContext: [String: any Sendable]
@@ -25,13 +26,15 @@ actor MLXEngine: LLMEngine {
     private var epoch = 0
 
     /// - Parameters:
+    ///   - weightsBytes: the size of the weights, for the memory check when they aren't on the phone yet.
     ///   - source: asked at each load, so a model downloaded since the last try is found.
     ///   - extraEOSTokens: end-of-turn tokens the tokenizer's config doesn't list.
     ///   - templateContext: extra values for the model's chat template.
-    init(name: String, extraEOSTokens: Set<String> = [], templateContext: [String: any Sendable] = [:],
+    init(name: String, weightsBytes: Int64, extraEOSTokens: Set<String> = [], templateContext: [String: any Sendable] = [:],
          source: @escaping @Sendable () async -> Source?,
          onDownloadProgress: @escaping @Sendable (Double) -> Void = { _ in }) {
         self.name = name
+        self.weightsBytes = weightsBytes
         self.extraEOSTokens = extraEOSTokens
         self.templateContext = templateContext
         self.source = source
@@ -45,6 +48,15 @@ actor MLXEngine: LLMEngine {
     func load() async throws {
         guard container == nil else { return }
         guard let source = await source() else { throw LLMError.loadFailed("it isn't downloaded") }
+        // Never start a load iOS would end the app for: check what's free first.
+        var budget = MemoryBudget(weightsBytes: weightsBytes)
+        if case .folder(let url) = source, let onDisk = Self.weightsOnDisk(in: url) { budget.weightsBytes = onDisk }
+        do {
+            try budget.check(availableBytes: MemoryProbe.availableBytes)
+        } catch {
+            LLMLog.note("\(name): not loading, \(error.localizedDescription) \(MemoryProbe.report("refused load"))")
+            throw error
+        }
         let epoch = epoch
         // Cap MLX's buffer cache so it doesn't hold on to memory iOS wants back.
         Memory.cacheLimit = 256 * 1024 * 1024
@@ -62,6 +74,13 @@ actor MLXEngine: LLMEngine {
             throw CancellationError()
         }
         if container == nil { container = loaded }
+    }
+
+    private static func weightsOnDisk(in folder: URL) -> Int64? {
+        let files = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.fileSizeKey])) ?? []
+        let sizes = files.filter { $0.pathExtension == "safetensors" }
+            .compactMap { try? $0.resourceValues(forKeys: [.fileSizeKey]).fileSize }
+        return sizes.isEmpty ? nil : Int64(sizes.reduce(0, +))
     }
 
     func generate(_ messages: [LLMMessage], config: GenerationConfig) -> AsyncThrowingStream<LLMEvent, Error> {
@@ -102,7 +121,15 @@ actor MLXEngine: LLMEngine {
         let started = Date()
         let input = try await container.prepare(input: UserInput(chat: chat, additionalContext: templateContext))
         try Task.checkCancellation()
-        let parameters = GenerateParameters(maxTokens: config.maxTokens, temperature: Float(config.temperature),
+        // The cache below keeps only the newest `contextTokens` tokens. A longer prompt would silently lose its
+        // start (the instructions), so refuse it instead.
+        let promptTokens = input.text.tokens.size
+        guard promptTokens <= config.promptTokenLimit else {
+            throw LLMError.promptTooLong(tokens: promptTokens, limit: config.promptTokenLimit)
+        }
+        // maxKVSize caps the key-value cache, the part of memory that grows with every token.
+        let parameters = GenerateParameters(maxTokens: config.maxTokens, maxKVSize: config.contextTokens,
+                                            temperature: Float(config.temperature),
                                             topP: Float(config.topP))
         let stream = try await container.generate(input: input, parameters: parameters)
         var filter = StopSequenceFilter(config.stopSequences)

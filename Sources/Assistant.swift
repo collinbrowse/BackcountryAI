@@ -152,15 +152,25 @@ final class Assistant {
                 let useBetter = better.isActive ? await better.ensureLoaded() : false
                 let engine: any LLMEngine = useBetter ? better.engine : apple
                 messages[index].status = "Writing an answer on this phone…"
-                let stats = try await engine.answer([.system(Retrieval.instructions), .user(prompt)],
-                                                    config: .answers) { text in
-                    messages[index].status = nil
-                    messages[index].text = text
+                let request: [LLMMessage] = [.system(Retrieval.instructions), .user(prompt)]
+                let show: @MainActor (String) -> Void = { text in
+                    self.messages[index].status = nil
+                    self.messages[index].text = text
                 }
-                if useBetter {
-                    messages[index].engine = String(format: "Written with better answers: first words in %.1f s, %.0f tokens/s, %.1f GB memory",
-                                                    stats.secondsToFirstToken, stats.tokensPerSecond,
-                                                    MemoryProbe.footprintGB)
+                do {
+                    let stats = try await engine.answer(request, config: .answers, onText: show)
+                    if useBetter {
+                        messages[index].engine = String(format: "Written with better answers: first words in %.1f s, %.0f tokens/s, %.1f GB memory",
+                                                        stats.secondsToFirstToken, stats.tokensPerSecond,
+                                                        MemoryProbe.footprintGB)
+                    }
+                } catch where useBetter && !Task.isCancelled {
+                    // The larger model was unloaded mid-answer (low memory, or the app left the screen) or
+                    // couldn't take the prompt. The person didn't press Stop, so Apple's model writes it instead.
+                    LLMLog.note("better answers gave up (\(error.localizedDescription)); Apple's model answers")
+                    messages[index].text = ""
+                    messages[index].status = "Writing an answer on this phone…"
+                    try await apple.answer(request, config: .answers, onText: show)
                 }
                 if !messages[index].text.isEmpty { Readiness.recordAnswer() }
             } catch is CancellationError {

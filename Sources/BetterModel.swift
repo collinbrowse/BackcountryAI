@@ -48,6 +48,7 @@ final class BetterModel {
     private init() {
         engine = MLXEngine(
             name: Self.displayName,
+            weightsBytes: Self.unpackedBytes,
             extraEOSTokens: ["<|im_end|>"],
             // Qwen 3.x thinks out loud first unless the chat template is told not to.
             templateContext: ["enable_thinking": false],
@@ -216,6 +217,9 @@ final class BetterModel {
                 if folder == nil { UserDefaults.standard.set(true, forKey: "betterModel.downloaded") }
                 state = .ready
             } catch is CancellationError {  // unloaded while it was loading
+                state = isDownloaded ? .onDisk : .notDownloaded
+            } catch LLMError.notEnoughMemory {
+                // Not an error to show: Apple's model answers this one, and the next question tries again.
                 state = isDownloaded ? .onDisk : .notDownloaded
             } catch where Task.isCancelled {
                 state = isDownloaded ? .onDisk : .notDownloaded

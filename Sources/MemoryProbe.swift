@@ -37,6 +37,25 @@ enum MemoryProbe {
     }
 }
 
+/// Decides whether a model can be loaded without iOS stopping the app for using too much memory.
+struct MemoryBudget: Sendable, Equatable {
+    /// The weights, which MLX holds in memory whole.
+    var weightsBytes: Int64
+    /// What answering adds on top: the key-value cache, the working buffers and MLX's buffer cache.
+    var workingBytes: Int64 = 900_000_000
+    /// Left free for the rest of the app while the model answers.
+    var reserveBytes: Int64 = 300_000_000
+
+    var neededBytes: Int64 { weightsBytes + workingBytes + reserveBytes }
+
+    /// Throws when `availableBytes` (os_proc_available_memory) is too little to load and answer.
+    func check(availableBytes: Int64) throws {
+        guard availableBytes >= neededBytes else {
+            throw LLMError.notEnoughMemory(neededBytes: neededBytes, availableBytes: availableBytes)
+        }
+    }
+}
+
 /// The log for everything about running a model on the phone: memory, load time, speed, heat.
 /// Debug builds also print, so `devicectl device process launch --console` shows it.
 enum LLMLog {
