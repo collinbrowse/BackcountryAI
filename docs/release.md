@@ -8,7 +8,7 @@ you can do, and the short checklist for each release.
 | When | What runs | Result |
 |---|---|---|
 | Pull request, or push to `main` | `CI` workflow | Build and unit tests |
-| Push to `main` | `TestFlight` workflow | Signed build on TestFlight; "What to Test" is the commits since the last release |
+| Push to `main` | `TestFlight` workflow | Signed build on TestFlight; "What to Test" is written by Claude from the commits since the last release, in plain language for testers |
 | You press **Run workflow** on `Release` | `Release` workflow | Tests → fresh screenshots and preview video from that exact code → build → TestFlight → every App Store field filled in → submitted for review → `vX.Y.Z` tag and GitHub release |
 | Push to `main` that touches `site/` | `Site` workflow | Privacy policy, support and home pages published |
 
@@ -123,6 +123,15 @@ gh secret set REVIEW_EMAIL
 `REVIEW_PHONE` needs the country code, like `+1 555 555 0100`. App Review uses these only to contact you.
 
 Move the `.p8` file somewhere safe (a password manager) and delete it from Downloads.
+
+Optional: a Claude API key (console.anthropic.com › API keys) turns the commits into plain-language TestFlight
+"What to Test" notes ("Added …, which lets you …", "Fixed a bug where …"). Without it, testers see a generic
+"Bug fixes and improvements" note. Preview the notes for the current commits with
+`bundle exec fastlane testflight_notes`.
+
+```bash
+gh secret set ANTHROPIC_API_KEY
+```
 
 ### 7. Publish the privacy and support pages
 

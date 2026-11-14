@@ -1,5 +1,5 @@
-# Every push to main: a signed build goes to TestFlight, with the commits since the last release as
-# "What to Test". Internal testers get it automatically; set TESTFLIGHT_GROUPS to send it to external groups.
+# Every push to main: a signed build goes to TestFlight, with tester-facing "What to Test" notes written by Claude
+# from the commits since the last release. Internal testers get it automatically; set TESTFLIGHT_GROUPS to send it to external groups.
 name: TestFlight
 on:
   push:
@@ -19,6 +19,7 @@ jobs:
       CI_SIGNING_P12_BASE64: ${{ secrets.CI_SIGNING_P12_BASE64 }}
       CI_SIGNING_P12_PASSWORD: ${{ secrets.CI_SIGNING_P12_PASSWORD }}
       TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_GROUPS }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # writes the tester-facing "What to Test" notes
     steps:
       - uses: actions/checkout@v4
         with:

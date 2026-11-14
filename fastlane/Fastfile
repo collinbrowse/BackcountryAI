@@ -5,12 +5,14 @@
 #   screenshots  App Store screenshots from the current code  → fastlane/screenshots/en-US
 #   previews     App Preview video from the current code      → fastlane/app_previews/en-US
 #   beta         build, sign, upload to TestFlight
+#   testflight_notes  print the tester-facing "What to Test" notes the next upload would get
 #   release      test, build, TestFlight, screenshots, preview, every App Store field, submit for review
 #   metadata     only refresh the App Store listing (text, screenshots, preview) without a new build
 #   privacy      one-time: App Privacy answers (needs your Apple ID, not the API key)
 #   bump         set the next version number
 require "base64"
 require "tmpdir"
+require_relative "testflight_notes"
 
 default_platform(:ios)
 
@@ -45,6 +47,13 @@ def changes_since_last_release(limit)
   subjects = `git -C "#{ROOT}" log #{range} --no-merges --pretty=format:%s`.lines.map(&:strip).reject(&:empty?)
   text = subjects.map { |s| "• #{s}" }.join("\n")
   text.length > limit ? text[0, limit - 1].sub(/\n[^\n]*\z/, "") + "\n…" : text
+end
+
+# Full commit messages since the last release, newest first, for the TestFlight notes (fastlane/testflight_notes.rb).
+def commit_log_since_last_release
+  range = last_release_tag.empty? ? "-n 15" : "#{last_release_tag}..HEAD"
+  log = `git -C "#{ROOT}" log #{range} --no-merges --pretty=format:'### %s%n%n%b'`.force_encoding("UTF-8").scrub
+  log.lines.reject { |l| l.match?(/\A\s*Co-Authored-By:/i) }.join.strip
 end
 
 # "What's New". The first version of an app can't have one. After that: fastlane/release_notes.txt if you
@@ -167,9 +176,14 @@ platform :ios do
   private_lane :testflight_upload do
     groups = ENV["TESTFLIGHT_GROUPS"].to_s.split(",").map(&:strip).reject(&:empty?)
     upload_to_testflight(api_key: asc_key, app_identifier: APP_ID, ipa: "build/release/BackcountryAI.ipa",
-                         changelog: changes_since_last_release(3900),
+                         changelog: TestflightNotes.generate(commit_log_since_last_release),
                          distribute_external: !groups.empty?, groups: groups.empty? ? nil : groups,
                          notify_external_testers: !groups.empty?)
+  end
+
+  desc "Print the TestFlight 'What to Test' notes the next upload would get, without building"
+  lane :testflight_notes do
+    puts TestflightNotes.generate(commit_log_since_last_release)
   end
 
   desc "Build and upload to TestFlight"
