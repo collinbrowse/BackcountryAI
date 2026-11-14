@@ -52,36 +52,72 @@ struct BetterAnswersCard: View {
                 RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Theme.moss.opacity(0.6), lineWidth: 1.5)
             }
         }
-        .animation(.bouncy, value: better.state)
+        .animation(.smooth(duration: 0.35), value: better.state)
         .task { await better.refreshSize() }
         // Load it now so the next answer doesn't wait, or give the memory back right away.
         .onChange(of: better.useForAnswers) { _, on in if on { better.warmUp() } else { better.unload() } }
     }
 
-    @ViewBuilder private var action: some View {
-        switch better.state {
-        case .downloading(let f):
-            VStack(alignment: .leading, spacing: 8) {
-                ProgressView(value: f) {
-                    Text(f > 0 ? "Downloading… \(Int(f * 100))%" : "Starting the download…").font(.footnote.weight(.semibold))
+    /// One of three faces (download, downloading, stopped), cross-faded in place so a quick start-and-fail reads
+    /// as a calm change rather than a flicker. BetterModel keeps a failed attempt on screen for a moment too.
+    private var action: some View {
+        ZStack(alignment: .topLeading) {
+            switch phase {
+            case .downloading(let f):
+                VStack(alignment: .leading, spacing: 8) {
+                    if f > 0 {
+                        ProgressView(value: f) {
+                            Text("Downloading… \(Int(f * 100))%").font(.footnote.weight(.semibold))
+                                .monospacedDigit().contentTransition(.numericText())
+                        }
+                    } else {
+                        // No progress yet: an honest "working on it" instead of an empty bar.
+                        HStack(spacing: 8) {
+                            ProgressView().controlSize(.small)
+                            Text("Starting the download…").font(.footnote.weight(.semibold))
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 4)
+                    }
+                    Button("Cancel", role: .cancel) { better.cancelDownload() }.font(.subheadline.weight(.semibold))
                 }
                 .tint(Theme.accent)
-                Button("Cancel", role: .cancel) { better.cancelDownload() }.font(.subheadline.weight(.semibold))
+                .transition(.opacity)
+            case .failed(let message):
+                VStack(alignment: .leading, spacing: 10) {
+                    Label(message, systemImage: "exclamationmark.circle.fill")
+                        .font(.footnote).foregroundStyle(Theme.danger)
+                    Button { better.download() } label: { Label("Try again", systemImage: "arrow.clockwise") }
+                        .buttonStyle(SecondaryButtonStyle())
+                }
+                .transition(.opacity)
+            case .idle:
+                VStack(spacing: 8) {
+                    Button { better.download() } label: { Label("Download better answers", systemImage: "arrow.down") }
+                        .buttonStyle(SecondaryButtonStyle())
+                        .disabled(!BetterModel.isSupported)
+                    Text(BetterModel.isSupported
+                         ? "Use Wi-Fi. Needs about \(gb(better.downloadBytes + BetterModel.unpackedBytes)) free while it installs."
+                         : "Needs a real iPhone; the simulator can't run it.")
+                        .font(.caption).foregroundStyle(Theme.inkSoft).frame(maxWidth: .infinity)
+                }
+                .transition(.opacity)
+            case .none:
+                EmptyView()
             }
-        case .failed(let message) where !better.isDownloaded:
-            Text(message).font(.footnote).foregroundStyle(Theme.danger)
-            Button { better.download() } label: { Label("Try again", systemImage: "arrow.clockwise") }
-                .buttonStyle(SecondaryButtonStyle())
-        default:
-            if !better.isDownloaded {
-                Button { better.download() } label: { Label("Download better answers", systemImage: "arrow.down") }
-                    .buttonStyle(SecondaryButtonStyle())
-                    .disabled(!BetterModel.isSupported)
-                Text(BetterModel.isSupported
-                     ? "Use Wi-Fi. Needs about \(gb(better.downloadBytes + BetterModel.unpackedBytes)) free while it installs."
-                     : "Needs a real iPhone; the simulator can't run it.")
-                    .font(.caption).foregroundStyle(Theme.inkSoft).frame(maxWidth: .infinity)
-            }
+        }
+        .animation(.smooth(duration: 0.35), value: phase)
+        .sensoryFeedback(.error, trigger: phase) { _, new in if case .failed = new { true } else { false } }
+    }
+
+    private enum Phase: Equatable { case idle, downloading(Double), failed(String), none }
+
+    private var phase: Phase {
+        guard !better.isDownloaded else { return .none }
+        switch better.state {
+        case .downloading(let f): return .downloading(f)
+        case .failed(let m): return .failed(m)
+        default: return .idle
         }
     }
 
@@ -366,10 +402,15 @@ final class LabBenchmark {
                 if Task.isCancelled { return }
                 status = "Searching the library \(i + 1)/\(Self.questions.count)"
                 progress = Double(i) / Double(Self.questions.count * 3)
-                let searches = await Retrieval.searches(for: q, previous: nil, model: apple) ?? []
-                let candidates = await Task.detached { Retrieval.candidates(question: q, searches: searches, library: library) }.value
-                let picked = await Retrieval.pick(question: q, from: candidates, model: apple)
-                prompts.append((q, Retrieval.prompt(question: q, sources: picked, previous: nil, previousAnswer: nil)))
+                let plan = await Retrieval.plan(for: q, history: [], model: apple)
+                    ?? Retrieval.Plan(kind: .howTo, searches: [])
+                let dense = await SearchModels.shared.denseSearch(q, library: library)
+                let candidates = await Task.detached {
+                    Retrieval.candidates(question: q, searches: plan.searches, dense: dense, library: library)
+                }.value
+                let picked = await Retrieval.pick(question: q, from: candidates, model: apple,
+                                                  scorer: SearchModels.shared.scorer)
+                prompts.append((q, Retrieval.prompt(question: q, sources: picked, history: [], kind: plan.kind)))
             }
             // 2. Apple's model, then Qwen, each over all questions, with battery read before and after each pass.
             var engines = ["Apple"]

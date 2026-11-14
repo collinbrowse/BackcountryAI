@@ -154,7 +154,7 @@ struct ShippedModelBenchmark {
             Passage(id: Int64($0), docID: Int64($0), title: "Field manual \($0)", source: "Test library",
                     sourceKey: "test", official: true, text: String(String(repeating: filler, count: 3).prefix(700)))
         }
-        return Retrieval.prompt(question: question, sources: passages, previous: nil, previousAnswer: nil)
+        return Retrieval.prompt(question: question, sources: passages, history: [])
     }
 
     @Test(.timeLimit(.minutes(10))) func measure() async throws {

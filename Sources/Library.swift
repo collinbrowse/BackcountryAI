@@ -236,6 +236,64 @@ final class Library: @unchecked Sendable {
         return out
     }
 
+    /// How many passages the library has (for progress while embedding them).
+    func passageCount() throws -> Int {
+        try query("SELECT COUNT(*) FROM passages") { Int(sqlite3_column_int64($0, 0)) }.first ?? 0
+    }
+
+    /// A file inside the library folder or pack ("vectors.bin", "models/…"), if it's there.
+    func fileURL(_ path: String) -> URL? {
+        guard let url = locate(path), FileManager.default.fileExists(atPath: url.path) else { return nil }
+        return url
+    }
+
+    /// Passages by id, in the order given, one per article (for meaning-based search, which finds passage ids).
+    /// Only this library's own passages: the person's documents have no vectors.
+    func passages(ids: [Int64], words: [String], maxChars: Int) -> [Passage] {
+        guard !ids.isEmpty else { return [] }
+        let list = ids.map(String.init).joined(separator: ",")
+        struct Row { let pid, doc: Int64; let title, label, key: String; let file, off, len: Int64 }
+        let rows = (try? query("""
+            SELECT p.id, d.id, d.title, s.label, s.key, d.file_id, p.offset, p.length
+            FROM passages p JOIN docs d ON d.id = p.doc_id JOIN sources s ON s.id = d.source_id
+            WHERE p.id IN (\(list))
+            """) { s in
+            Row(pid: sqlite3_column_int64(s, 0), doc: sqlite3_column_int64(s, 1), title: Self.text(s, 2),
+                label: Self.text(s, 3), key: Self.text(s, 4), file: sqlite3_column_int64(s, 5),
+                off: sqlite3_column_int64(s, 6), len: sqlite3_column_int64(s, 7))
+        }) ?? []
+        let byID = Dictionary(rows.map { ($0.pid, $0) }, uniquingKeysWith: { a, _ in a })
+        var out: [Passage] = [], seenDocs = Set<Int64>()
+        for id in ids {
+            guard let r = byID[id], !seenDocs.contains(r.doc), !Self.isTranslation(r.title, key: r.key),
+                  let raw = readText(fileID: r.file, offset: r.off, length: r.len) else { continue }
+            seenDocs.insert(r.doc)
+            let flat = Self.flatten(raw)
+            out.append(Passage(id: r.pid, docID: r.doc, title: r.title, source: r.label, sourceKey: r.key,
+                               official: Self.officialLabel.contains(r.key),
+                               text: Self.window(flat, words: words, width: maxChars), coverage: nil))
+        }
+        return out
+    }
+
+    /// The next `limit` passages after id `after`, as the text the embedder reads: "Title (Source)" then the passage,
+    /// so a passage that only says "Check the plug" still carries what it's about (scout-tools embed).
+    func passageBatch(after: Int64, limit: Int = 64, maxChars: Int = 1500) throws -> [(id: Int64, text: String)] {
+        struct Row { let pid: Int64; let title, label: String; let file, off, len: Int64 }
+        let rows = try query("""
+            SELECT p.id, d.title, s.label, d.file_id, p.offset, p.length
+            FROM passages p JOIN docs d ON d.id = p.doc_id JOIN sources s ON s.id = d.source_id
+            WHERE p.id > \(after) ORDER BY p.id LIMIT \(limit)
+            """) { s in
+            Row(pid: sqlite3_column_int64(s, 0), title: Self.text(s, 1), label: Self.text(s, 2),
+                file: sqlite3_column_int64(s, 3), off: sqlite3_column_int64(s, 4), len: sqlite3_column_int64(s, 5))
+        }
+        return rows.map { r in
+            let text = readText(fileID: r.file, offset: r.off, length: r.len).map(Self.flatten) ?? ""
+            return (r.pid, "\(r.title) (\(r.label))\n" + text.prefix(maxChars))
+        }
+    }
+
     /// Libraries built before the translation filter hold wiki translations such as "Solar cooker/ru".
     static func isTranslation(_ title: String, key: String) -> Bool {
         (key == "appropedia" || key == "energypedia") && title.contains(/\/[a-z]{2,3}(-[a-z]+)?$/)
