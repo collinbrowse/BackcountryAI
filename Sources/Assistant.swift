@@ -3,8 +3,6 @@ import FoundationModels
 import Observation
 import os
 
-let log = Logger(subsystem: "com.collinbrowse.backcountryai", category: "assistant")
-
 struct ChatMessage: Identifiable, Codable, Hashable {
     enum Role: String, Codable { case user, assistant }
     var id = UUID()
@@ -20,12 +18,14 @@ struct ChatMessage: Identifiable, Codable, Hashable {
     var engine: String? = nil          // set when the larger model wrote it: its speed and memory (not saved)
     var casual: Bool? = nil            // a chat reply to small talk ("hi", "thanks"): no steps, no sources
     var isCasual: Bool { casual == true }
+    var kind: Retrieval.Kind? = nil    // what the question needed (troubleshooting answers end with a question)
+    var choices: [String]? = nil       // tap-to-answer replies to the question a troubleshooting answer ends with
 
     var isFinished: Bool { role == .assistant && status == nil && !text.isEmpty }
 
     // `status` is only meaningful while an answer is being written, so it isn't saved.
     enum CodingKeys: String, CodingKey {
-        case id, role, text, sources, battery, batterySession, failed, question, urgent, casual
+        case id, role, text, sources, battery, batterySession, failed, question, urgent, casual, kind, choices
     }
 }
 
@@ -41,10 +41,17 @@ final class Assistant {
     private var task: Task<Void, Never>?
     private let chats: ChatStore?
 
-    init(chats: ChatStore? = nil) { self.chats = chats }
+    init(chats: ChatStore? = nil) {
+        self.chats = chats
+        let model = SystemLanguageModel(useCase: .general, guardrails: .permissiveContentTransformations)
+        self.model = model
+        apple = FoundationEngine(model: model)
+    }
 
     // Apple's on-device model. It never uses the network.
-    private let model = SystemLanguageModel(useCase: .general, guardrails: .permissiveContentTransformations)
+    private let model: SystemLanguageModel
+    /// The same model as an engine, for writing answers.
+    private let apple: FoundationEngine
 
     var availabilityProblem: String? {
         if ScreenshotMode.isOn { return nil }
@@ -67,6 +74,7 @@ final class Assistant {
         guard !q.isEmpty, !isBusy else { return }
         let previous = messages.last(where: { $0.role == .user })?.text
         let previousAnswer = messages.last(where: { $0.role == .assistant && !$0.failed })?.text
+        let history = Self.history(from: messages)
         messages.append(ChatMessage(role: .user, text: q))
         let obviousSmallTalk = SmallTalk.isObvious(q)
         messages.append(ChatMessage(role: .assistant, text: "", status: obviousSmallTalk ? "…" : "Searching the library…",
@@ -103,18 +111,29 @@ final class Assistant {
             if obviousSmallTalk {
                 return await chat(q, at: index, previous: previous, previousAnswer: previousAnswer)
             }
+            var kind = Retrieval.Kind.guess(q)
             if let library {
                 if problem == nil {
-                    guard let searches = await Retrieval.searches(for: q, previous: previous, model: model) else {
+                    guard let plan = await Retrieval.plan(for: q, history: history, model: model) else {
                         messages[index].urgent = false
                         return await chat(q, at: index, previous: previous, previousAnswer: previousAnswer)
                     }
-                    log.notice("searches: \(searches.joined(separator: " | "))")
+                    kind = plan.kind
+                    log.notice("kind \(plan.kind.rawValue) searches: \(plan.searches.joined(separator: " | "))")
+                    // Meaning-based search, when the library has its vectors (see SearchModels). A follow-up is
+                    // searched with the question before it, so "should I go uphill?" still knows they're lost.
+                    // Leave room for the answer model if it still has to load after the search models.
+                    let answers = BetterModel.shared
+                    SearchModels.shared.reserveBytes = answers.isActive && !answers.isReady
+                        ? ModelCatalog.qwen35_4B.budget.neededBytes : 300_000_000
+                    let context = ([history.last?.question].compactMap { $0 } + [q]).joined(separator: " ")
+                    let dense = await SearchModels.shared.denseSearch(context, library: library)
                     let candidates = await Task.detached(priority: .userInitiated) {
-                        Retrieval.candidates(question: q, searches: searches, library: library)
+                        Retrieval.candidates(question: q, searches: plan.searches, dense: dense, library: library)
                     }.value
                     messages[index].status = "Reading what it found…"
-                    sources = await Retrieval.pick(question: q, from: candidates, model: model)
+                    sources = await Retrieval.pick(question: q, history: history, from: candidates, model: model,
+                                                   scorer: SearchModels.shared.scorer)
                 } else {
                     sources = await Task.detached(priority: .userInitiated) {
                         var hits = library.search(q, limit: 5)
@@ -125,6 +144,7 @@ final class Assistant {
                     }.value
                 }
             }
+            messages[index].kind = kind
             messages[index].sources = sources
             log.notice("using \(sources.count) passages")
 
@@ -138,28 +158,47 @@ final class Assistant {
             messages[index].status = better.isActive && !better.isReady
                 ? "Getting better answers ready…" : "Writing an answer on this phone…"
             do {
-                let prompt = try await fittingPrompt(question: q, sources: &sources,
-                                                     previous: previous, previousAnswer: previousAnswer)
-                messages[index].sources = sources
                 // Better answers: the larger model writes the answer when it's on. If it can't load, Apple's does.
-                if better.isActive, await better.ensureLoaded() {
-                    messages[index].status = "Writing an answer on this phone…"
-                    let stats = try await better.answer(instructions: Retrieval.instructions, prompt: prompt) { text in
-                        messages[index].status = nil
-                        messages[index].text = text
-                    }
-                    messages[index].engine = String(format: "Written with better answers: first words in %.1f s, %.0f tokens/s, %.1f GB memory",
-                                                    stats.secondsToFirstWord, stats.tokensPerSecond,
-                                                    MemoryProbe.footprintGB)
-                    if !messages[index].text.isEmpty { Readiness.recordAnswer() }
-                    return
+                // A hot phone gets shorter answers, and a critically hot one gets Apple's lighter model.
+                let heat = ProcessInfo.processInfo.thermalState
+                let config = ThermalPolicy.adjusted(.answers, for: heat)
+                if heat == .serious || heat == .critical {
+                    LLMLog.note("phone is hot (\(ThermalPolicy.name(heat))): answers up to \(config.maxTokens) tokens, "
+                        + "larger model \(ThermalPolicy.allowsLargeModel(heat) ? "allowed" : "paused")")
                 }
-                let session = LanguageModelSession(model: model, instructions: Retrieval.instructions)
-                let options = GenerationOptions(temperature: 0.3, maximumResponseTokens: 700)
-                for try await snapshot in session.streamResponse(to: prompt, options: options) {
-                    try Task.checkCancellation()
-                    messages[index].status = nil
-                    messages[index].text = snapshot.content
+                let useBetter = better.isActive && ThermalPolicy.allowsLargeModel(heat)
+                    ? await better.ensureLoaded() : false
+                let engine: any LLMEngine = useBetter ? better.engine : apple
+                messages[index].status = "Writing an answer on this phone…"
+                // Drop the weakest excerpts until the prompt fits this model, by its own token count.
+                let fitted = await PromptFit.fit(sources, engine: engine, config: config) { [kind] kept in
+                    [.system(Retrieval.instructions),
+                     .user(Retrieval.prompt(question: q, sources: kept, history: history, kind: kind))]
+                }
+                sources = fitted.sources
+                messages[index].sources = sources
+                let request = fitted.messages
+                // A troubleshooting answer's closing "Ask: … [A | B]" line becomes tap-to-answer chips.
+                let show: @MainActor (String) -> Void = { text in
+                    let split = Clarify.split(text)
+                    self.messages[index].status = nil
+                    self.messages[index].text = split.text
+                    self.messages[index].choices = split.choices.isEmpty ? nil : split.choices
+                }
+                do {
+                    let stats = try await engine.answer(request, config: config, onText: show)
+                    if useBetter {
+                        messages[index].engine = String(format: "Written with better answers: first words in %.1f s, %.0f tokens/s, %.1f GB memory",
+                                                        stats.secondsToFirstToken, stats.tokensPerSecond,
+                                                        MemoryProbe.footprintGB)
+                    }
+                } catch where useBetter && !Task.isCancelled {
+                    // The larger model was unloaded mid-answer (low memory, or the app left the screen) or
+                    // couldn't take the prompt. The person didn't press Stop, so Apple's model writes it instead.
+                    LLMLog.note("better answers gave up (\(error.localizedDescription)); Apple's model answers")
+                    messages[index].text = ""
+                    messages[index].status = "Writing an answer on this phone…"
+                    try await apple.answer(request, config: config, onText: show)
                 }
                 if !messages[index].text.isEmpty { Readiness.recordAnswer() }
             } catch is CancellationError {
@@ -170,6 +209,13 @@ final class Assistant {
                     + (sources.isEmpty ? "" : " The library matches are below. Tap one to read it.")
             }
         }
+    }
+
+    /// The conversation so far, oldest first: the last few answered questions (not small talk or failures).
+    static func history(from messages: [ChatMessage], limit: Int = 3) -> [Retrieval.Turn] {
+        messages.filter { $0.role == .assistant && !$0.failed && !$0.isCasual && !$0.question.isEmpty && !$0.text.isEmpty }
+            .suffix(limit)
+            .map { Retrieval.Turn(question: $0.question, answer: $0.text) }
     }
 
     /// A short chat reply to small talk, from Apple's model (or a fixed line without it). No library, no steps.
@@ -238,36 +284,5 @@ final class Assistant {
     private func save() {
         guard let conversationID else { return }
         chats?.save(id: conversationID, messages: messages, topic: topic)
-    }
-
-    /// Exact token counts need iOS 26.4. Before that the callers estimate from the text's length.
-    private func tokens(inInstructions text: String) async -> Int? {
-        guard #available(iOS 26.4, *) else { return nil }
-        return try? await model.tokenCount(for: Instructions(text))
-    }
-
-    private func tokens(inPrompt text: String) async -> Int? {
-        guard #available(iOS 26.4, *) else { return nil }
-        return try? await model.tokenCount(for: text)
-    }
-
-    /// Builds the prompt, dropping the weakest excerpts until it fits the model's context window
-    /// with room left for the answer.
-    private func fittingPrompt(question: String, sources: inout [Passage], previous: String?,
-                               previousAnswer: String?) async throws -> String {
-        let reserve = 900  // tokens for the answer plus overhead
-        // Guard against a not-yet-loaded model reporting a tiny window, which would drop every source.
-        let window = max(model.contextSize, 4096)
-        let instructionTokens = await tokens(inInstructions: Retrieval.instructions) ?? 250
-        while true {
-            let prompt = Retrieval.prompt(question: question, sources: sources, previous: previous,
-                                     previousAnswer: previousAnswer)
-            let counted = await tokens(inPrompt: prompt)
-            let n = sources.count
-            let tokens = counted ?? prompt.count / 3
-            log.notice("context \(window) instructions \(instructionTokens) prompt \(tokens) (counted: \(counted != nil)) sources \(n)")
-            if instructionTokens + tokens + reserve <= window || sources.count <= 2 { return prompt }
-            sources.removeLast()
-        }
     }
 }

@@ -50,6 +50,14 @@ enum Readiness {
         ]
     }
 
+    /// The checklist as it stands, from what's saved on this phone.
+    @MainActor
+    static func current(libraryReady: Bool, aiReady: Bool) -> [Item] {
+        let d = UserDefaults.standard
+        return items(libraryReady: libraryReady, aiReady: aiReady,
+                     asked: d.bool(forKey: askedKey), offline: d.bool(forKey: offlineKey))
+    }
+
     /// Called when an answer finishes without error.
     @MainActor
     static func recordAnswer() {

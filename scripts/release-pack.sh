@@ -64,6 +64,12 @@ AUDIT="$LIB-reports/quality-audit.md"
 "$PY" "$ROOT/library/audit_library.py" "$LIB" --out "$AUDIT"
 
 step "Building the asset pack"
+# Meaning-based search: the embedder, the reranker and one vector per passage ship inside the pack
+# (docs/answer-quality.md). Without them the app still works, on keyword search alone.
+if [ ! -f "$LIB/vectors.bin" ]; then
+  step "Adding the search models and passage vectors (about an hour for Essentials)"
+  "$ROOT/scripts/embed-library.sh" "$LIB"
+fi
 "$ROOT/scripts/build-asset-packs.sh" "$LIB" "$ID"
 AAR="$ROOT/build/asset-packs/$ID.aar"
 

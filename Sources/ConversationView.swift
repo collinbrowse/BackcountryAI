@@ -101,14 +101,9 @@ struct AssistantTurn: View {
         .animation(.bouncy, value: message.isFinished)
     }
 
-    /// Share, and how long the answer took. Saving is for the whole chat, from the top bar.
+    /// How long the answer took. Saving and sharing are for the whole chat, from the top bar's menu.
     private var footer: some View {
         HStack(spacing: 8) {
-            if !message.failed {
-                ShareLink(item: message.question + "\n\n" + message.text) {
-                    Label("Share", systemImage: "square.and.arrow.up")
-                }
-            }
             Spacer()
             if message.engine != nil {
                 Image(systemName: "sparkles").foregroundStyle(Theme.accent)

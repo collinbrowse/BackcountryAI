@@ -71,6 +71,51 @@ It passed all three ship criteria: free memory stayed far above ~0.5 GB, the fir
 answer took under ~30 s. Heat reached "serious" by the end of the 16-answer run, so it's worth re-checking during long
 sessions.
 
+## The engine, measured again
+
+Measured 2026-11-13 on an iPhone 17 (8 GB, iOS 27.2.1) after the answers moved behind `LLMEngine` (MLX Swift through
+mlx-swift-lm 3.32.3). The numbers come from `ShippedModelBenchmark`: six questions, each with four 700-character
+excerpts, which is the size of prompt Scout sends.
+
+**What iOS allows the app:** the phone reports 7,672 MiB of memory and, with the Increased Memory Limit
+entitlement, lets the app hold 6,144 MiB. The app logs this at every launch (`memory at launch`).
+
+| Qwen 3.5 4B, 4-bit, MLX | iPhone 17 |
+|---|---|
+| Load and warm-up | 3.1 s |
+| First token (1,206-token prompt) | 3.0–3.6 s |
+| Reading the prompt | about 410 tokens/s |
+| Writing speed | 22.2 tokens/s |
+| Full answer (100–117 tokens) | 8.0–9.1 s (worst 10.7 s) |
+| Peak app memory | 3.48–3.65 GB |
+| Lowest free memory | 2.79 GB |
+| Heat after six answers | nominal to fair |
+
+The ranges are the medians of two runs. The higher memory figure is from a run that had also loaded the 335 MB
+test model.
+
+**What that means for model size on an 8 GB iPhone:** a model may use about 6.1 GB less what the rest of the
+app needs. Qwen 3.5 4B leaves 2.8 GB free. A 9B model at 4 bits (about 5 GB of text weights plus working
+memory) does not fit. 12 GB iPhones are untested.
+
+**How the app stays inside the limit:**
+
+- Before loading, `MemoryBudget` checks that the weights, 900 MB of working room and a 300 MB reserve fit in what
+  iOS says is free. If they don't, Apple's model answers and the next question tries again.
+- `GenerationConfig.contextTokens` (4,096) caps both the prompt and the key-value cache.
+- The model unloads, stopping any answer first, when the app leaves the foreground, on a memory warning and when
+  the phone is critically hot. At a "serious" thermal state answers are capped at 400 tokens.
+- MLX holds the weights in memory whole; it does not memory-map them.
+
+**Tests:** `MLXEngineDeviceTests` runs the real engine with Qwen3 0.6B (335 MB) and `ShippedModelBenchmark`
+measures the shipped model. Both need a connected iPhone and are skipped in the simulator and CI:
+
+```bash
+xcodebuild test -project BackcountryAI.xcodeproj -scheme BackcountryAI -destination "platform=iOS,name=<your iPhone>" -skipMacroValidation -only-testing:BackcountryAITests/MLXEngineDeviceTests -only-testing:BackcountryAITests/ShippedModelBenchmark
+```
+
+Debug builds print the `[llm]` log lines; in other builds they are in Console under the `llm` category.
+
 ## In the app: Better answers
 
 **Library › Better answers** offers it as an optional download on iPhones with 8 GB or more:
