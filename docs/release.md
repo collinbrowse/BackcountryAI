@@ -124,13 +124,23 @@ gh secret set REVIEW_EMAIL
 
 Move the `.p8` file somewhere safe (a password manager) and delete it from Downloads.
 
-Optional: a Claude API key (console.anthropic.com › API keys) turns the commits into plain-language TestFlight
-"What to Test" notes ("Added …, which lets you …", "Fixed a bug where …"). Without it, testers see a generic
-"Bug fixes and improvements" note. Preview the notes for the current commits with
-`bundle exec fastlane testflight_notes`.
+Optional: a Claude subscription token turns the commits into plain-language TestFlight "What to Test" notes
+("Added …, which lets you …", "Fixed a bug where …"). CI runs Claude Code with it, so it uses your Claude
+subscription, not API credits. Without it, testers see a generic "Bug fixes and improvements" note. Create the
+token (it opens a browser to sign in and prints a token valid for a year), then store it:
 
 ```bash
-gh secret set ANTHROPIC_API_KEY
+claude setup-token
+```
+
+```bash
+gh secret set CLAUDE_CODE_OAUTH_TOKEN
+```
+
+Preview the notes for the current commits with your own Claude Code login:
+
+```bash
+TESTFLIGHT_NOTES_LOCAL=1 bundle exec fastlane testflight_notes
 ```
 
 ### 7. Publish the privacy and support pages
