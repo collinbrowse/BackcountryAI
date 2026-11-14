@@ -37,11 +37,25 @@ adds them (and `scripts/release-pack.sh` runs it when `vectors.bin` is missing):
 | `models/reranker` | Qwen3-Reranker-0.6B, full precision (Apache 2.0) | 1.2 GB |
 | `vectors.bin` | one 384-bit vector per passage | about 65 MB for Essentials |
 
-The reranker is the big one. Its 4-bit copy (350 MB) was tried and scored badly: 0.09 for a passage the
-full-precision model gives 0.92. A smaller reranker that holds up would cut the download; `scout-tools rerank
-<model> <query> <doc>…` compares them. On the phone the reranker loads only when there is memory for it and for
-the answer model (`MemoryBudget`); otherwise Apple's model checks the excerpts, as before. Not yet measured on an
-iPhone: load time, memory alongside the better-answers model, and time per question.
+**The reranker is not in the released pack yet.** On the full Essentials library (89 questions in
+`library/questions.tsv`, 2026-11-14):
+
+| Setup | Found a relevant article | Checking the articles |
+|---|---|---|
+| Keyword search alone | 86 | n/a |
+| Meaning search + Apple's yes/no check | 87 | about 7.6 s |
+| Meaning search + reranker | 86 | about 0.5 s |
+
+The difference is within run-to-run noise, but the reranker dropped "Eye Injury" (0.02) and "Corneal abrasion"
+(0.00) for "I got something in my eye", which Apple's check kept. Until that's understood it isn't worth 1.2 GB of
+download, so the released pack has the embedder and vectors only: remove `models/reranker` from the library folder
+before `scripts/release-pack.sh`. The app uses a reranker whenever the library has one. The 0.3 cutoff sits in a
+clear valley (292 scores near 0, 402 above 0.9, few between). The 4-bit copy (350 MB) scored worse still: 0.09 for
+a passage the full-precision model gives 0.92. `scout-tools rerank <model> <query> <doc>…` compares rerankers.
+
+On the phone the reranker loads only when there is memory for it and for the answer model (`MemoryBudget`);
+otherwise Apple's model checks the excerpts. Not yet measured on an iPhone: meaning search's load time and time
+per question.
 
 A library without these files, and the simulator, use keyword search and Apple's model alone.
 
