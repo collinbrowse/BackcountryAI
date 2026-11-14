@@ -58,6 +58,7 @@ actor MLXEngine: LLMEngine {
             throw error
         }
         let epoch = epoch
+        let started = Date()
         // Cap MLX's buffer cache so it doesn't hold on to memory iOS wants back.
         Memory.cacheLimit = 256 * 1024 * 1024
         let configuration = switch source {
@@ -73,7 +74,18 @@ actor MLXEngine: LLMEngine {
             Memory.clearCache()
             throw CancellationError()
         }
+        let loadSeconds = Date().timeIntervalSince(started)
+        // The first answer after a load is slow: Metal compiles its shaders and the weights are touched for the
+        // first time. One throwaway token pays that now, not while someone waits for an answer.
+        let warmStarted = Date()
+        _ = try? await Self.run(loaded, [.user("Hi")], GenerationConfig(temperature: 0, maxTokens: 1), templateContext) { _ in }
+        guard epoch == self.epoch, !Task.isCancelled else {
+            Memory.clearCache()
+            throw CancellationError()
+        }
         if container == nil { container = loaded }
+        LLMLog.note(String(format: "%@: loaded in %.1f s, warmed up in %.1f s. ", name, loadSeconds,
+                           Date().timeIntervalSince(warmStarted)) + MemoryProbe.report("after load"))
     }
 
     private static func weightsOnDisk(in folder: URL) -> Int64? {

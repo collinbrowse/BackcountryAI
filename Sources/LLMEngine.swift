@@ -95,6 +95,7 @@ extension LLMEngine {
     func answer(_ messages: [LLMMessage], config: GenerationConfig,
                 onText: @MainActor (String) -> Void) async throws -> LLMStats {
         var stats = LLMStats(stopReason: .cancelled)
+        let started = Date()
         for try await event in await generate(messages, config: config) {
             try Task.checkCancellation()
             switch event {
@@ -103,6 +104,12 @@ extension LLMEngine {
             }
         }
         try Task.checkCancellation()
+        LLMLog.note(String(
+            format: "%@: first token %.2f s, %.1f tokens/s, %d prompt + %d answer tokens, %.1f s in all, ended by %@, "
+                + "footprint %.2f GB, thermal %@",
+            name, stats.secondsToFirstToken, stats.tokensPerSecond, stats.promptTokens, stats.answerTokens,
+            Date().timeIntervalSince(started), stats.stopReason.rawValue, MemoryProbe.footprintGB,
+            ThermalPolicy.name(ProcessInfo.processInfo.thermalState)))
         return stats
     }
 }
