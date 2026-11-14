@@ -41,10 +41,17 @@ final class Assistant {
     private var task: Task<Void, Never>?
     private let chats: ChatStore?
 
-    init(chats: ChatStore? = nil) { self.chats = chats }
+    init(chats: ChatStore? = nil) {
+        self.chats = chats
+        let model = SystemLanguageModel(useCase: .general, guardrails: .permissiveContentTransformations)
+        self.model = model
+        apple = FoundationEngine(model: model)
+    }
 
     // Apple's on-device model. It never uses the network.
-    private let model = SystemLanguageModel(useCase: .general, guardrails: .permissiveContentTransformations)
+    private let model: SystemLanguageModel
+    /// The same model as an engine, for writing answers.
+    private let apple: FoundationEngine
 
     var availabilityProblem: String? {
         if ScreenshotMode.isOn { return nil }
@@ -142,24 +149,18 @@ final class Assistant {
                                                      previous: previous, previousAnswer: previousAnswer)
                 messages[index].sources = sources
                 // Better answers: the larger model writes the answer when it's on. If it can't load, Apple's does.
-                if better.isActive, await better.ensureLoaded() {
-                    messages[index].status = "Writing an answer on this phone…"
-                    let stats = try await better.answer(instructions: Retrieval.instructions, prompt: prompt) { text in
-                        messages[index].status = nil
-                        messages[index].text = text
-                    }
-                    messages[index].engine = String(format: "Written with better answers: first words in %.1f s, %.0f tokens/s, %.1f GB memory",
-                                                    stats.secondsToFirstWord, stats.tokensPerSecond,
-                                                    MemoryProbe.footprintGB)
-                    if !messages[index].text.isEmpty { Readiness.recordAnswer() }
-                    return
-                }
-                let session = LanguageModelSession(model: model, instructions: Retrieval.instructions)
-                let options = GenerationOptions(temperature: 0.3, maximumResponseTokens: 700)
-                for try await snapshot in session.streamResponse(to: prompt, options: options) {
-                    try Task.checkCancellation()
+                let useBetter = better.isActive ? await better.ensureLoaded() : false
+                let engine: any LLMEngine = useBetter ? better.engine : apple
+                messages[index].status = "Writing an answer on this phone…"
+                let stats = try await engine.answer([.system(Retrieval.instructions), .user(prompt)],
+                                                    config: .answers) { text in
                     messages[index].status = nil
-                    messages[index].text = snapshot.content
+                    messages[index].text = text
+                }
+                if useBetter {
+                    messages[index].engine = String(format: "Written with better answers: first words in %.1f s, %.0f tokens/s, %.1f GB memory",
+                                                    stats.secondsToFirstToken, stats.tokensPerSecond,
+                                                    MemoryProbe.footprintGB)
                 }
                 if !messages[index].text.isEmpty { Readiness.recordAnswer() }
             } catch is CancellationError {

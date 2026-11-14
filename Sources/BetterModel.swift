@@ -1,12 +1,8 @@
 import BackgroundAssets
 import Foundation
 import HuggingFace
-import MLX
-import MLXLLM
-import MLXLMCommon
 import Observation
 import System
-import Tokenizers
 import UIKit
 
 /// "Better answers": an optional bigger on-device model (Qwen 3.5 4B, 4-bit, run with MLX on the GPU) that writes
@@ -41,13 +37,37 @@ final class BetterModel {
         didSet { UserDefaults.standard.set(useForAnswers, forKey: "betterModel.useForAnswers") }
     }
 
-    private var container: ModelContainer?
+    /// Runs the model. Everything that asks it for text goes through this.
+    nonisolated let engine: MLXEngine
     private var loadTask: Task<Void, Never>?
+    private var unloadTask: Task<Void, Never>?
     private var downloadTask: Task<Void, Never>?
     private var progress: Progress?
     private nonisolated static var manager: AssetPackManager { .shared }
 
     private init() {
+        engine = MLXEngine(
+            name: Self.displayName,
+            extraEOSTokens: ["<|im_end|>"],
+            // Qwen 3.x thinks out loud first unless the chat template is told not to.
+            templateContext: ["enable_thinking": false],
+            source: {
+                await MainActor.run {
+                    if let folder = BetterModel.packFolder { return .folder(folder) }
+                    #if DEBUG
+                    return .hub(BetterModel.modelID)  // not on App Store Connect yet: Xcode builds use Hugging Face
+                    #else
+                    return nil
+                    #endif
+                }
+            },
+            onDownloadProgress: { fraction in
+                Task { @MainActor in
+                    if case .downloading = BetterModel.shared.state {
+                        BetterModel.shared.state = fraction >= 1 ? .loading : .downloading(fraction)
+                    }
+                }
+            })
         useForAnswers = UserDefaults.standard.bool(forKey: "betterModel.useForAnswers")
         state = .notDownloaded  // every stored property needs a value before isDownloaded can be read
         state = isDownloaded ? .onDisk : .notDownloaded
@@ -176,13 +196,13 @@ final class BetterModel {
 
     /// Loads it into memory ahead of the next question, so the answer doesn't wait. Only when it's in use.
     func warmUp() {
-        guard isActive, container == nil else { return }
+        guard isActive, state != .ready else { return }
         prepare()
     }
 
     /// Loads the model into memory. In Xcode builds without the pack, downloads it from Hugging Face first.
     func prepare() {
-        guard Self.isSupported, container == nil, loadTask == nil else { return }
+        guard Self.isSupported, state != .ready, loadTask == nil else { return }
         let folder = Self.packFolder
         #if !DEBUG
         guard folder != nil else { return }
@@ -190,25 +210,13 @@ final class BetterModel {
         state = folder != nil || Self.hubDownloaded ? .loading : .downloading(0)
         loadTask = Task {
             defer { loadTask = nil }
+            await unloadTask?.value  // an unload still in progress finishes first, or it would undo this load
             do {
-                // Cap MLX's buffer cache so it doesn't hold on to memory iOS wants back.
-                Memory.cacheLimit = 256 * 1024 * 1024
-                let configuration = folder.map { ModelConfiguration(directory: $0, extraEOSTokens: ["<|im_end|>"]) }
-                    ?? ModelConfiguration(id: Self.modelID, extraEOSTokens: ["<|im_end|>"])
-                let c = try await loadModelContainer(
-                    from: HubDownloader(), using: TransformersTokenizerLoader(), configuration: configuration
-                ) { progress in
-                    Task { @MainActor in
-                        let f = progress.fractionCompleted
-                        if case .downloading = BetterModel.shared.state {
-                            BetterModel.shared.state = f >= 1 ? .loading : .downloading(f)
-                        }
-                    }
-                }
+                try await engine.load()
                 if folder == nil { UserDefaults.standard.set(true, forKey: "betterModel.downloaded") }
-                guard !Task.isCancelled else { state = .onDisk; return }  // unloaded while it was loading
-                container = c
                 state = .ready
+            } catch is CancellationError {  // unloaded while it was loading
+                state = isDownloaded ? .onDisk : .notDownloaded
             } catch where Task.isCancelled {
                 state = isDownloaded ? .onDisk : .notDownloaded
             } catch {
@@ -228,11 +236,14 @@ final class BetterModel {
 
     /// Frees the model's memory (it reloads from disk in a few seconds when needed again).
     func unload() {
-        guard container != nil || state == .loading else { return }
+        guard state == .ready || state == .loading else { return }
         loadTask?.cancel()
-        container = nil
-        Memory.clearCache()
         state = isDownloaded ? .onDisk : .notDownloaded
+        // Stops an answer in progress first: iOS ends apps that use the GPU in the background.
+        unloadTask = Task { [previous = unloadTask] in
+            await previous?.value
+            await engine.unload()
+        }
     }
 
     /// Deletes the downloaded files and goes back to Apple's model.
@@ -251,90 +262,5 @@ final class BetterModel {
             state = isDownloaded ? .onDisk : .notDownloaded
         }
         state = .notDownloaded
-    }
-
-    struct Stats: Sendable {
-        var promptTokens = 0
-        var answerTokens = 0
-        var secondsToFirstWord: Double = 0
-        var promptTokensPerSecond: Double = 0
-        var tokensPerSecond: Double = 0
-    }
-
-    /// Streams an answer. `onText` gets the whole answer so far, like LanguageModelSession's snapshots.
-    func answer(instructions: String, prompt: String, onText: @MainActor (String) -> Void) async throws -> Stats {
-        guard let container else { throw CancellationError() }
-        // Qwen 3.x thinks out loud first unless the chat template is told not to.
-        let input = UserInput(chat: [.system(instructions), .user(prompt)],
-                              additionalContext: ["enable_thinking": false])
-        let started = Date()
-        let lmInput = try await container.prepare(input: input)
-        let stream = try await container.generate(
-            input: lmInput, parameters: GenerateParameters(maxTokens: 700, temperature: 0.3, topP: 0.95))
-        var text = "", stats = Stats()
-        for await event in stream {
-            try Task.checkCancellation()
-            switch event {
-            case .chunk(let s):
-                if text.isEmpty { stats.secondsToFirstWord = Date().timeIntervalSince(started) }
-                text += s
-                onText(text)
-            case .info(let info):
-                stats.promptTokens = info.promptTokenCount
-                stats.answerTokens = info.generationTokenCount
-                stats.promptTokensPerSecond = info.promptTokensPerSecond
-                stats.tokensPerSecond = info.tokensPerSecond
-            default:
-                break
-            }
-        }
-        return stats
-    }
-}
-
-// The adapters MLXHuggingFace's macros would generate, written out so the app doesn't depend on package macros.
-
-/// Downloads model files from Hugging Face into the app's cache.
-struct HubDownloader: MLXLMCommon.Downloader {
-    private let hub = HubClient()
-
-    func download(id: String, revision: String?, matching patterns: [String], useLatest: Bool,
-                  progressHandler: @Sendable @escaping (Progress) -> Void) async throws -> URL {
-        guard let repo = Repo.ID(rawValue: id) else { throw URLError(.badURL) }
-        return try await hub.downloadSnapshot(of: repo, revision: revision ?? "main", matching: patterns,
-                                              progressHandler: { @MainActor progress in progressHandler(progress) })
-    }
-}
-
-/// Loads the model's tokenizer with swift-transformers.
-struct TransformersTokenizerLoader: MLXLMCommon.TokenizerLoader {
-    func load(from directory: URL) async throws -> any MLXLMCommon.Tokenizer {
-        TokenizerBridge(try await AutoTokenizer.from(modelFolder: directory))
-    }
-}
-
-struct TokenizerBridge: MLXLMCommon.Tokenizer {
-    let upstream: any Tokenizers.Tokenizer
-    init(_ upstream: any Tokenizers.Tokenizer) { self.upstream = upstream }
-
-    func encode(text: String, addSpecialTokens: Bool) -> [Int] {
-        upstream.encode(text: text, addSpecialTokens: addSpecialTokens)
-    }
-    func decode(tokenIds: [Int], skipSpecialTokens: Bool) -> String {
-        upstream.decode(tokens: tokenIds, skipSpecialTokens: skipSpecialTokens)
-    }
-    func convertTokenToId(_ token: String) -> Int? { upstream.convertTokenToId(token) }
-    func convertIdToToken(_ id: Int) -> String? { upstream.convertIdToToken(id) }
-    var bosToken: String? { upstream.bosToken }
-    var eosToken: String? { upstream.eosToken }
-    var unknownToken: String? { upstream.unknownToken }
-
-    func applyChatTemplate(messages: [[String: any Sendable]], tools: [[String: any Sendable]]?,
-                           additionalContext: [String: any Sendable]?) throws -> [Int] {
-        do {
-            return try upstream.applyChatTemplate(messages: messages, tools: tools, additionalContext: additionalContext)
-        } catch Tokenizers.TokenizerError.missingChatTemplate {
-            throw MLXLMCommon.TokenizerError.missingChatTemplate
-        }
     }
 }

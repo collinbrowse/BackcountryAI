@@ -412,22 +412,12 @@ final class LabBenchmark {
         var r = Result(engine: engine, question: question, answer: "", firstWord: 0, total: 0, promptTokens: 0,
                        answerTokens: 0, tokensPerSecond: 0, peakFootprintGB: 0, minAvailableGB: 0, thermal: "")
         do {
-            if engine == "Apple" {
-                let session = LanguageModelSession(model: apple, instructions: Retrieval.instructions)
-                for try await snap in session.streamResponse(to: prompt, options: GenerationOptions(temperature: 0.3, maximumResponseTokens: 700)) {
-                    if first == nil { first = Date().timeIntervalSince(t0) }
-                    text = snap.content
-                }
-                if #available(iOS 26.4, *) {
-                    r.promptTokens = (try? await apple.tokenCount(for: prompt)) ?? 0
-                    r.answerTokens = (try? await apple.tokenCount(for: text)) ?? 0
-                }
-            } else {
-                let stats = try await BetterModel.shared.answer(instructions: Retrieval.instructions, prompt: prompt) { text = $0 }
-                first = stats.secondsToFirstWord
-                r.promptTokens = stats.promptTokens
-                r.answerTokens = stats.answerTokens
-            }
+            let model: any LLMEngine = engine == "Apple" ? FoundationEngine(model: apple) : BetterModel.shared.engine
+            let stats = try await model.answer([.system(Retrieval.instructions), .user(prompt)],
+                                               config: .answers) { text = $0 }
+            first = stats.secondsToFirstToken
+            r.promptTokens = stats.promptTokens
+            r.answerTokens = stats.answerTokens
         } catch {
             text = "(failed: \(error.localizedDescription))"
         }
