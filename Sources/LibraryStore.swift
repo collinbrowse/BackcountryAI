@@ -32,7 +32,7 @@ struct LibraryPack: Identifiable, Hashable, Sendable {
 enum PackCatalog {
     static let all: [LibraryPack] = [
         LibraryPack(id: "lite", label: "Essentials", articles: 277_281, assetPackIDs: ["lite"],
-                    downloadBytes: 811_712_233, unpackedBytes: 1_891_962_787),
+                    downloadBytes: 953_467_561, unpackedBytes: 2_099_510_894),
     ]
 }
 
