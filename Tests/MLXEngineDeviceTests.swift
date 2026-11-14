@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import UIKit
 @testable import BackcountryAI
 
 #if targetEnvironment(simulator)
@@ -126,5 +127,82 @@ struct MLXEngineDeviceTests {
         await engine.unload()
         await #expect(throws: CancellationError.self) { try await reader.value }
         #expect(await !engine.isLoaded)
+    }
+}
+
+/// Measures the model the app ships (Qwen 3.5 4B) on this iPhone, with prompts the size Scout really sends.
+/// Skipped unless "Better answers" is already downloaded in this build of the app. The numbers go to the log
+/// (lines starting "[llm] benchmark") and into docs/on-device-model-comparison.md by hand.
+@Suite(.enabled(if: runningOnDevice, "MLX can't run in the simulator"), .serialized)
+@MainActor
+struct ShippedModelBenchmark {
+    private static let questions = [
+        "Someone cut their arm badly and it is bleeding a lot. What do I do?",
+        "My friend is shivering and slurring words after we got soaked in a cold rain. We have a tent and stove. What now?",
+        "Is the water from this standing pond safe to filter with my Katadyn BeFree filter?",
+        "I have a blister forming but still have 8 miles to hike. What should I do?",
+        "My truck won't start and just clicks. What do I check?",
+        "I'm lost but have half a phone battery and no signal. What should I do?",
+    ]
+
+    /// Four excerpts of about 700 characters each, like Retrieval passes along.
+    private static func prompt(for question: String) -> String {
+        let filler = "Stay calm and assess the scene before acting. Check for hazards to yourself first. "
+            + "Use what you carry: a first-aid kit, clean water, a stove, an insulating layer, a light and a "
+            + "way to signal. Small problems grow in the backcountry when they are ignored, so treat them early. "
+        let passages = (1...4).map {
+            Passage(id: Int64($0), docID: Int64($0), title: "Field manual \($0)", source: "Test library",
+                    sourceKey: "test", official: true, text: String(String(repeating: filler, count: 3).prefix(700)))
+        }
+        return Retrieval.prompt(question: question, sources: passages, previous: nil, previousAnswer: nil)
+    }
+
+    @Test(.timeLimit(.minutes(10))) func measure() async throws {
+        let better = BetterModel.shared
+        guard better.isDownloaded else {
+            LLMLog.note("benchmark skipped: \(BetterModel.displayName) isn't downloaded in this build")
+            return
+        }
+        // Keep the screen on: a locked phone sends the app to the background, which unloads the model.
+        UIApplication.shared.isIdleTimerDisabled = true
+        defer { UIApplication.shared.isIdleTimerDisabled = false }
+        better.unload()  // so the load is timed from cold
+        let loadStarted = Date()
+        try #require(await better.ensureLoaded())
+        let loadSeconds = Date().timeIntervalSince(loadStarted)
+
+        var peak = MemoryProbe.footprintBytes, lowest = MemoryProbe.availableBytes
+        let sampler = Task { @MainActor in
+            while !Task.isCancelled {
+                peak = max(peak, MemoryProbe.footprintBytes)
+                lowest = min(lowest, MemoryProbe.availableBytes)
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+        }
+        defer { sampler.cancel() }
+
+        var all: [LLMStats] = [], totals: [Double] = []
+        for question in Self.questions {
+            let started = Date()
+            let stats = try await better.engine.answer(
+                [.system(Retrieval.instructions), .user(Self.prompt(for: question))], config: .answers) { _ in }
+            all.append(stats)
+            totals.append(Date().timeIntervalSince(started))
+            #expect(stats.answerTokens > 0)
+        }
+        let median = { (values: [Double]) in values.sorted()[values.count / 2] }
+        LLMLog.note(String(
+            format: "benchmark %@: load+warm-up %.1f s, median first token %.2f s, median %.1f tokens/s, "
+                + "median prompt speed %.0f tokens/s, median answer %.1f s (worst %.1f s), "
+                + "median prompt %d tokens, median answer %d tokens, peak %.2f GB, "
+                + "lowest available %.2f GB, thermal at end %@",
+            BetterModel.displayName, loadSeconds, median(all.map(\.secondsToFirstToken)),
+            median(all.map(\.tokensPerSecond)), median(all.map(\.promptTokensPerSecond)), median(totals),
+            totals.max() ?? 0, Int(median(all.map { Double($0.promptTokens) })),
+            Int(median(all.map { Double($0.answerTokens) })), Double(peak) / 1e9,
+            Double(lowest) / 1e9, ThermalPolicy.name(ProcessInfo.processInfo.thermalState)))
+        // The ship criteria: memory stays well clear of the limit, and answers start quickly.
+        #expect(lowest > 500_000_000)
+        #expect(median(all.map(\.secondsToFirstToken)) < 5)
     }
 }
