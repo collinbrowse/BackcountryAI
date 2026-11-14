@@ -42,7 +42,7 @@ module TestflightNotes
     return FALLBACK if commit_log.to_s.strip.empty?
 
     if ENV["ANTHROPIC_API_KEY"].to_s.strip.empty?
-      UI.important("ANTHROPIC_API_KEY isn't set, so TestFlight gets generic notes. Add it as a GitHub secret (docs/release.md).")
+      FastlaneCore::UI.important("ANTHROPIC_API_KEY isn't set, so TestFlight gets generic notes. Add it as a GitHub secret (docs/release.md).")
       return FALLBACK
     end
 
@@ -57,7 +57,7 @@ module TestflightNotes
       fallbacks: :default
     )
     unless message.stop_reason == :end_turn
-      UI.important("Claude stopped with #{message.stop_reason} while writing the TestFlight notes; using generic notes.")
+      FastlaneCore::UI.important("Claude stopped with #{message.stop_reason} while writing the TestFlight notes; using generic notes.")
       return FALLBACK
     end
 
@@ -65,7 +65,7 @@ module TestflightNotes
     return FALLBACK if text.empty?
     text.length > LIMIT ? text[0, LIMIT - 1].sub(/\n[^\n]*\z/, "") + "\n…" : text
   rescue StandardError => e
-    UI.important("Couldn't write the TestFlight notes with Claude (#{e.class}: #{e.message}); using generic notes.")
+    FastlaneCore::UI.important("Couldn't write the TestFlight notes with Claude (#{e.class}: #{e.message}); using generic notes.")
     FALLBACK
   end
 end
