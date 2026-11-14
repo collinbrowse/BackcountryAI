@@ -1,12 +1,8 @@
 import BackgroundAssets
 import Foundation
 import HuggingFace
-import MLX
-import MLXLLM
-import MLXLMCommon
 import Observation
 import System
-import Tokenizers
 import UIKit
 
 /// "Better answers": an optional bigger on-device model (Qwen 3.5 4B, 4-bit, run with MLX on the GPU) that writes
@@ -17,13 +13,15 @@ import UIKit
 @Observable
 final class BetterModel {
     static let shared = BetterModel()
-    static let assetPackID = "answers"
-    static let modelID = "mlx-community/Qwen3.5-4B-MLX-4bit"
+    /// The model it offers. One today; ModelCatalog chooses by the phone's memory.
+    static let spec = ModelCatalog.qwen35_4B
+    static let assetPackID = spec.assetPackID
+    static let modelID = spec.hubID
     /// The model's name as people see it.
-    static let displayName = "Qwen 3.5 4B"
+    static let displayName = spec.displayName
     /// From scripts/release-model-pack.sh; App Store Connect's figure replaces it once known.
-    static let estimatedDownloadBytes: Int64 = 2_261_254_682
-    static let unpackedBytes: Int64 = 2_394_053_774
+    static let estimatedDownloadBytes = spec.downloadBytes
+    static let unpackedBytes = spec.weightsBytes
 
     enum State: Equatable {
         case notDownloaded
@@ -41,13 +39,41 @@ final class BetterModel {
         didSet { UserDefaults.standard.set(useForAnswers, forKey: "betterModel.useForAnswers") }
     }
 
-    private var container: ModelContainer?
+    /// Runs the model. Everything that asks it for text goes through this.
+    nonisolated let engine: MLXEngine
     private var loadTask: Task<Void, Never>?
+    private var unloadTask: Task<Void, Never>?
+    /// A load that was cancelled but hasn't wound down yet. The next load waits for it, so two never overlap.
+    private var cancelledLoad: Task<Void, Never>?
+    /// Which load is current. A cancelled one that finishes late must not touch the state.
+    private var loadID = 0
     private var downloadTask: Task<Void, Never>?
     private var progress: Progress?
     private nonisolated static var manager: AssetPackManager { .shared }
 
     private init() {
+        engine = MLXEngine(
+            name: Self.displayName,
+            weightsBytes: Self.spec.weightsBytes,
+            extraEOSTokens: Self.spec.extraEOSTokens,
+            templateContext: Self.spec.templateContext,
+            source: {
+                await MainActor.run {
+                    if let folder = BetterModel.packFolder { return .folder(folder) }
+                    #if DEBUG
+                    return .hub(BetterModel.modelID)  // not on App Store Connect yet: Xcode builds use Hugging Face
+                    #else
+                    return nil
+                    #endif
+                }
+            },
+            onDownloadProgress: { fraction in
+                Task { @MainActor in
+                    if case .downloading = BetterModel.shared.state {
+                        BetterModel.shared.state = fraction >= 1 ? .loading : .downloading(fraction)
+                    }
+                }
+            })
         useForAnswers = UserDefaults.standard.bool(forKey: "betterModel.useForAnswers")
         state = .notDownloaded  // every stored property needs a value before isDownloaded can be read
         state = isDownloaded ? .onDisk : .notDownloaded
@@ -55,19 +81,31 @@ final class BetterModel {
         let center = NotificationCenter.default
         for name in [UIApplication.didEnterBackgroundNotification, UIApplication.didReceiveMemoryWarningNotification] {
             center.addObserver(forName: name, object: nil, queue: .main) { _ in
-                MainActor.assumeIsolated { BetterModel.shared.unload() }
+                MainActor.assumeIsolated {
+                    SearchModels.shared.unload()  // the search models' memory too; they reload when next needed
+                    let model = BetterModel.shared
+                    guard model.state == .ready || model.state == .loading else { return }
+                    LLMLog.note(name == UIApplication.didReceiveMemoryWarningNotification
+                        ? "memory warning: unloading. " + MemoryProbe.report("warning")
+                        : "app left the foreground: unloading")
+                    model.unload()
+                }
+            }
+        }
+        // A critically hot phone gives the model's memory and the GPU back; Apple's model answers until it cools.
+        center.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated {
+                let heat = ProcessInfo.processInfo.thermalState
+                LLMLog.note("thermal state: \(ThermalPolicy.name(heat))")
+                if !ThermalPolicy.allowsLargeModel(heat) { BetterModel.shared.unload() }
             }
         }
     }
 
-    /// MLX needs a real GPU; the simulator can't run it. Apple Intelligence iPhones all have 8 GB or more.
-    static var isSupported: Bool {
-        #if targetEnvironment(simulator)
-        false
-        #else
-        ProcessInfo.processInfo.physicalMemory >= 7_000_000_000
-        #endif
-    }
+    /// Whether this iPhone can run it: enough memory, and enough of it allowed to one app. MLX also needs a real
+    /// GPU, which the simulator doesn't have.
+    static let isSupported = ModelCatalog.best(deviceBytes: MemoryProbe.deviceBytes,
+                                               appLimitBytes: MemoryProbe.ceilingBytes) != nil
 
     /// Whether to offer it at all. The simulator shows it (without the download) so the screens can be checked.
     static var isOffered: Bool {
@@ -111,6 +149,7 @@ final class BetterModel {
     func download() {
         guard Self.isSupported, !isDownloaded, downloadTask == nil else { return }
         state = .downloading(0)
+        let started = ContinuousClock.now
         downloadTask = Task {
             defer { downloadTask = nil; progress = nil }
             do {
@@ -129,12 +168,18 @@ final class BetterModel {
                     return
                 }
                 #endif
+                // A download that fails at once (no pack, no network) would flash "Starting the download…" for
+                // a frame and snap back. Let it read for a moment so the change is a calm hand-off, not a flicker.
+                try? await Task.sleep(until: started + Self.minimumAttempt, clock: .continuous)
                 state = .failed(Self.isMissingPack(error)
                     ? "Better answers aren't available from the App Store yet."
                     : "The download didn't finish (\(error.localizedDescription)). Check Wi-Fi and try again.")
             }
         }
     }
+
+    /// The shortest time a download attempt stays on screen before it reports failing.
+    static let minimumAttempt: Duration = .seconds(1.4)
 
     func cancelDownload() {
         progress?.cancel()
@@ -176,44 +221,40 @@ final class BetterModel {
 
     /// Loads it into memory ahead of the next question, so the answer doesn't wait. Only when it's in use.
     func warmUp() {
-        guard isActive, container == nil else { return }
+        guard isActive, state != .ready,
+              ThermalPolicy.allowsPreloading(ProcessInfo.processInfo.thermalState) else { return }
         prepare()
     }
 
     /// Loads the model into memory. In Xcode builds without the pack, downloads it from Hugging Face first.
     func prepare() {
-        guard Self.isSupported, container == nil, loadTask == nil else { return }
+        guard Self.isSupported, state != .ready, loadTask == nil else { return }
         let folder = Self.packFolder
         #if !DEBUG
         guard folder != nil else { return }
         #endif
         state = folder != nil || Self.hubDownloaded ? .loading : .downloading(0)
-        loadTask = Task {
-            defer { loadTask = nil }
+        loadID += 1
+        let id = loadID
+        loadTask = Task { [cancelledLoad] in
+            await cancelledLoad?.value
+            await unloadTask?.value  // an unload still in progress finishes first, or it would undo this load
+            let result: State
             do {
-                // Cap MLX's buffer cache so it doesn't hold on to memory iOS wants back.
-                Memory.cacheLimit = 256 * 1024 * 1024
-                let configuration = folder.map { ModelConfiguration(directory: $0, extraEOSTokens: ["<|im_end|>"]) }
-                    ?? ModelConfiguration(id: Self.modelID, extraEOSTokens: ["<|im_end|>"])
-                let c = try await loadModelContainer(
-                    from: HubDownloader(), using: TransformersTokenizerLoader(), configuration: configuration
-                ) { progress in
-                    Task { @MainActor in
-                        let f = progress.fractionCompleted
-                        if case .downloading = BetterModel.shared.state {
-                            BetterModel.shared.state = f >= 1 ? .loading : .downloading(f)
-                        }
-                    }
-                }
+                try await engine.load()
                 if folder == nil { UserDefaults.standard.set(true, forKey: "betterModel.downloaded") }
-                guard !Task.isCancelled else { state = .onDisk; return }  // unloaded while it was loading
-                container = c
-                state = .ready
-            } catch where Task.isCancelled {
-                state = isDownloaded ? .onDisk : .notDownloaded
+                result = .ready
+            } catch is CancellationError {  // unloaded while it was loading
+                result = isDownloaded ? .onDisk : .notDownloaded
+            } catch LLMError.notEnoughMemory {
+                // Not an error to show: Apple's model answers this one, and the next question tries again.
+                result = isDownloaded ? .onDisk : .notDownloaded
             } catch {
-                state = .failed("Couldn't load better answers (\(error.localizedDescription)).")
+                result = .failed("Couldn't load better answers (\(error.localizedDescription)).")
             }
+            guard id == loadID else { return }  // unloaded meanwhile: a newer load or the unload owns the state
+            state = result
+            loadTask = nil
         }
     }
 
@@ -228,11 +269,17 @@ final class BetterModel {
 
     /// Frees the model's memory (it reloads from disk in a few seconds when needed again).
     func unload() {
-        guard container != nil || state == .loading else { return }
+        guard state == .ready || state == .loading else { return }
         loadTask?.cancel()
-        container = nil
-        Memory.clearCache()
+        if let loadTask { cancelledLoad = loadTask }
+        loadTask = nil
+        loadID += 1
         state = isDownloaded ? .onDisk : .notDownloaded
+        // Stops an answer in progress first: iOS ends apps that use the GPU in the background.
+        unloadTask = Task { [previous = unloadTask] in
+            await previous?.value
+            await engine.unload()
+        }
     }
 
     /// Deletes the downloaded files and goes back to Apple's model.
@@ -251,107 +298,5 @@ final class BetterModel {
             state = isDownloaded ? .onDisk : .notDownloaded
         }
         state = .notDownloaded
-    }
-
-    struct Stats: Sendable {
-        var promptTokens = 0
-        var answerTokens = 0
-        var secondsToFirstWord: Double = 0
-        var promptTokensPerSecond: Double = 0
-        var tokensPerSecond: Double = 0
-    }
-
-    /// Streams an answer. `onText` gets the whole answer so far, like LanguageModelSession's snapshots.
-    func answer(instructions: String, prompt: String, onText: @MainActor (String) -> Void) async throws -> Stats {
-        guard let container else { throw CancellationError() }
-        // Qwen 3.x thinks out loud first unless the chat template is told not to.
-        let input = UserInput(chat: [.system(instructions), .user(prompt)],
-                              additionalContext: ["enable_thinking": false])
-        let started = Date()
-        let lmInput = try await container.prepare(input: input)
-        let stream = try await container.generate(
-            input: lmInput, parameters: GenerateParameters(maxTokens: 700, temperature: 0.3, topP: 0.95))
-        var text = "", stats = Stats()
-        for await event in stream {
-            try Task.checkCancellation()
-            switch event {
-            case .chunk(let s):
-                if text.isEmpty { stats.secondsToFirstWord = Date().timeIntervalSince(started) }
-                text += s
-                onText(text)
-            case .info(let info):
-                stats.promptTokens = info.promptTokenCount
-                stats.answerTokens = info.generationTokenCount
-                stats.promptTokensPerSecond = info.promptTokensPerSecond
-                stats.tokensPerSecond = info.tokensPerSecond
-            default:
-                break
-            }
-        }
-        return stats
-    }
-}
-
-/// How much memory the app is using and how much more iOS will allow before it stops the app.
-enum MemoryProbe {
-    static var footprintGB: Double {
-        var info = task_vm_info_data_t()
-        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
-        let r = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
-            }
-        }
-        return r == KERN_SUCCESS ? Double(info.phys_footprint) / 1e9 : 0
-    }
-
-    static var availableGB: Double { Double(os_proc_available_memory()) / 1e9 }
-    static var deviceGB: Double { Double(ProcessInfo.processInfo.physicalMemory) / 1e9 }
-}
-
-// The adapters MLXHuggingFace's macros would generate, written out so the app doesn't depend on package macros.
-
-/// Downloads model files from Hugging Face into the app's cache.
-struct HubDownloader: MLXLMCommon.Downloader {
-    private let hub = HubClient()
-
-    func download(id: String, revision: String?, matching patterns: [String], useLatest: Bool,
-                  progressHandler: @Sendable @escaping (Progress) -> Void) async throws -> URL {
-        guard let repo = Repo.ID(rawValue: id) else { throw URLError(.badURL) }
-        return try await hub.downloadSnapshot(of: repo, revision: revision ?? "main", matching: patterns,
-                                              progressHandler: { @MainActor progress in progressHandler(progress) })
-    }
-}
-
-/// Loads the model's tokenizer with swift-transformers.
-struct TransformersTokenizerLoader: MLXLMCommon.TokenizerLoader {
-    func load(from directory: URL) async throws -> any MLXLMCommon.Tokenizer {
-        TokenizerBridge(try await AutoTokenizer.from(modelFolder: directory))
-    }
-}
-
-struct TokenizerBridge: MLXLMCommon.Tokenizer {
-    let upstream: any Tokenizers.Tokenizer
-    init(_ upstream: any Tokenizers.Tokenizer) { self.upstream = upstream }
-
-    func encode(text: String, addSpecialTokens: Bool) -> [Int] {
-        upstream.encode(text: text, addSpecialTokens: addSpecialTokens)
-    }
-    func decode(tokenIds: [Int], skipSpecialTokens: Bool) -> String {
-        upstream.decode(tokens: tokenIds, skipSpecialTokens: skipSpecialTokens)
-    }
-    func convertTokenToId(_ token: String) -> Int? { upstream.convertTokenToId(token) }
-    func convertIdToToken(_ id: Int) -> String? { upstream.convertIdToToken(id) }
-    var bosToken: String? { upstream.bosToken }
-    var eosToken: String? { upstream.eosToken }
-    var unknownToken: String? { upstream.unknownToken }
-
-    func applyChatTemplate(messages: [[String: any Sendable]], tools: [[String: any Sendable]]?,
-                           additionalContext: [String: any Sendable]?) throws -> [Int] {
-        do {
-            return try upstream.applyChatTemplate(messages: messages, tools: tools, additionalContext: additionalContext)
-        } catch Tokenizers.TokenizerError.missingChatTemplate {
-            throw MLXLMCommon.TokenizerError.missingChatTemplate
-        }
     }
 }

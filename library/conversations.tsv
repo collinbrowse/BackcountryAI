@@ -1,0 +1,37 @@
+id	area	question	about-regex
+lost-map	survival	I think I'm lost on a trail in the woods and it's getting dark. What should I do?	lost|navigat|survival
+lost-map	survival	I don't have a map or a compass, just my phone with no signal.	lost|navigat|compass|direction
+lost-map	survival	My phone is at 15 percent. Should I keep using it or save it?	battery|phone|signal|lost
+sled-start	vehicle	My snowmobile won't start this morning. It was fine yesterday.	snowmobile|engine|start
+sled-start	vehicle	It's electric start and it cranks fine, it just won't catch.	snowmobile|engine|fuel|spark|start
+sled-start	vehicle	There's fresh gas in it and the kill switch is up. What next?	spark|plug|fuel|carburet|choke
+stove-jet	gear	My MSR Whisperlite won't light. I pump it and nothing comes out at the burner.	stove|whisperlite|jet|fuel
+stove-jet	gear	I already cleaned the jet with the shaker needle and it's still not working.	stove|pump|fuel line|o-ring|seal
+stove-jet	gear	The pump plunger feels loose and doesn't build pressure.	pump|cup|leather|lubric|stove
+burn-camp	medical	I spilled boiling water on my hand making dinner at camp. It's red and blistering.	burn|scald|blister
+burn-camp	medical	I don't have any burn gel or aloe. Just a first aid kit with gauze and tape.	burn|dressing|gauze|wound
+burn-camp	medical	Should I pop the blisters? They're about the size of a quarter.	burn|blister
+creek-water	water	Is it safe to drink from this creek if it looks clear?	water|creek|stream|purif|giardia
+creek-water	water	My filter cracked when it froze last night. I have a pot and a stove though.	boil|water|filter|freez
+creek-water	water	I'm at about 9,000 feet. Does that change how long I boil it?	boil|altitude|elevation|water
+hypo-friend	medical	My friend fell in a creek, he's soaked and shivering hard and it's 35 degrees.	hypotherm|cold|wet
+hypo-friend	medical	He's stopped shivering and he's slurring his words now.	hypotherm|severe|cold
+truck-battery	vehicle	My truck won't start, it just clicks. I'm at a trailhead an hour from town.	battery|starter|click|start
+truck-battery	vehicle	There's nobody else here, so no jump start. I don't have a jump pack either.	battery|terminal|starter|push start|clean
+bear-food	wildlife	How should I store food overnight in grizzly country?	bear|food|storage|canister
+bear-food	wildlife	There are no trees big enough to hang a bag and I didn't bring a canister.	bear|food|storage|cook
+storm-ridge	weather	Thunder is getting closer and I'm on an exposed ridge above treeline.	lightning|thunder|storm
+storm-ridge	weather	I can't get below treeline for at least 30 minutes. What do I do right now?	lightning|crouch|position|storm
+storm-ridge	weather	Can you check whether the storm is going to clear up this afternoon?	forecast|weather|storm|cloud
+ankle-trail	medical	I rolled my ankle on a rock 5 miles from the car. It's swollen but I can put some weight on it.	ankle|sprain
+ankle-trail	medical	I don't have an elastic bandage. What can I use to wrap it?	ankle|sprain|splint|wrap|tape
+radio-check	radio	My handheld Baofeng isn't picking anything up on the repeater I programmed.	radio|repeater|baofeng|ham
+radio-check	radio	The frequency is right, I double checked it against the repeater book.	offset|tone|ctcss|pl|repeater|squelch
+outboard-stall	vehicle	The outboard on my jon boat keeps dying when I give it throttle.	outboard|engine|stall|fuel
+outboard-stall	vehicle	I already squeezed the primer bulb until it's firm and the tank vent is open.	fuel|filter|carburet|outboard|water separator
+generator-co	home	The power's out from the storm. Where can I run my generator?	generator|carbon monoxide
+generator-co	home	It's pouring rain. Can I run it in the open garage just until it stops?	generator|carbon monoxide|garage
+dog-quills	pets	My dog just got a face full of porcupine quills on a hike.	porcupine|quill|dog
+dog-quills	pets	I don't have pliers or a multitool with me. We're 3 miles from the car.	porcupine|quill|dog
+fire-wet	survival	Everything's wet. How do I get a fire going?	fire|tinder|wet
+fire-wet	survival	I've got a lighter but no fire starters or cotton balls.	fire|tinder|feather|kindling|birch

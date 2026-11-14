@@ -10,17 +10,11 @@ struct ChatView: View {
     @Environment(Router.self) private var router
     @Environment(ChatStore.self) private var chats
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.openURL) private var openURL
-    @Environment(\.displayScale) private var displayScale
 
     @State private var draft = ""
     @State private var peek: [Passage] = []
     @State private var openArticle: Passage?
-    @State private var showLibrary = false
     @State private var showSOS = false
-    @State private var showHowItWorks = false
-    @State private var showOfflineTip = false
-    @State private var showReadiness = false
     @State private var aiProblem: String?? = nil
     @State private var confetti = 0
     @State private var sent = 0
@@ -84,23 +78,9 @@ struct ChatView: View {
             .toolbar { toolbar }
             .overlay { ConfettiBurst(trigger: confetti) }
         }
-        .sheet(isPresented: $showLibrary) { LibraryView() }
-        .sheet(isPresented: $showReadiness) {
-            ReadinessSheet(items: readiness) { item in
-                showReadiness = false
-                act(item)
-            }
-        }
         .sheet(isPresented: $showSOS) { SOSSheet(ask: { showSOS = false; send($0.question) },
                                                       openField: { showSOS = false; router.showField() }) }
         .sheet(item: $openArticle) { ArticleView(passage: $0) }
-        .fullScreenCover(isPresented: $showHowItWorks) { OnboardingView(isReplay: true) { showHowItWorks = false } }
-        .alert("Test it in Airplane Mode", isPresented: $showOfflineTip) {
-            Button("OK") {}
-        } message: {
-            Text("Swipe down from the top-right corner, turn on Airplane Mode, then ask Scout anything. "
-                 + "If you get an answer, you're set for the backcountry.")
-        }
         .sensoryFeedback(.impact(weight: .medium), trigger: sent)
         .sensoryFeedback(.success, trigger: assistant.messages.last?.isFinished == true)
         .task(id: scenePhase) { await watchAI() }
@@ -144,20 +124,7 @@ struct ChatView: View {
             }
         }
         ToolbarItem(placement: .topBarTrailing) {
-            Menu { menuItems } label: {
-                // A stopped download that isn't showing in the top bar: a small red "!" up and to the right.
-                Image(systemName: "ellipsis")
-                    .overlay(alignment: .topTrailing) {
-                        if downloads.stopped > 0 && !downloads.active {
-                            Image(systemName: "exclamationmark.circle.fill")
-                                .font(.system(size: 10, weight: .bold))
-                                .symbolRenderingMode(.palette)
-                                .foregroundStyle(.white, Theme.danger)
-                                .offset(x: 8, y: -9)
-                        }
-                    }
-            }
-            .accessibilityLabel(downloads.stopped > 0 ? "More, \(downloads.stoppedText)" : "More")
+            Menu { menuItems } label: { AppMenuLabel() }
         }
     }
 
@@ -177,62 +144,23 @@ struct ChatView: View {
                     Label(isSaved ? "Unsave chat" : "Save chat", systemImage: isSaved ? "bookmark.slash" : "bookmark")
                 }
                 .disabled(chats.conversation(assistant.conversationID ?? UUID()) == nil)
+                ShareLink(item: ChatTranscript.text(title: assistant.topic, messages: assistant.messages),
+                          preview: SharePreview(assistant.topic ?? "Chat with Scout")) {
+                    Label("Share chat", systemImage: "square.and.arrow.up")
+                }
+                .disabled(assistant.isBusy)
             }
         }
-        Section {
-            Button { showReadiness = true } label: {
-                Label("Trail-ready checklist · \(readyCount)/\(readiness.count)", systemImage: "checklist")
-            }
-            Button { showLibrary = true } label: {
-                Text("Offline library")
-                if let text = libraryStatus.text { Text(text) }
-                libraryMenuIcon
-            }
-            Button { showHowItWorks = true } label: { Label("How Scout works", systemImage: "questionmark.circle") }
-        }
+        AppMenuSection()
     }
 
     private var downloads: Downloads { Downloads(store: store, better: BetterModel.shared) }
-
-    /// The menu row's subtitle. Ready means the field guides are on the phone: the person's own documents alone
-    /// don't make Scout trail-ready.
-    /// Text only when there's something the ring can't say: a stopped download, missing guides, or "ready".
-    /// While downloading with nothing wrong, the ring says it all and there's no text.
-    private var libraryStatus: (text: String?, symbol: String, tint: Color) {
-        let d = downloads
-        if d.stopped > 0 { return (d.stoppedText, "exclamationmark.circle", Theme.danger) }
-        if d.active { return (nil, "arrow.down.circle", Theme.accent) }
-        if !store.hasPack { return ("No field guides", "arrow.down.circle", Theme.danger) }
-        return NetworkMonitor.shared.isOnline
-            ? ("Ready offline", "checkmark.circle.fill", Theme.pine)
-            : ("No signal · still works", "antenna.radiowaves.left.and.right.slash", Theme.pine)
-    }
-
-    /// The menu row's icon. Menus don't redraw while open, so while downloading this is a picture of the ring at
-    /// the moment the menu opened; opening it again draws a fresh one.
-    private var libraryMenuIcon: Image {
-        let d = downloads
-        guard d.active || d.stopped > 0 else { return Image(systemName: libraryStatus.symbol) }
-        // Drawn as a picture so the menu keeps its colors: the ring, or a red "!" for a stopped download.
-        let renderer = ImageRenderer(content: Group {
-            if d.active {
-                DownloadRing(fraction: d.fraction ?? 0, alert: d.stopped > 0, lineWidth: 3)
-            } else {
-                Image(systemName: "exclamationmark.circle.fill").resizable()
-                    .symbolRenderingMode(.palette).foregroundStyle(.white, Theme.danger)
-            }
-        }
-            .frame(width: 22, height: 22).padding(1))
-        renderer.scale = displayScale
-        guard let image = renderer.uiImage else { return Image(systemName: libraryStatus.symbol) }
-        return Image(uiImage: image).renderingMode(.original)
-    }
 
     /// Top bar status while downloading: just the ring, filling as it goes, with a red "!" if another download
     /// stopped. Opens the library.
     private var statusPill: some View {
         let d = downloads
-        return Button { showLibrary = true } label: {
+        return Button { router.sheet = .library } label: {
             DownloadRing(fraction: d.fraction, alert: d.stopped > 0, lineWidth: 3)
                 .frame(width: 22, height: 22)
                 .padding(.horizontal, 4)
@@ -286,7 +214,7 @@ struct ChatView: View {
                 .padding(.top, 8)
                 .riseIn(1)
             if downloads.active {
-                Button { showLibrary = true } label: {
+                Button { router.sheet = .library } label: {
                     HStack(spacing: 10) {
                         DownloadRing(fraction: downloads.fraction, alert: downloads.stopped > 0).frame(width: 18, height: 18)
                         Text(downloadLabel).monospacedDigit().contentTransition(.numericText())
@@ -300,7 +228,7 @@ struct ChatView: View {
                 .padding(.top, 16)
                 .riseIn(2)
             } else if !store.hasPack {
-                Button { showLibrary = true } label: {
+                Button { router.sheet = .library } label: {
                     Label("Get the field guides", systemImage: "arrow.down.circle.fill")
                 }
                 .buttonStyle(PrimaryButtonStyle())
@@ -357,7 +285,9 @@ struct ChatView: View {
     }
 
     private func followUps(for m: ChatMessage) -> some View {
-        let replies: [(String, String)] = m.urgent
+        // A troubleshooting answer ends with a question: its answers come first, as one tap.
+        let choices = (m.choices ?? []).map { ($0, "arrowshape.turn.up.left") }
+        let replies: [(String, String)] = !choices.isEmpty ? choices : m.urgent
             ? [("What if it gets worse?", "exclamationmark.triangle"), ("Should we evacuate?", "figure.walk.motion"),
                ("What do I tell 911?", "phone")]
             : AnswerBlock.parse(m.text).contains(where: { if case .step = $0 { true } else { false } })
@@ -370,7 +300,7 @@ struct ChatView: View {
         return ScrollView(.horizontal) {
             HStack(spacing: 8) {
                 ForEach(Array(replies.enumerated()), id: \.offset) { i, r in
-                    Button { send(r.0) } label: { SuggestionChip(title: r.0, symbol: r.1, quiet: true) }
+                    Button { send(r.0) } label: { SuggestionChip(title: r.0, symbol: r.1, quiet: choices.isEmpty) }
                         .buttonStyle(SquishyButtonStyle(scale: 0.92))
                         .riseIn(i)
                 }
@@ -481,15 +411,6 @@ struct ChatView: View {
         let hits = await Task.detached(priority: .userInitiated) { lib.search(q, limit: 6, maxChars: 220) }.value
         guard !Task.isCancelled else { return }
         withAnimation(.bouncy) { peek = hits }
-    }
-
-    private func act(_ item: Readiness.Item) {
-        switch item.id {
-        case "library": Task { try? await Task.sleep(for: .milliseconds(400)); showLibrary = true }
-        case "ai": if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
-        case "asked": send(Topic.camp[1].question)
-        default: Task { try? await Task.sleep(for: .milliseconds(400)); showOfflineTip = true }
-        }
     }
 
     /// The model's state isn't observable, so poll it while it isn't ready (it may be downloading).

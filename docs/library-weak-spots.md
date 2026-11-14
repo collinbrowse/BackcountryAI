@@ -1,13 +1,15 @@
 # Library weak spots
 
-What the library answers badly. The last check (`scripts/check-answers.sh`, 2026-11-11) found a relevant
-article for 88 of the 89 questions in `library/questions.tsv`.
+What the library answers badly. The last check (`scripts/check-answers.sh`, 2026-11-14, with meaning search)
+found a relevant article for 87 of the 89 questions in `library/questions.tsv`.
 
 When the library has nothing on a question, Scout answers from the model's own knowledge under "Not from the
 library". To see those answers, run `scripts/check-answers.sh <library> --no-library`.
 
 ## Missed
 
+- **Hard shivering and confusion after cold:** frostbite and altitude articles came back instead of hypothermia.
+- **Head injury while skiing:** Apple's check dropped the concussion articles in the last run.
 - **Asthma attack with no inhaler:** the model's searches went off-topic, and there's no good public-domain
   source anyway. The answer should tell people to get help.
 

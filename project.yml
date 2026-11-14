@@ -13,10 +13,10 @@ packages:
     from: 0.32.3
   SwiftHuggingFace:
     url: https://github.com/huggingface/swift-huggingface
-    from: 0.9.0
+    from: 1.0.0
   SwiftTransformers:
     url: https://github.com/huggingface/swift-transformers
-    from: 1.3.0
+    from: 1.4.0
 targets:
   BackcountryAI:
     type: application
@@ -25,7 +25,9 @@ targets:
     dependencies:
       - target: BackcountryAIDownloader
       - package: MLXSwiftLM
-        products: [MLXLLM, MLXLMCommon]   # not MLXHuggingFace: its macros need approval; BetterModel has the adapters
+        # Not MLXHuggingFace: its macros need approval; MLXEngine.swift has the adapters.
+        # MLXEmbedders and MLXRerankers: meaning-based search and the reranker (SearchModels.swift).
+        products: [MLXLLM, MLXLMCommon, MLXEmbedders, MLXRerankers]
       - package: MLXSwift
         products: [MLX]
       - package: SwiftHuggingFace
@@ -121,6 +123,43 @@ targets:
         SWIFT_VERSION: "6.0"
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: YES
+  # Mac tools that run the app's own search code (scripts/check-answers.sh, scripts/embed-library.sh): checking
+  # retrieval and answers, and writing a library's passage vectors. Built with xcodebuild, since MLX's GPU code
+  # needs it.
+  ScoutTools:
+    type: tool
+    platform: macOS
+    deploymentTarget: "26.0"
+    scheme: {}
+    sources:
+      - tools/scout-tools
+      - Sources/Library.swift
+      - Sources/Retrieval.swift
+      - Sources/SearchModels.swift
+      # The app's engines, so answers here are written exactly as on the phone.
+      - Sources/LLMEngine.swift
+      - Sources/MLXEngine.swift
+      - Sources/FoundationEngine.swift
+      - Sources/MemoryProbe.swift
+      - Sources/ModelCatalog.swift
+    dependencies:
+      - package: MLXSwiftLM
+        products: [MLXLLM, MLXLMCommon, MLXEmbedders, MLXRerankers]
+      - package: MLXSwift
+        products: [MLX]
+      - package: SwiftHuggingFace
+        products: [HuggingFace]
+      - package: SwiftTransformers
+        products: [Tokenizers]
+    settings:
+      base:
+        PRODUCT_NAME: scout-tools
+        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryai.scout-tools
+        SWIFT_VERSION: "6.0"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        OTHER_LDFLAGS: [-lsqlite3]
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) SCOUT_TOOLS
   BackcountryAIDownloader:
     type: extensionkit-extension
     platform: iOS
