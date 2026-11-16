@@ -2,6 +2,23 @@ import SwiftUI
 import Observation
 import UIKit
 
+/// Keeps the screen on while any holder needs it, so work that iOS would stop in the background keeps running.
+/// Counted, so one holder finishing doesn't let the screen sleep under another.
+@MainActor enum ScreenAwake {
+    private static var holders: Set<String> = []
+    static func hold(_ reason: String) { holders.insert(reason); update() }
+    static func release(_ reason: String) { holders.remove(reason); update() }
+    private static func update() { UIApplication.shared.isIdleTimerDisabled = !holders.isEmpty }
+}
+
+/// What a download in progress says about leaving the app.
+enum DownloadCopy {
+    static let keepsGoing = "You can lock your phone or leave the app. It keeps downloading."
+    /// The Hugging Face download in Xcode builds stops in the background, so it asks the person to stay.
+    static let staysOpen = "Keep the app open until it's done. The screen stays on meanwhile."
+    static func text(continues: Bool) -> String { continues ? keepsGoing : staysOpen }
+}
+
 /// Kept in a reference so scrolling only redraws the backdrop, not the whole home screen.
 @MainActor @Observable final class ScrollOffset { var y: CGFloat = 0 }
 

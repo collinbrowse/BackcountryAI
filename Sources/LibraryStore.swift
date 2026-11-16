@@ -89,6 +89,23 @@ final class LibraryStore {
                 if case .finished = update, self?.isWorking == false { self?.open() }
             }
         }
+        resumePending()
+    }
+
+    /// The library a download was started for and hasn't finished, failed or been cancelled. iOS keeps
+    /// downloading it while the app is suspended or closed; this is how the app finds it again when it relaunches.
+    private static let pendingKey = "library.pendingPack"
+
+    /// Picks up a download that was still going when iOS stopped the app, so it shows its progress again instead
+    /// of offering to start over. Asking for the pack again joins the download iOS already has in progress, or,
+    /// if it finished while the app was away, returns at once and does the clean-up the app didn't get to.
+    private func resumePending() {
+        guard let id = UserDefaults.standard.string(forKey: Self.pendingKey) else { return }
+        guard let pack = packs.first(where: { $0.id == id }) else {
+            UserDefaults.standard.removeObject(forKey: Self.pendingKey)
+            return
+        }
+        install(pack, resuming: true)
     }
 
     /// Whether an asset pack is on this iPhone. Before iOS 26.4 there's no direct question to ask, so it looks for
@@ -211,16 +228,20 @@ final class LibraryStore {
         if case let .downloading(f, _) = phase { f } else { nil }
     }
 
-    func install(_ pack: LibraryPack) {
+    /// - Parameter resuming: joining a download started before the app was last stopped. Its partial files already
+    ///   take up space, so the free-space check would count them twice.
+    func install(_ pack: LibraryPack, resuming: Bool = false) {
         guard !isWorking else { return }
         phase = .preparing
+        UserDefaults.standard.set(pack.id, forKey: Self.pendingKey)
         work = Task {
             do {
-                try await download(pack)
+                try await download(pack, checkSpace: !resuming)
                 phase = .idle
             } catch {
                 phase = Task.isCancelled ? .idle : .failed(Self.message(for: error))
             }
+            UserDefaults.standard.removeObject(forKey: Self.pendingKey)
             progresses = [:]
             fractions = [:]
             downloadStart = nil
@@ -248,7 +269,7 @@ final class LibraryStore {
 
     // MARK: - Download
 
-    private func download(_ pack: LibraryPack) async throws {
+    private func download(_ pack: LibraryPack, checkSpace: Bool = true) async throws {
         var assetPacks: Set<AssetPack> = []
         for id in pack.assetPackIDs { assetPacks.insert(try await Self.manager.assetPack(withID: id)) }
 
@@ -257,7 +278,7 @@ final class LibraryStore {
         let free = (try? URL.applicationSupportDirectory.resourceValues(
             forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage) ?? 0
         let needed = missing.isEmpty ? 0 : downloadBytes + pack.unpackedBytes + 1_000_000_000
-        if free > 0 && free < needed {
+        if checkSpace && free > 0 && free < needed {
             throw StoreError.noSpace(needed: needed, free: free)
         }
 
