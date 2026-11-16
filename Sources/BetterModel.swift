@@ -101,9 +101,8 @@ final class BetterModel {
             }
         }
         // A download iOS was still doing when it stopped the app: show its progress again (see download()).
-        if UserDefaults.standard.bool(forKey: Self.pendingKey) {
-            Task { @MainActor in BetterModel.shared.download(resuming: true) }
-        }
+        // At once rather than later, so the Live Activity left from before sees the download carry on.
+        if UserDefaults.standard.bool(forKey: Self.pendingKey) { download(resuming: true) }
     }
 
     /// Whether this iPhone can run it: enough memory, and enough of it allowed to one app. MLX also needs a real
