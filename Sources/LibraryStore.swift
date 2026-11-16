@@ -70,7 +70,8 @@ final class LibraryStore {
     /// Live downloads by asset-pack ID: their Progress objects are how a download is cancelled.
     private var progresses: [String: Progress] = [:]
     private var fractions: [String: Double] = [:]
-    private var downloadStart: Date?
+    /// Time left for the download in progress.
+    private var estimate = DownloadEstimate()
 
     private nonisolated static var manager: AssetPackManager { .shared }
 
@@ -244,7 +245,7 @@ final class LibraryStore {
             UserDefaults.standard.removeObject(forKey: Self.pendingKey)
             progresses = [:]
             fractions = [:]
-            downloadStart = nil
+            estimate = DownloadEstimate()
         }
     }
 
@@ -330,12 +331,11 @@ final class LibraryStore {
         }
         let total = max(sizes.values.reduce(0, +), 1)
         let done = sizes.reduce(0.0) { $0 + Double($1.value) * (fractions[$1.key] ?? 0) }
-        let start = downloadStart ?? Date()
-        downloadStart = start
-        let elapsed = Date().timeIntervalSince(start)
-        let rate = elapsed > 3 ? done / elapsed : 0
+        let now = Date()
+        let end = estimate.record(bytes: done, total: Double(total), at: now)
         phase = .downloading(fraction: done / Double(total),
-                             detail: Self.progressText(done: Int64(done), total: total, rate: rate))
+                             detail: Self.progressText(done: Int64(done), total: total, rate: estimate.rate,
+                                                       left: end.map { max($0.timeIntervalSince(now), 0) }))
     }
 
     enum StoreError: LocalizedError {
@@ -363,18 +363,20 @@ final class LibraryStore {
 
     /// Fixed-width numbers (padded with figure spaces, which are as wide as a digit) so the text after each number
     /// doesn't shift as the download moves along. Shown in a monospaced-digit font.
-    nonisolated static func progressText(done: Int64, total: Int64, rate: Double) -> String {
+    /// - Parameters:
+    ///   - rate: bytes per second, once known.
+    ///   - left: seconds to go, once there's a steady estimate (see DownloadEstimate); until then, "estimating".
+    nonisolated static func progressText(done: Int64, total: Int64, rate: Double?, left: TimeInterval?) -> String {
         func pad(_ text: String, _ width: Int) -> String {
             String(repeating: "\u{2007}", count: max(0, width - text.count)) + text
         }
         let totalGB = String(format: "%.2f", Double(total) / 1e9)
         var s = "\(pad(String(format: "%.2f", Double(done) / 1e9), totalGB.count)) of \(totalGB) GB"
-        if rate > 0 {
-            s += " · \(pad(String(format: "%.1f", rate / 1e6), 4)) MB/s"
-            let left = Double(total - done) / rate
-            if left.isFinite {
-                s += " · " + (left > 90 ? "\(pad("\(Int(left / 60))", 2)) min left" : "\(pad("\(Int(left))", 2)) s left")
-            }
+        if let rate, rate > 0 { s += " · \(pad(String(format: "%.1f", rate / 1e6), 4)) MB/s" }
+        if let left, left.isFinite {
+            s += " · " + (left > 90 ? "\(pad("\(Int(left / 60))", 2)) min left" : "\(pad("\(Int(left))", 2)) s left")
+        } else if done < total {
+            s += " · estimating time left"
         }
         return s
     }

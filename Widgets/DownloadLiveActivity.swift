@@ -148,7 +148,8 @@ private struct TimeLeft: View {
                 Text("left")
             }
         } else if state.stage == .downloading, !isStale {
-            Text(state.fraction.formatted(.percent.precision(.fractionLength(0))))
+            // No steady speed yet (the first seconds), or the estimate has run out but iOS hasn't said it's done.
+            Text(state.estimatedEnd == nil ? "Estimating…" : "Almost done")
         }
     }
 }

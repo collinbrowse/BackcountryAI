@@ -19,8 +19,8 @@ final class DownloadActivity {
     private var activityID: String?
     /// What this activity covers ("library", "model"), to tell finished from cancelled when it ends.
     private var tracking: Set<String> = []
-    /// The first progress reading of this download: the speed so far is measured from it.
-    private var firstReading: (date: Date, bytes: Double)?
+    /// When this download should finish, from its progress so far.
+    private var estimate = DownloadEstimate()
     private var lastSent: (date: Date, state: State)?
     private var latest: Snapshot?
     private var observing: Task<Void, Never>?
@@ -106,7 +106,7 @@ final class DownloadActivity {
         // Reset before ending, so a download started meanwhile gets an activity of its own.
         activityID = nil
         self.tracking = []
-        firstReading = nil
+        estimate = DownloadEstimate()
         lastSent = nil
         if let failure = tracking.lazy.compactMap({ snapshot.failures[$0] }).first {
             let state = State(stage: .failed, title: title, kinds: kinds, fraction: fraction,
@@ -133,14 +133,7 @@ final class DownloadActivity {
         }
         let done = snapshot.parts.reduce(0) { $0 + ($1.fraction ?? 0) * $1.bytes }
         let fraction = total > 0 ? min(done / total, 1) : 0
-        let first = firstReading ?? (now, done)
-        firstReading = first
-        var end: Date?
-        let elapsed = now.timeIntervalSince(first.date)
-        if elapsed > 5, done > first.bytes {
-            let rate = (done - first.bytes) / elapsed
-            end = now.addingTimeInterval((total - done) / rate)
-        }
+        let end = estimate.record(bytes: done, total: total, at: now)
         // The total, not how much is done: that figure would sit still while the app is suspended and the bar moves.
         let detail = String(format: "Downloading %.2f GB", total / 1e9)
         return State(stage: .downloading, title: snapshot.title, kinds: Array(tracking), fraction: fraction,
