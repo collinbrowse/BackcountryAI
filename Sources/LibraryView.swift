@@ -256,6 +256,7 @@ struct DownloadProgressCard: View {
                 Spacer(minLength: 0)
             }
             if case .downloading = store.phase {
+                Text(DownloadCopy.keepsGoing).font(.caption).foregroundStyle(Theme.inkSoft)
                 Button("Cancel", role: .cancel) { store.cancel() }.font(.subheadline.weight(.semibold))
             }
         }

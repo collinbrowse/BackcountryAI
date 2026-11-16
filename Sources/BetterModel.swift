@@ -100,6 +100,9 @@ final class BetterModel {
                 if !ThermalPolicy.allowsLargeModel(heat) { BetterModel.shared.unload() }
             }
         }
+        // A download iOS was still doing when it stopped the app: show its progress again (see download()).
+        // At once rather than later, so the Live Activity left from before sees the download carry on.
+        if UserDefaults.standard.bool(forKey: Self.pendingKey) { download(resuming: true) }
     }
 
     /// Whether this iPhone can run it: enough memory, and enough of it allowed to one app. MLX also needs a real
@@ -146,14 +149,36 @@ final class BetterModel {
 
     // MARK: - Download
 
-    func download() {
-        guard Self.isSupported, !isDownloaded, downloadTask == nil else { return }
+    /// Set while a download is wanted and hasn't finished, failed or been cancelled. iOS keeps downloading the
+    /// pack while the app is suspended or closed; this is how the app finds it again when it relaunches.
+    private static let pendingKey = "betterModel.pendingDownload"
+
+    /// Whether the download in progress carries on if the person leaves the app. Apple-hosted packs do; the
+    /// Hugging Face download in Xcode builds stops, so the screen stays on for it instead.
+    private(set) var downloadContinuesInBackground = true
+
+    /// - Parameter resuming: joining a download started before the app was last stopped. Its partial files already
+    ///   take up space, so the free-space check would count them twice.
+    func download(resuming: Bool = false) {
+        guard downloadTask == nil else { return }
+        guard Self.isSupported, !isDownloaded else {
+            // Finished while the app was away: turn it on, as a download that finished in the app would.
+            if resuming && isDownloaded { useForAnswers = true }
+            UserDefaults.standard.removeObject(forKey: Self.pendingKey)
+            return
+        }
         state = .downloading(0)
+        downloadContinuesInBackground = true
+        UserDefaults.standard.set(true, forKey: Self.pendingKey)
         let started = ContinuousClock.now
         downloadTask = Task {
-            defer { downloadTask = nil; progress = nil }
+            defer {
+                downloadTask = nil
+                progress = nil
+                UserDefaults.standard.removeObject(forKey: Self.pendingKey)
+            }
             do {
-                try await downloadPack()
+                try await downloadPack(checkSpace: !resuming)
                 useForAnswers = true
                 state = .onDisk
             } catch where Task.isCancelled || (error as? CocoaError)?.code == .userCancelled {
@@ -186,13 +211,13 @@ final class BetterModel {
         downloadTask?.cancel()
     }
 
-    private func downloadPack() async throws {
+    private func downloadPack(checkSpace: Bool) async throws {
         let pack = try await Self.manager.assetPack(withID: Self.assetPackID)
         downloadBytes = Int64(pack.downloadSize)
         let free = (try? URL.applicationSupportDirectory.resourceValues(
             forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage) ?? 0
         let needed = downloadBytes + Self.unpackedBytes + 500_000_000
-        if free > 0 && free < needed {
+        if checkSpace && free > 0 && free < needed {
             throw LibraryStore.StoreError.noSpace(needed: needed, free: free)
         }
         let watcher = Task { [weak self] in
@@ -233,10 +258,17 @@ final class BetterModel {
         #if !DEBUG
         guard folder != nil else { return }
         #endif
-        state = folder != nil || Self.hubDownloaded ? .loading : .downloading(0)
+        let fromHub = folder == nil && !Self.hubDownloaded
+        state = fromHub ? .downloading(0) : .loading
+        if fromHub {
+            // A plain download in the app: iOS stops it when the app is suspended, so keep the screen on.
+            downloadContinuesInBackground = false
+            ScreenAwake.hold("hubDownload")
+        }
         loadID += 1
         let id = loadID
         loadTask = Task { [cancelledLoad] in
+            defer { if fromHub { ScreenAwake.release("hubDownload") } }
             await cancelledLoad?.value
             await unloadTask?.value  // an unload still in progress finishes first, or it would undo this load
             let result: State

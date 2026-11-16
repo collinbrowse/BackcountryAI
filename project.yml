@@ -21,9 +21,10 @@ targets:
   BackcountryAI:
     type: application
     platform: iOS
-    sources: [Sources]
+    sources: [Sources, Shared]
     dependencies:
       - target: BackcountryAIDownloader
+      - target: BackcountryAIWidgets
       - package: MLXSwiftLM
         # Not MLXHuggingFace: its macros need approval; MLXEngine.swift has the adapters.
         # MLXEmbedders and MLXRerankers: meaning-based search and the reranker (SearchModels.swift).
@@ -55,6 +56,7 @@ targets:
         BAAppGroupID: $(APP_GROUP_ID)
         BAHasManagedAssetPacks: true
         BAUsesAppleHosting: true
+        NSSupportsLiveActivities: true   # download progress on the Lock Screen (DownloadActivity.swift)
         UIFileSharingEnabled: true   # shows the app in Finder › iPhone › Files, so a library can be copied in
         # "Open in BackcountryAI" from Files and other apps adds the file to the person's documents (MyDocuments).
         CFBundleDocumentTypes:
@@ -189,6 +191,29 @@ targets:
         Debug:
           PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryai.dev.downloader
           APP_GROUP_ID: group.com.collinbrowse.backcountryai.dev
+  # The downloads' Live Activity on the Lock Screen and in the Dynamic Island (Widgets/DownloadLiveActivity.swift).
+  BackcountryAIWidgets:
+    type: app-extension
+    platform: iOS
+    sources: [Widgets, Shared]
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: BackcountryAI
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryai.widgets
+        DEVELOPMENT_TEAM: 84XX2W7G34
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+      configs:
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: com.collinbrowse.backcountryai.dev.widgets
 schemes:
   BackcountryAIScreenshots:
     build:
