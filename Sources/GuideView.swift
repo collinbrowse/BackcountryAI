@@ -92,7 +92,7 @@ struct GuideView: View {
             }
             .buttonStyle(.plain)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-                ForEach(FieldCard.all.prefix(6)) { c in
+                ForEach(FieldCard.firstAid.prefix(6)) { c in
                     NavigationLink(value: c) { MiniTile(title: c.title, symbol: c.icon) }
                         .buttonStyle(SquishyButtonStyle(scale: 0.94))
                 }

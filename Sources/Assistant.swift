@@ -114,26 +114,21 @@ final class Assistant {
             var kind = Retrieval.Kind.guess(q)
             if let library {
                 if problem == nil {
-                    guard let plan = await Retrieval.plan(for: q, history: history, model: model) else {
-                        messages[index].urgent = false
-                        return await chat(q, at: index, previous: previous, previousAnswer: previousAnswer)
-                    }
-                    kind = plan.kind
-                    log.notice("kind \(plan.kind.rawValue) searches: \(plan.searches.joined(separator: " | "))")
-                    // Meaning-based search, when the library has its vectors (see SearchModels). A follow-up is
-                    // searched with the question before it, so "should I go uphill?" still knows they're lost.
                     // Leave room for the answer model if it still has to load after the search models.
                     let answers = BetterModel.shared
                     SearchModels.shared.reserveBytes = answers.isActive && !answers.isReady
                         ? ModelCatalog.qwen35_4B.budget.neededBytes : 300_000_000
-                    let context = ([history.last?.question].compactMap { $0 } + [q]).joined(separator: " ")
-                    let dense = await SearchModels.shared.denseSearch(context, library: library)
-                    let candidates = await Task.detached(priority: .userInitiated) {
-                        Retrieval.candidates(question: q, searches: plan.searches, dense: dense, library: library)
-                    }.value
-                    messages[index].status = "Reading what it found…"
-                    sources = await Retrieval.pick(question: q, history: history, from: candidates, model: model,
-                                                   scorer: SearchModels.shared.scorer)
+                    let found = await Retrieval.find(question: q, history: history, library: library, model: model) {
+                        self.messages[index].status = "Reading what it found…"
+                    }
+                    if found.isChat {
+                        messages[index].urgent = false
+                        return await chat(q, at: index, previous: previous, previousAnswer: previousAnswer)
+                    }
+                    kind = found.kind
+                    sources = found.sources
+                    let note = found.reusedLastSources ? " (about the last answer: its excerpts again)" : ""
+                    log.notice("kind \(found.kind.rawValue) searches: \(found.searches.joined(separator: " | "))\(note)")
                 } else {
                     sources = await Task.detached(priority: .userInitiated) {
                         var hits = library.search(q, limit: 5)
@@ -147,6 +142,17 @@ final class Assistant {
             messages[index].kind = kind
             messages[index].sources = sources
             log.notice("using \(sources.count) passages")
+
+            // A dose, an identification or anything else medical that the library doesn't cover is not answered
+            // from the model's memory: Scout says it has no reliable source, in fixed words (Stakes).
+            if problem == nil, library != nil,
+               let reply = Retrieval.declines(question: q, history: history, sources: sources) {
+                log.notice("declined: \(Stakes.of(q, earlier: Retrieval.earlier(in: history)).rawValue), \(sources.count) excerpts not enough")
+                // The articles search found stay under the reply, for the person to read for themselves.
+                messages[index].status = nil
+                messages[index].text = reply
+                return
+            }
 
             // 2. Ask the on-device model.
             if let problem {
@@ -171,8 +177,12 @@ final class Assistant {
                 let engine: any LLMEngine = useBetter ? better.engine : apple
                 messages[index].status = "Writing an answer on this phone…"
                 // Drop the weakest excerpts until the prompt fits this model, by its own token count.
+                // Whether the answer says to call for help is decided here, not by the model (see Urgency).
+                let emergency = Urgency.needsHelpNow(q), followUp = Retrieval.carriesOn(q, history: history)
+                let stakes = Stakes.of(q, earlier: Retrieval.earlier(in: history))
                 let fitted = await PromptFit.fit(sources, engine: engine, config: config) { [kind] kept in
-                    [.system(Retrieval.instructions),
+                    [.system(Retrieval.instructions(for: engine.stepHabit, emergency: emergency, followUp: followUp,
+                                                     stakes: stakes)),
                      .user(Retrieval.prompt(question: q, sources: kept, history: history, kind: kind))]
                 }
                 sources = fitted.sources
@@ -198,7 +208,11 @@ final class Assistant {
                     LLMLog.note("better answers gave up (\(error.localizedDescription)); Apple's model answers")
                     messages[index].text = ""
                     messages[index].status = "Writing an answer on this phone…"
-                    try await apple.answer(request, config: config, onText: show)
+                    // The same question and excerpts, with the instructions written for Apple's model.
+                    let retry = [LLMMessage.system(Retrieval.instructions(for: apple.stepHabit, emergency: emergency,
+                                                                          followUp: followUp, stakes: stakes))]
+                        + request.filter { $0.role != .system }
+                    try await apple.answer(retry, config: config, onText: show)
                 }
                 if !messages[index].text.isEmpty { Readiness.recordAnswer() }
             } catch is CancellationError {
@@ -215,7 +229,7 @@ final class Assistant {
     static func history(from messages: [ChatMessage], limit: Int = 3) -> [Retrieval.Turn] {
         messages.filter { $0.role == .assistant && !$0.failed && !$0.isCasual && !$0.question.isEmpty && !$0.text.isEmpty }
             .suffix(limit)
-            .map { Retrieval.Turn(question: $0.question, answer: $0.text) }
+            .map { Retrieval.Turn(question: $0.question, answer: $0.text, sources: $0.sources, kind: $0.kind) }
     }
 
     /// A short chat reply to small talk, from Apple's model (or a fixed line without it). No library, no steps.

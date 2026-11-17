@@ -35,3 +35,16 @@ dog-quills	pets	My dog just got a face full of porcupine quills on a hike.	porcu
 dog-quills	pets	I don't have pliers or a multitool with me. We're 3 miles from the car.	porcupine|quill|dog
 fire-wet	survival	Everything's wet. How do I get a fire going?	fire|tinder|wet
 fire-wet	survival	I've got a lighter but no fire starters or cotton balls.	fire|tinder|feather|kindling|birch
+chip-burn	medical	I burned my forearm on the camp stove. It's red and it really hurts.	burn
+chip-burn	medical	Explain step 1 more	burn
+chip-burn	medical	What should I watch out for?	burn|infect|blister
+chip-stove	gear	My canister stove sputters and the flame is weak, even with a new canister.	stove|canister|burner|jet
+chip-stove	gear	What if that doesn't work?	stove|canister|burner|jet
+chip-trail	survival	I took a wrong turn and can't find the trail. It's mid-afternoon and I have a daypack.	lost|navigat|trail
+chip-trail	survival	What gear helps?	lost|navigat|signal|whistle|kit|gear
+chip-trail	survival	Tell me more	lost|navigat|trail
+chip-knee	medical	My friend twisted her knee and can't put weight on it. We're 4 miles from the trailhead.	knee|sprain|splint|injur
+chip-knee	medical	Should we evacuate?	evacuat|knee|sprain|injur|rescue
+chip-knee	medical	What do I tell 911?	911|emergency|rescue|sos
+chip-heat	medical	My hiking partner is dizzy and nauseous in the heat and has stopped sweating.	heat
+chip-heat	medical	What if it gets worse?	heat

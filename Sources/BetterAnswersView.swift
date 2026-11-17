@@ -402,15 +402,8 @@ final class LabBenchmark {
                 if Task.isCancelled { return }
                 status = "Searching the library \(i + 1)/\(Self.questions.count)"
                 progress = Double(i) / Double(Self.questions.count * 3)
-                let plan = await Retrieval.plan(for: q, history: [], model: apple)
-                    ?? Retrieval.Plan(kind: .howTo, searches: [])
-                let dense = await SearchModels.shared.denseSearch(q, library: library)
-                let candidates = await Task.detached {
-                    Retrieval.candidates(question: q, searches: plan.searches, dense: dense, library: library)
-                }.value
-                let picked = await Retrieval.pick(question: q, from: candidates, model: apple,
-                                                  scorer: SearchModels.shared.scorer)
-                prompts.append((q, Retrieval.prompt(question: q, sources: picked, history: [], kind: plan.kind)))
+                let found = await Retrieval.find(question: q, history: [], library: library, model: apple)
+                prompts.append((q, Retrieval.prompt(question: q, sources: found.sources, history: [], kind: found.kind)))
             }
             // 2. Apple's model, then Qwen, each over all questions, with battery read before and after each pass.
             var engines = ["Apple"]
@@ -454,7 +447,8 @@ final class LabBenchmark {
                        answerTokens: 0, tokensPerSecond: 0, peakFootprintGB: 0, minAvailableGB: 0, thermal: "")
         do {
             let model: any LLMEngine = engine == "Apple" ? FoundationEngine(model: apple) : BetterModel.shared.engine
-            let stats = try await model.answer([.system(Retrieval.instructions), .user(prompt)],
+            let instructions = Retrieval.instructions(for: model.stepHabit, emergency: Urgency.needsHelpNow(question))
+            let stats = try await model.answer([.system(instructions), .user(prompt)],
                                                config: .answers) { text = $0 }
             first = stats.secondsToFirstToken
             r.promptTokens = stats.promptTokens

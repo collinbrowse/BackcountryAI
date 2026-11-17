@@ -69,11 +69,22 @@ enum LLMError: LocalizedError, Equatable {
     }
 }
 
+/// How a model writes a list of steps when left to itself. Its instructions lean the other way (see
+/// `Retrieval.instructions(for:)`): one wording for every model made Apple's stop at step two.
+enum StepHabit: String, Sendable {
+    /// Stops after a step or two unless it is told to give the whole procedure (Apple's model).
+    case stopsEarly
+    /// Gives the procedure, and then keeps going with notes and disclaimers unless told where to stop (Qwen).
+    case runsLong
+}
+
 /// A language model that runs on the phone. The app talks to models only through this, so the engine
 /// underneath (MLX today) can be swapped.
 protocol LLMEngine: Sendable {
     /// A short name for logs and benchmark results.
     var name: String { get }
+    /// How this model writes steps, which decides how its instructions ask for them.
+    var stepHabit: StepHabit { get }
     var isLoaded: Bool { get async }
     /// The most tokens the engine can hold for one answer under `config`.
     func contextTokens(for config: GenerationConfig) async -> Int
@@ -90,6 +101,8 @@ protocol LLMEngine: Sendable {
 }
 
 extension LLMEngine {
+    var stepHabit: StepHabit { .runsLong }
+
     /// Runs one answer to the end, calling `onText` with the whole answer so far.
     @discardableResult
     func answer(_ messages: [LLMMessage], config: GenerationConfig,

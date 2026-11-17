@@ -22,7 +22,7 @@ struct FieldView: View {
                         Text("No AI · almost no battery").font(.caption).foregroundStyle(Theme.inkSoft)
                     }
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                        ForEach(Array(FieldCard.all.enumerated()), id: \.element.id) { i, card in
+                        ForEach(Array(FieldCard.firstAid.enumerated()), id: \.element.id) { i, card in
                             NavigationLink(value: card) { CardTile(card: card) }
                                 .buttonStyle(SquishyButtonStyle())
                                 .riseIn(i)

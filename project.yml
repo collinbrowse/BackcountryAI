@@ -135,6 +135,11 @@ targets:
       - tools/scout-tools
       - Sources/Library.swift
       - Sources/Retrieval.swift
+      - Sources/Urgency.swift
+      - Sources/Stakes.swift
+      # The field cards' words and how a question is matched to one (their views stay in the app).
+      - Sources/FieldCardData.swift
+      - Sources/CardMatcher.swift
       - Sources/SearchModels.swift
       # The app's engines, so answers here are written exactly as on the phone.
       - Sources/LLMEngine.swift

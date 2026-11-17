@@ -5,6 +5,7 @@ import FoundationModels
 /// and unloading do nothing here.
 actor FoundationEngine: LLMEngine {
     nonisolated let name = "Apple"
+    nonisolated let stepHabit = StepHabit.stopsEarly
     nonisolated let model: SystemLanguageModel
     private var generation: Task<Void, Never>?
 

@@ -29,7 +29,10 @@ case "$cmd" in
     # One run covers both lists. Without --answers the single questions get no answer; conversation turns are
     # always answered by Apple's model, so later turns carry a realistic history.
     QUESTIONS="$OUT/questions.tsv" "$ROOT/scripts/check-answers.sh" "$1" \
-      --conversations "$OUT/conversations.tsv" --json "$OUT/prompts.json" ;;
+      --conversations "$OUT/conversations.tsv" --json "$OUT/prompts.json"
+    # That run wrote Apple's instructions, which ask for the steps another way (StepHabit). The model being
+    # trained must see its own, or it learns to answer instructions the app never gives it.
+    "$("$ROOT/scripts/build-scout-tools.sh")" instructions "$OUT/prompts.json" --json "$OUT/prompts.json" ;;
 
   answers)
     "$PY" -I "$TOOLS/write_answers.py" "$OUT/prompts.json" --out-dir "$OUT/data" "$@" ;;
@@ -45,9 +48,10 @@ case "$cmd" in
     step "Answering them with the fine-tuned model"
     "$PY" -I "$TOOLS/answer_mlx.py" "$OUT/answers" "$OUT/data/test-records.json" "$OUT/eval/tuned.json"
     step "Grading"
+    # Into its own folder: the grader names its files after the labels, and would write over the answers.
     "$PY" -I "$ROOT/tools/grade-answers/grade.py" "$OUT/eval/base.json" "$OUT/eval/tuned.json" \
-      --label base --label tuned --out "$OUT/eval" "$@"
-    echo "Read $OUT/eval/summary.md" ;;
+      --label base --label tuned --out "$OUT/eval/grades" "$@"
+    echo "Read $OUT/eval/grades/summary.md" ;;
 
   dry-run)
     D="$ROOT/build/train-answers-dry-run"
