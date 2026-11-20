@@ -2,14 +2,22 @@ import SwiftUI
 
 /// How the quick reference cards look. Their words are in FieldCardData.swift.
 extension FieldCard {
-    /// The quick card that goes with a Guide topic, if there is one.
-    static func forTopic(_ id: String) -> FieldCard? {
-        let map = ["bleed": "bleeding", "shock": "shock", "fracture": "fracture", "head": "head", "burns": "burns",
-                   "allergy": "anaphylaxis", "cpr": "cpr", "hypo": "hypothermia", "frost": "frostbite", "heat": "heat",
-                   "altitude": "altitude", "lightning": "lightning", "bites": nil, "assess": nil]
-        guard let key = map[id] ?? nil else { return nil }
-        return all.first { $0.id == key }
+    /// The quick cards that go with a Guide topic, the main one first. None for a topic without one.
+    static func forTopic(_ id: String) -> [FieldCard] {
+        (topicCards[id] ?? []).compactMap { card(id: $0) }
     }
+
+    private static let topicCards: [String: [String]] = [
+        "cpr": ["cpr"], "choking": ["choking"], "bleed": ["bleeding"], "shock": ["shock"], "wounds": ["wounds"],
+        "burns": ["burns"], "sprain": ["sprain"], "fracture": ["fracture"], "spine": ["spine"], "head": ["head"],
+        "chest": ["chest"], "stroke": ["stroke"], "seizure": ["seizure"], "sugar": ["lowbloodsugar"],
+        "asthma": ["asthma"], "allergy": ["anaphylaxis"], "stomach": ["diarrhea"],
+        "dehydration": ["dehydration"], "heat": ["heat"], "hypo": ["hypothermia"], "frost": ["frostbite"],
+        "altitude": ["altitude"], "bites": ["snakebite", "tick", "animalbite"], "coldwater": ["coldwater"],
+        "lightning": ["lightning", "thunderstorm"],
+        "eye": ["eye"], "tooth": ["tooth"], "blister": ["blister"],
+        "snake": ["snakebite"], "tick": ["tick"],
+    ]
 
     var icon: String { Self.looks[id]?.0 ?? areaLook.0 }
     var tint: Color { Self.looks[id]?.1 ?? areaLook.1 }

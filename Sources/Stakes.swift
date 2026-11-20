@@ -38,11 +38,15 @@ enum Stakes: String, Sendable {
     /// telling the two apart takes reading. Left to answer 16 dose questions from library excerpts, Apple's
     /// model stated a dose in 15 and 6 of those were in no excerpt; of 10 identifications it made 5, none
     /// supported. Anything else medical needs some excerpt; everything else needs none.
-    func isCovered(by sources: [Passage]) -> Bool {
+    /// - Parameter keepsWarnings: whether the model that will answer carries a card's warnings into what it
+    ///   writes (`LLMEngine.keepsWarnings`). With one that doesn't, a card is not enough for a dose: the reply
+    ///   is the fixed one, with the card under it to read.
+    func isCovered(by sources: [Passage], keepsWarnings: Bool = true) -> Bool {
         switch self {
         case .ordinary: true
         case .medical: !sources.isEmpty
-        case .dose, .identify: sources.contains { $0.isCard || $0.isMine }
+        case .dose: sources.contains { $0.isMine || $0.isCard && keepsWarnings }
+        case .identify: sources.contains { $0.isCard || $0.isMine }
         }
     }
 
@@ -106,7 +110,7 @@ enum Stakes: String, Sendable {
 
     private static func normal(_ text: String) -> String { text.lowercased().replacing(/[’‘]/, with: "'") }
 
-    nonisolated(unsafe) private static let medicine = /\b(ibuprofen|advil|motrin|acetaminophen|paracetamol|tylenol|aspirin|naproxen|aleve|benadryl|diphenhydramine|loperamide|imodium|pepto\w*|bismuth|antihistamines?|cetirizine|zyrtec|loratadine|claritin|epi-?pens?|epinephrine|adrenaline|auto-?injectors?|insulin|glucagon|antibiotics?|amoxicillin|doxycycline|cipro\w*|azithromycin|penicillin|diamox|acetazolamide|dexamethasone|nifedipine|oxycodone|hydrocodone|codeine|tramadol|morphine|opioids?|painkillers?|pain ?relievers?|pain (pills?|meds?|medicine)|sleeping pills?|melatonin|antacids?|laxatives?|steroids?|prednisone|albuterol|nitroglycerin|blood thinners?|warfarin|lisinopril|antidepressants?|medicines?|medications?|meds|pills?|prescriptions?|oral rehydration (salts?|solution)|potassium iodide)\b/
+    nonisolated(unsafe) private static let medicine = /\b(ibuprofen|advil|motrin|acetaminophen|paracetamol|tylenol|aspirin|naproxen|aleve|benadryl|diphenhydramine|loperamide|imodium|pepto\w*|bismuth|antihistamines?|cetirizine|zyrtec|loratadine|claritin|epi-?pens?|epinephrine|adrenaline|auto-?injectors?|insulin|glucagon|antibiotics?|amoxicillin|doxycycline|cipro\w*|azithromycin|penicillin|diamox|acetazolamide|dexamethasone|nifedipine|oxycodone|hydrocodone|codeine|tramadol|morphine|opioids?|painkillers?|pain ?relievers?|pain (pills?|meds?|medicine)|sleeping pills?|melatonin|antacids?|laxatives?|steroids?|prednisone|albuterol|inhalers?|nitroglycerin|blood thinners?|warfarin|lisinopril|antidepressants?|medicines?|medications?|meds|pills?|prescriptions?|oral rehydration (salts?|solution)|potassium iodide)\b/
     nonisolated(unsafe) private static let taking = /\b(take|takes|taking|took|taken|give|giving|gave|swallow\w*|inject\w*|stop|stopping|stopped|skip\w*|ran out|expired|work|mix\w*|combin\w*)\b/
     nonisolated(unsafe) private static let amount = /\b(dose|doses|dosage|dosing|how (much|many|often|long between)|the most|maximum|max|too much|overdos\w*|mg|milligrams?|ml|per (liter|litre|quart|gallon))\b/
     nonisolated(unsafe) private static let wildThing = /\b(berr(y|ies)|mushrooms?|toadstools?|fung(us|i)|plants?|shrubs?|vines?|weeds?|leaves|roots?|bulbs?|nuts?|seeds?|flowers?|bark|moss|lichen|seaweed|shellfish|mussels|clams|snakes?|spiders?|scorpions?|caterpillars?)\b/
@@ -134,9 +138,24 @@ enum Stakes: String, Sendable {
 extension Retrieval {
     /// Scout's reply in place of an answer, when the question is one it mustn't answer from memory and the library
     /// doesn't cover it; nil when it should answer as usual (`Stakes`).
-    static func declines(question: String, history: [Turn], sources: [Passage]) -> String? {
+    /// - Parameter keepsWarnings: `LLMEngine.keepsWarnings` of the model that would write the answer. With one
+    ///   that drops warnings, a question about a medicine that a field card covers gets the card's own words
+    ///   (`quoting`) and not an answer written from it.
+    static func declines(question: String, history: [Turn], sources: [Passage], keepsWarnings: Bool = true) -> String? {
         let stakes = Stakes.of(question, earlier: earlier(in: history))
-        guard !stakes.isCovered(by: sources) else { return nil }
-        return stakes.declining(emergency: Urgency.needsHelpNow(question), hasArticles: !sources.isEmpty)
+        guard !stakes.isCovered(by: sources, keepsWarnings: keepsWarnings) else { return nil }
+        let emergency = Urgency.needsHelpNow(question)
+        if stakes == .dose, let card = sources.lazy.compactMap({ FieldCard.card(passageID: $0.id) }).first {
+            return quoting(card, emergency: emergency)
+        }
+        return stakes.declining(emergency: emergency, hasArticles: !sources.isEmpty)
+    }
+
+    /// A field card's steps and warnings word for word, in place of an answer written from them.
+    static func quoting(_ card: FieldCard, emergency: Bool) -> String {
+        let help = emergency ? "If this is an emergency, call or text 911 or use SOS on a satellite messenger now.\n" : ""
+        let steps = card.treat.enumerated().map { "\($0.offset + 1). \($0.element)" }
+        return help + "This is the \(card.title) field card, word for word. About a medicine I won't add to it.\n"
+            + (steps + card.avoid).joined(separator: "\n") + "\nThe whole card is below."
     }
 }

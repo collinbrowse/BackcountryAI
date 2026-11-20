@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Field mode: a WFR-style patient assessment, vitals log, SOAP note and quick cards.
+/// Field mode: a Wilderness First Responder patient assessment, vitals log, SOAP note and quick cards.
 /// Everything here works without the AI, so it costs almost no battery. Lives in the Guide tab.
 struct FieldView: View {
     @Environment(FieldStore.self) private var field
@@ -163,7 +163,7 @@ private struct StepRow: View {
     }
 }
 
-private struct CardTile: View {
+struct CardTile: View {
     let card: FieldCard
     var body: some View {
         HStack(spacing: 10) {
@@ -181,37 +181,42 @@ private struct CardTile: View {
 
 // MARK: - Assessment steps
 
+/// The assessment in the order it is done: scene size-up, primary assessment, the three parts of the secondary
+/// assessment (vital signs, history, physical exam), the written assessment and plan, then reassessment.
 enum AssessmentStep: String, CaseIterable, Identifiable {
-    case scene, primary, history, exam, vitals, plan
+    case scene, primary, vitals, history, exam, plan, reassess
     var id: String { rawValue }
     var title: String {
         switch self {
         case .scene: "1. Scene size-up"
-        case .primary: "2. Primary survey (ABCs)"
-        case .history: "3. Patient and history"
-        case .exam: "4. Head-to-toe exam"
-        case .vitals: "5. Vital signs"
+        case .primary: "2. Primary assessment"
+        case .vitals: "3. Vital signs"
+        case .history: "4. History"
+        case .exam: "5. Physical exam"
         case .plan: "6. Assessment and plan"
+        case .reassess: "7. Reassess"
         }
     }
     func isDone(_ p: Patient) -> Bool {
         switch self {
         case .scene: p.sceneSafe != .unknown || !p.mechanism.isEmpty
         case .primary: p.airway != .unknown && p.breathing != .unknown && p.circulation != .unknown
+        case .vitals: !p.vitals.isEmpty
         case .history: !p.chiefComplaint.isEmpty
         case .exam: !p.examFindings.isEmpty
-        case .vitals: !p.vitals.isEmpty
         case .plan: !p.problems.isEmpty && p.evac != .undecided
+        case .reassess: p.vitals.count >= 2 || !p.changes.isEmpty
         }
     }
     var icon: String {
         switch self {
         case .scene: "exclamationmark.shield"
         case .primary: "lungs"
+        case .vitals: "waveform.path.ecg"
         case .history: "person.text.rectangle"
         case .exam: "figure.stand"
-        case .vitals: "waveform.path.ecg"
         case .plan: "list.clipboard"
+        case .reassess: "arrow.triangle.2.circlepath"
         }
     }
 }
@@ -233,74 +238,102 @@ struct AssessmentStepView: View {
             switch step {
             case .scene:
                 Section {
-                    Picker("Scene safe for you?", selection: p.sceneSafe) {
+                    Picker("Safe for you and your group?", selection: p.sceneSafe) {
                         ForEach(Check.allCases) { Text($0 == .ok ? "Yes" : $0 == .problem ? "No" : "Not checked").tag($0) }
                     }
                     if p.wrappedValue.sceneSafe == .problem {
                         Text("Don't become a second patient. Make it safe or move away before you treat.")
                             .font(.callout).foregroundStyle(Theme.danger)
                     }
-                    TextField("What happened? (fall 5 m, rockfall, lost 2 days…)", text: p.mechanism, axis: .vertical)
+                    TextField("What happened? An injury: how (fell 5 m, rockfall). An illness: how it came on.",
+                              text: p.mechanism, axis: .vertical)
                     TextField("Number of patients", text: p.patientCount).keyboardType(.numberPad)
-                    TextField("Hazards, weather, resources, location", text: p.sceneNotes, axis: .vertical)
+                    TextField("Hazards, location, and the help and gear you need", text: p.sceneNotes, axis: .vertical)
                 } footer: {
-                    Text("Wear gloves if you have them. Think about weather and nightfall early.")
+                    Text("Protect yourself before you touch them: gloves (plastic bags work), a mask if they are "
+                         + "coughing, glasses against splashes. Clean your hands afterwards.")
                 }
             case .primary:
-                Section("Responsiveness") {
-                    Picker("Level", selection: p.avpu) {
-                        ForEach(AVPU.allCases) { Text("\($0.rawValue) · \($0.label)").tag($0) }
-                    }
-                }
                 Section {
                     checkRow("A · Airway open and clear", p.airway)
                     checkRow("B · Breathing adequate", p.breathing)
-                    checkRow("C · Pulse present, no severe bleeding", p.circulation)
+                    checkRow("C · Pulse present, bleeding controlled", p.circulation)
                     Toggle("Severe bleeding", isOn: p.severeBleeding)
-                    Toggle("D · Possible spine injury (mechanism)", isOn: p.spineConcern)
+                    Toggle("D · Possible spine injury", isOn: p.spineConcern)
+                    Picker("D · Responsiveness", selection: p.avpu) {
+                        ForEach(AVPU.allCases) { Text("\($0.rawValue) · \($0.label)").tag($0) }
+                    }
+                    Toggle("E · Looked under clothing, then covered", isOn: p.exposed)
+                    Toggle("G · Sugar given", isOn: p.sugarGiven)
                     TextField("Notes", text: p.primaryNotes, axis: .vertical)
                 } header: {
-                    Text("ABCs: fix problems as you find them")
+                    Text("Find life threats. Stop and fix each one.")
                 } footer: {
-                    Text("Problems here are life threats. Treat them before moving on (see the CPR, bleeding and "
-                         + "spine cards). E: protect them from the environment early.")
-                }
-            case .history:
-                Section("Patient") {
-                    TextField("Age", text: p.age).keyboardType(.numberPad)
-                    TextField("Sex", text: p.sex)
-                    TextField("Chief complaint (what's wrong, in their words)", text: p.chiefComplaint, axis: .vertical)
+                    Text("A: tilt the head and lift the chin; if the spine may be hurt, push the jaw forward instead. "
+                         + "C: feel for a pulse at the neck and the wrist, stop bleeding, treat for shock. "
+                         + "E: remove or cut clothing to find injuries, then insulate them from the ground and the weather. "
+                         + "G: unresponsive and you don't know why: sugar between cheek and gum, with them lying on their side. "
+                         + "The CPR, Severe bleeding, Shock and Spine injury cards have the steps.")
                 }
                 Section {
-                    TextField("S · Symptoms (for pain: onset, triggers, quality, spread, severity 0–10, time)",
-                              text: p.symptoms, axis: .vertical)
-                    TextField("A · Allergies", text: p.allergies)
-                    TextField("M · Medications", text: p.medications)
-                    TextField("P · Pertinent medical history", text: p.history, axis: .vertical)
-                    TextField("L · Last food, water, urine, bowel movement", text: p.lastInOut, axis: .vertical)
-                    TextField("E · Events leading up to this", text: p.events, axis: .vertical)
+                    Picker("Injury or illness", selection: p.kind) {
+                        ForEach(ProblemKind.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    Picker("Stable or critical", selection: p.condition) {
+                        ForEach(Condition.allCases) { Text($0.rawValue).tag($0) }
+                    }
                 } header: {
-                    Text("SAMPLE history")
-                }
-            case .exam:
-                Section {
-                    TextField("Findings: look, ask and feel head to toe. Note pain, tenderness, deformity, swelling, bleeding, and circulation, sensation and movement in the hands and feet.",
-                              text: p.examFindings, axis: .vertical)
-                        .lineLimit(6...20)
-                } header: {
-                    Text("Head-to-toe exam")
+                    Text("Transport decision")
                 } footer: {
-                    Text("Order: head, neck, chest, abdomen, pelvis, legs, arms, back. Compare left with right. Keep them covered and warm.")
+                    Text("Critical is a life threat you couldn't fix. Decide now whether to send for help: the rest of "
+                         + "the assessment can go on while it comes.")
                 }
             case .vitals:
                 VitalsSection(patient: p)
+            case .history:
+                Section("Patient") {
+                    TextField("Name", text: p.name)
+                    TextField("Age", text: p.age).keyboardType(.numberPad)
+                    TextField("Sex", text: p.sex)
+                    TextField("Pronouns", text: p.pronouns)
+                    TextField("Chief complaint (what's wrong, in their words)", text: p.chiefComplaint, axis: .vertical)
+                }
+                Section {
+                    TextField("S · Signs and symptoms", text: p.symptoms, axis: .vertical)
+                    TextField("A · Allergies", text: p.allergies)
+                    TextField("M · Medications", text: p.medications)
+                    TextField("P · Pre-existing conditions", text: p.history, axis: .vertical)
+                    TextField("L · Last ins and outs: food, water, urine, stool", text: p.lastInOut, axis: .vertical)
+                    TextField("E · Events prior", text: p.events, axis: .vertical)
+                } header: {
+                    Text("SAMPLE history")
+                } footer: {
+                    Text("Pain you can't make sense of: ask OPQRST. Onset, what provokes it, its quality, whether it "
+                         + "radiates, severity from 0 to 10, and time, with any treatment tried. "
+                         + "Not acting normally and you don't know why: run through 1ST STEP. Sugar, temperature, "
+                         + "salt, toxins, electricity or elevation, pressure in the skull.")
+                }
+            case .exam:
+                Section {
+                    TextField("Findings: pain, tenderness, deformity, swelling, bleeding, and the pulse, feeling and movement in each hand and foot.",
+                              text: p.examFindings, axis: .vertical)
+                        .lineLimit(6...20)
+                } header: {
+                    Text("Physical exam")
+                } footer: {
+                    Text("Head to toe when they fell far, were hit hard or are seriously ill: skull and neck bones, "
+                         + "eyes, ears and mouth, neck, chest, each quarter of the abdomen, back, pelvis (one gentle "
+                         + "inward squeeze, once), legs and feet, arms and hands. Otherwise examine the chief "
+                         + "complaint closely. Keep them covered and warm.")
+                }
             case .plan:
                 Section {
                     TextField("Problem list (e.g. 1. Possible fractured left ankle, 2. Mild hypothermia)",
                               text: p.problems, axis: .vertical).lineLimit(3...10)
+                    TextField("Anticipated worst case: what this could become", text: p.worstCase, axis: .vertical)
                 } header: { Text("Assessment") }
                 Section {
-                    TextField("Plan for each problem (splint, rewarm, monitor every 15 min…)",
+                    TextField("Plan for each problem (splint, rewarm, new vitals on a schedule…)",
                               text: p.plan, axis: .vertical).lineLimit(3...10)
                     Picker("Evacuation", selection: p.evac) {
                         ForEach(EvacUrgency.allCases) { Text($0.rawValue).tag($0) }
@@ -313,6 +346,19 @@ struct AssessmentStepView: View {
                             Label($0, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.danger)
                         }
                     }
+                }
+            case .reassess:
+                Section {
+                    Text("Chief complaint: has it changed, and how?")
+                    Text("Primary assessment again: anything new?")
+                    NavigationLink("Take a new set of vital signs") { AssessmentStepView(step: .vitals) }
+                    Text("Treatments: are the splints, bandages and medicines still working?")
+                    TextField("What has changed", text: p.changes, axis: .vertical).lineLimit(3...10)
+                } header: {
+                    Text("Reevaluate")
+                } footer: {
+                    Text("Look for the trend in the vital signs and what it means. Write things down as they happen: "
+                         + "a strip of athletic tape works when there is no paper.")
                 }
             }
         }
@@ -344,18 +390,19 @@ struct VitalsSection: View {
 
     var body: some View {
         Section {
+            TextField("Heart rate (beats per minute)", text: $draft.heartRate).keyboardType(.numberPad)
+            TextField("Breathing rate (per minute)", text: $draft.respRate).keyboardType(.numberPad)
+            TextField("Blood pressure, or wrist pulse: strong, weak, none", text: $draft.bloodPressure)
             Picker("Responsiveness", selection: $draft.avpu) {
                 ForEach(AVPU.allCases) { Text("\($0.rawValue) · \($0.label)").tag($0) }
             }
             if draft.avpu == .alert {
                 Stepper("Oriented to \(draft.oriented) of 4", value: $draft.oriented, in: 0...4)
             }
-            TextField("Heart rate (beats per minute)", text: $draft.heartRate).keyboardType(.numberPad)
-            TextField("Breathing rate (per minute)", text: $draft.respRate).keyboardType(.numberPad)
             TextField("Skin: color, temperature, moisture", text: $draft.skin)
-            TextField("Blood pressure or radial pulse", text: $draft.bloodPressure)
-            TextField("Pupils", text: $draft.pupils)
-            TextField("Temperature", text: $draft.temperature)
+            TextField("CSM: pulse, feeling, movement in hands and feet", text: $draft.csm)
+            TextField("Pupils: equal, round, react to light?", text: $draft.pupils)
+            TextField("Temperature, if you can measure it", text: $draft.temperature)
             Button {
                 withAnimation(.bouncy) { draft.time = .now }
                 patient.vitals.append(draft)
@@ -370,8 +417,11 @@ struct VitalsSection: View {
         } header: {
             Text("New set")
         } footer: {
-            Text("Oriented: knows who they are, where, when, and what happened. Count the pulse and breaths for "
-                 + "30 seconds and double. Repeat every 15 minutes if serious; the trend matters most.")
+            Text("Count the pulse and the breaths for 15 seconds and multiply by 4. Normal at rest: pulse 60–100, "
+                 + "breathing 12–20. With no cuff, feel the pulse at the wrist: strong means a pressure near 100, "
+                 + "weak near 80, none below 80. Oriented: knows who they are, where, when, and what happened. "
+                 + "Skin on a dark-skinned person: look at the gums, the tongue and inside the lower eyelid. "
+                 + "CSM: all four hands and feet. Take a new set regularly: the trend matters more than any one set.")
         }
         if !patient.vitals.isEmpty {
             Section("Log (newest first)") {
@@ -392,7 +442,8 @@ struct VitalsSection: View {
 
 // MARK: - SOAP
 
-/// The note writes itself from the assessment. Share it, send the 160-character SOS version, or hand it to Scout.
+/// The note writes itself from the assessment. Share it, send the 160-character SOS version, read out the
+/// rescue call, or hand it to Scout.
 struct SOAPView: View {
     @Environment(FieldStore.self) private var field
     @Environment(Router.self) private var router
@@ -402,6 +453,7 @@ struct SOAPView: View {
         let patient = field.patient ?? Patient()
         let note = SOAP.note(patient)
         let sat = SOAP.satellite(patient)
+        let call = SOAP.rescueCall(patient)
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 10) {
@@ -430,6 +482,26 @@ struct SOAPView: View {
                             .buttonStyle(SecondaryButtonStyle())
                     }
                 }
+                .card()
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Label("Calling for a rescue", systemImage: "phone.arrow.up.right.fill")
+                        .font(.subheadline.weight(.bold)).foregroundStyle(Theme.danger)
+                    Text("By radio or phone, say it in this order.").font(.caption).foregroundStyle(Theme.inkSoft)
+                    ForEach(Array(call.enumerated()), id: \.offset) { i, line in
+                        if i == 4 {
+                            Text("Then the patient report").font(.caption.weight(.bold)).textCase(.uppercase)
+                                .foregroundStyle(Theme.inkSoft).padding(.top, 4)
+                        }
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Text(i < 4 ? "\(i + 1)" : "•").font(.callout.weight(.bold)).foregroundStyle(Theme.danger)
+                                .frame(width: 16)
+                            Text(line).font(.callout).foregroundStyle(Theme.ink)
+                                .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .card()
 
                 VStack(alignment: .leading, spacing: 10) {
@@ -475,27 +547,37 @@ struct EvacGuideView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 tier("Evacuate urgently", "light.beacon.max.fill", Theme.danger, [
-                    "Airway, breathing or circulation problems, or signs of shock",
-                    "Level of responsiveness dropping, or confused",
-                    "Severe bleeding, or a tourniquet in place",
-                    "Possible spine injury with numbness, tingling or weakness",
-                    "Anaphylaxis treated with epinephrine",
-                    "Heat stroke, severe hypothermia, HACE or HAPE",
-                    "Chest pain that could be the heart",
-                    "Open fracture, femur or pelvis fracture, or a limb with poor circulation",
+                    "An airway, breathing or circulation problem you can't fix, or signs of shock",
+                    "Getting less responsive or more confused, or any sign of a stroke",
+                    "Severe bleeding, a tourniquet in place or a packed wound",
+                    "Spine injury with numbness, tingling, weakness or shooting pain",
+                    "Head injury with a worsening headache, repeated vomiting, drowsiness or unequal pupils",
+                    "Chest pain that rest doesn't settle",
+                    "Anaphylaxis, or an asthma attack the inhaler doesn't fix. Anyone given epinephrine",
+                    "Heat stroke, hypothermia beyond shivering, or altitude illness with stumbling, confusion or breathlessness at rest",
+                    "Any snakebite, even before symptoms",
+                    "Open fracture, a broken thigh or pelvis, a dislocation that won't go back, or a limb that is cold, numb or far more painful than it looks",
+                    "Burns of the airway, face, hands, feet or genitals, right around a limb, or over 10% of the body",
+                    "A diabetic who can't swallow, isn't recovering after sugar, or is sick with high blood sugar",
+                    "Bloody diarrhea, or can't keep water down for an hour",
+                    "Breathed in water and now coughing hard, wheezing or drowsy",
                 ])
                 tier("Evacuate, non-urgent", "figure.walk", Theme.sun, [
-                    "Stable fracture or a sprain they can't walk on",
-                    "Wound that needs closing or is dirty and deep",
-                    "Infection that's spreading, or a fever",
-                    "Frostbite beyond frostnip",
-                    "Brief knockout with full recovery",
+                    "Knocked out, even briefly, or any sign of concussion",
+                    "A first seizure, or one unusual for them",
+                    "A stable fracture, or a sprain they can't use or walk on",
+                    "A wound that is deep, gaping, dirty or from a bite, or infected and no better in 12–24 hours",
+                    "Frostbite that blisters after thawing: reach a hospital within 24 hours",
+                    "Something stuck in the eye",
+                    "Knocked-out tooth: a dentist as soon as you can. Exposed nerve or lost filling: within 48 hours",
                     "Anything you can't manage, or that's getting worse",
                 ])
                 tier("Treat in the field", "tent.fill", Theme.moss, [
                     "Minor wounds, blisters, mild sprains they can walk on",
                     "Mild hypothermia that fully rewarms",
                     "Mild altitude sickness that improves with rest (don't go higher)",
+                    "Mild dehydration, or a stomach bug that eases within 48 hours",
+                    "Breathed in a little water with no symptoms: watch them for 6 hours",
                 ])
                 Text("Also weigh: weather, daylight, distance, your group's strength, and whether you can call for "
                      + "help. When unsure, choose the more cautious option early. It's easier to cancel an "

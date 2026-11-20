@@ -110,7 +110,8 @@ enum Check {
             // What the app does with a dose, an identification or a medical question the library doesn't cover:
             // fixed words, no model (Stakes). --no-decline answers anyway, to see what the model would have said.
             let stakes = Stakes.of(q.text, earlier: Retrieval.earlier(in: history))
-            let wouldDecline = noLibrary ? nil : Retrieval.declines(question: q.text, history: history, sources: picked)
+            let wouldDecline = noLibrary ? nil : Retrieval.declines(question: q.text, history: history, sources: picked,
+                                                                    keepsWarnings: engine.keepsWarnings)
             let declined = args.contains("--no-decline") ? nil : wouldDecline
             if stakes != .ordinary { print("    stakes: \(stakes.rawValue)\(wouldDecline == nil ? "" : ", declined") ") }
             // Fitted to the answering model's context with its own tokenizer, as in the app.

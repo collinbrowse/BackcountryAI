@@ -17,6 +17,7 @@ struct StakesTests {
         "Can I take naproxen and ibuprofen together for a bad back?",
         "How much oral rehydration solution should I give a 2-year-old who keeps vomiting?",
         "Is it safe to take ibuprofen that expired two years ago?",
+        "My friend is having an asthma attack and has her inhaler. How many puffs should she take?",
     ])
     func aDose(_ question: String) {
         #expect(Stakes.of(question) == .dose)
@@ -119,6 +120,25 @@ struct StakesTests {
         #expect(!Stakes.identify.isCovered(by: [Self.passage("survival-manuals")]) && Stakes.identify.isCovered(by: [card]))
         #expect(!Stakes.medical.isCovered(by: []) && Stakes.medical.isCovered(by: [forum]))
         #expect(Stakes.ordinary.isCovered(by: []))
+    }
+
+    @Test func aCardIsNotEnoughForADoseWhenTheModelDropsWarnings() throws {
+        let card = [try #require(FieldCard.card(id: "chest")).passage]
+        let question = "He has chest pain and carries nitroglycerin, but he took Viagra last night. Can he take it?"
+        #expect(Stakes.of(question) == .dose)
+        // Qwen keeps the card's "never after Viagra"; Apple's model doesn't (LLMEngine.keepsWarnings).
+        #expect(Retrieval.declines(question: question, history: [], sources: card) == nil)
+        // With Apple's model the reply is the card's own words: the call for help, the steps, the don'ts.
+        let reply = try #require(Retrieval.declines(question: question, history: [], sources: card, keepsWarnings: false))
+        #expect(reply.hasPrefix("If this is an emergency, call or text 911 or use SOS on a satellite messenger now.\n"
+            + "This is the Chest pain field card, word for word."))
+        #expect(reply.contains("\n3. Never give nitroglycerin after Viagra, Levitra or Cialis in the last 2 days"))
+        #expect(reply.hasSuffix("\nDon't let them walk out.\nThe whole card is below."))
+        // Their own document still answers a dose, and a card still answers everything that isn't one.
+        #expect(Stakes.dose.isCovered(by: [Self.passage(Library.minePrefix + "manual")], keepsWarnings: false))
+        #expect(Stakes.identify.isCovered(by: card, keepsWarnings: false))
+        #expect(Retrieval.declines(question: "My dad has crushing chest pain going down his left arm", history: [],
+                                   sources: card, keepsWarnings: false) == nil)
     }
 
     @Test func scoutDeclinesInFixedWords() {

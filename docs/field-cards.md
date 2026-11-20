@@ -1,8 +1,8 @@
 # Field cards
 
 Field cards are the app's own quick-reference cards (`Sources/FieldCardData.swift`): what to do in the situations
-people most often ask about, in about 130 words each. There are 52. Field mode and the Guide show the 15 first-aid
-cards as they are. In chat, when a question is about a card's situation, the card is the answer model's first source,
+people most often ask about, in about 130 words each. There are 52. Field mode shows the 15 first-aid cards as they
+are, and every first-aid topic in the Guide opens on its card (`FieldCard.forTopic`). In chat, when a question is about a card's situation, the card is the answer model's first source,
 ahead of anything search found (`CardMatcher`, `Retrieval.find`), and it sits first among the answer's sources, where
 it opens like an article.
 
@@ -15,9 +15,11 @@ from the library: Qwen all 6 tried, Apple's model all 6 once its step instructio
 
 ## Review before release
 
-**Every card must be reviewed by qualified people before it ships.** The 15 first-aid cards were written for this app
-as general wilderness first-aid guidance and need a wilderness medicine instructor's review. The 37 situation cards
-were drafted by Claude from the library's public-domain sources and checked by a second pass, and need the same. Five
+**Every card must be reviewed by qualified people before it ships.** The 15 first-aid cards follow a Wilderness First
+Responder course manual, which is the source of truth for them ("The first-aid cards and the WFR manual" below).
+Claude made that comparison, so they still need reading by someone trained in wilderness medicine. The 37 situation
+cards were drafted by Claude from the library's public-domain sources and checked by a second pass, and need a
+qualified review too. Five
 rest mostly on general knowledge because no government source in the library covers them: **Vehicle won't start**,
 **Vehicle stuck in snow or mud**, **Small engine won't start** and **Camp stove won't light** (a mechanic and the
 makers' manuals), and **Dog hurt on the trail** (a veterinarian). **Emergency childbirth** needs a midwife or
@@ -74,9 +76,9 @@ write phrases it no longer measures anything, and a new one has to be written.
 | Messages | About a card | Right card | Wrong card | No card | About none | Given a card anyway |
 |---|---|---|---|---|---|---|
 | `questions.tsv`: the app's test questions (`library/questions.tsv`) with their cards | 62 | 54 | 0 | 8 | 27 | 0 |
-| `blind-1.tsv`: the 44 older cards | 264 | 211 | 1 | 52 | 120 | 3 |
-| `blind-2.tsv`: the 44 older cards | 264 | 201 | 6 | 57 | 120 | 0 |
-| `new-cards.tsv`: the eight newest cards and their neighbours | 120 | 84 | 4 | 32 | 30 | 0 |
+| `blind-1.tsv`: the 44 older cards | 264 | 213 | 1 | 50 | 120 | 3 |
+| `blind-2.tsv`: the 44 older cards | 264 | 203 | 5 | 56 | 120 | 0 |
+| `new-cards.tsv`: the eight newest cards and their neighbours | 120 | 85 | 3 | 32 | 30 | 0 |
 | `library/questions-longtail.tsv`: 130 questions written to be about no card | | | | | 130 | 4 |
 
 `new-cards.tsv` was blind once: 77 right, 6 wrong, 37 none, and 1 card on a message about none. Rule 4 and sixteen notAsks
@@ -118,10 +120,259 @@ Seen landing near a card in the tests, and worth a card: bites and stings withou
 bees), poison ivy and sunburn, splinters, fainting and panic attacks, hurricanes and earthquakes, a flat tire, and
 water filter care.
 
+## The first-aid cards and the WFR manual
+
+On 2026-11-18 the 15 first-aid cards were compared, line by line, with the Desert Mountain Medicine Wilderness First
+Responder student manual (80-hour course, revised January 2023), and rewritten to follow it wherever they differed
+or fell short. The manual is the source of truth for these cards: when one is changed, check it against the manual's
+page first. The manual is copyrighted and all rights are reserved, so the cards state its guidance in the app's own
+words and it is not part of the library.
+
+| Card | What now follows the manual (its printed page) |
+|---|---|
+| CPR | Signs of life and a neck pulse, checked for 10 seconds or 60 when very cold; 5 breaths first after drowning, burial or carbon monoxide; breaths with every 30 compressions; AED; child and baby differences; when to stop and when not to start (28-30, 147, 166) |
+| Severe bleeding | Pressure for 15-20 minutes; packing where a tourniquet can't go; pressure bandage; tourniquet until no pulse beyond it; a second one; never loosened after 2 hours, and released before that only by someone trained to; bleeding inside (36-39) |
+| Shock | Early and late signs with pulse and breathing rates; red, hot skin in allergic and septic shock; trend of vital signs; faster decline on heart medicines (41-44) |
+| Allergic reaction | Two body systems, or one with a known severe allergy and an exposure; repeat epinephrine at 5 or 15 minutes; junior injector by weight; antihistamine after, never instead; milder allergies (92-95) |
+| Hypothermia | Mild, moderate and severe; the wrap and its parts, for at least 30 minutes; food and drink only when mild; no standing or walking past mild; 60-second pulse check; a hospital that can rewarm blood (143-147) |
+| Frostbite | Thaw or go out frozen (the 2-hour rule); water temperature and the hand test; care after thawing; ibuprofen dose; 24 hours to a hospital for deep frostbite (150-151) |
+| Heat illness | Signs of each; cooling by stage; airway during immersion; low sodium told from dehydration by clear urine, treated with salt and no water (140-142) |
+| Altitude illness | 8,000 ft threshold; signs; descent of 2,000 ft for all three; oxygen and pressure bag; ascent limit of 2,000 ft a day (155-156) |
+| Head injury | Concussion signs apart from signs of pressure in the skull; airway and breathing rate; lying flat; waking every 2 hours; who is evacuated and how fast (67-68) |
+| Spine injury | Easing to neutral and when to stop; lifting and log roll; soft padding, no rigid collar; the focused spine assessment's conditions; low and high risk and how each leaves (62-65) |
+| Fractures | Shock with femur or several fractures; rinsing open fractures; splint rules; femur without traction; pelvic band and when not to use one; sprain care; compartment syndrome (53-61) |
+| Wounds | Half a liter under pressure; closure strips or packed open; small objects out, large ones left; amputated parts; soaks for infection; tetanus; which wounds leave, and the 12-24 hour rule (46-48) |
+| Burns | Rule of nines; gel on superficial burns; daily dressing; burst blisters; over 10%: shock, hypothermia and the 30-minute limit on wet dressings; every immediate evacuation the manual lists (50-51) |
+| Lightning | Breathing that lags the pulse by 20-30 minutes; injuries to expect; 25 ft spacing; the crouch; what not to shelter in (167-168) |
+| Chest pain | Typical and quiet presentations; 325 mg of aspirin even after a daily low dose; their own nitroglycerin, its limit and when not to; evacuate if rest and nitroglycerin don't stop it (81-83) |
+
+Kept from the earlier cards because the manual doesn't address them and nothing in it disagrees: "gasping doesn't
+count" (CPR); sips of water only if fully alert (shock); sitting up or lying flat (allergic reaction); "treat
+hypothermia first", no rubbing, not walking on thawed feet (frostbite); cooling a burn for 10-20 minutes and taking
+rings off; victims are safe to touch and the apparently dead come first (lightning); chewing the aspirin and not
+walking out (chest pain); the 15-minute checks (head injury). A reviewer should look at these first.
+
+Choices made in the rewrite:
+
+- **Skills the manual teaches by hand are named, not taught.** Releasing a tourniquet (the manual's "conversion",
+  with its conditions on page 38), straightening a fracture and clearing a spine are marked for trained
+  responders. Reducing dislocations and airway adjuncts are left out.
+- **Prescription medicines** appear only as the person's own (nitroglycerin, altitude medicines, an auto-injector).
+  The doses the cards state (ibuprofen for frostbite, aspirin for a heart attack, the auto-injector sizes, the limit
+  on nitroglycerin) are the manual's. Its two windows for nitroglycerin after an erectile-dysfunction drug, 24 and
+  48 hours, are given as one: 2 days.
+- **Left off.** The manual's first stage of cold, "cold stressed" (shivering but thinking and moving normally: eat,
+  drink and move around), is not on the hypothermia card. With it there, Apple's model told someone whose friend had
+  stopped shivering to feed him and get him moving.
+- **Length.** The cards roughly doubled, to between 780 and 1,390 characters. The limit of 1,400 (a test) is what
+  fits beside two library excerpts in the prompt, so each card kept what changes what someone does first.
+- **Thunderstorm coming** is not one of the 15, but its group spacing was changed from 15 ft to the manual's 25 ft
+  so the two cards agree.
+
+### Written for the models that read them
+
+A card is the answer model's first source, and neither model reads it the way a person does. The first rewrite
+followed the manual's layout (stages, then what to do in each) and both models answered worse from it. What they
+do, and how the cards are written because of it:
+
+- **They copy the first four or five steps**, whatever stage a step is labelled for, and skip the "Evacuate if"
+  line. So the first steps are the ones that are right at every stage, and anything that means "get help now" is
+  a step of its own near the top (a burned airway, pressure in the skull, numbness after a fall).
+- **They keep a sentence's first clause and drop the rest.** A warning tucked behind a permission is lost, and
+  Apple's model has turned "not if no pulse can be felt" into "if no pulse can be felt". So one condition to a
+  sentence, and a prohibition is its own sentence that starts with "Never" or "Don't", before what is allowed.
+- **A number they already know beats the card's.** Qwen checked a cold patient's pulse "for no more than 10
+  seconds" with "a full 60 seconds" in front of it. The card now says "60 seconds, not the usual 10".
+- **A step for someone else, placed late, is not used.** With the baby's line fifth on the choking card, both
+  models stood behind a six-month-old and gave abdominal thrusts. The baby's line now comes before the others,
+  each step that gives thrusts starts "Toddler, child or adult", and "Don't use abdominal thrusts on a baby under
+  1" is its own sentence. Both then answered with back slaps and chest thrusts. Every such step needs its label:
+  one unlabelled "Keep giving abdominal thrusts until it comes out" was enough for Apple's model to give them to a
+  baby again. What the baby's line coming first costs is under "Checking the answers": Apple's model gives a
+  three-year-old the baby's steps.
+- **The last sentence of a long step is dropped, and the gap is filled from another step.** With "Repeat until it
+  comes out or they go limp" ending the long step on where the fist goes, Apple's model left it out and gave a
+  conscious adult the unresponsive step's breaths instead. As a labelled step of its own it is copied.
+- **A count beside the word CPR becomes a rate.** "Start CPR: 30 compressions, then 2 breaths" came back from
+  Apple's model as "compressions at 30 per minute" (3 of 7 answers), and once as "60 to 100 per minute" when the
+  step gave no number to misread. With the rate in the step ("100–120 a minute, and after every 30 compressions
+  give 2 breaths") it gave both right in 12 of 13 answers; the other put the rate into the thrusts.
+- **A permission in "Evacuate if" outweighs a duty there.** Asked whether to keep hiking after a first-ever
+  seizure, Qwen said yes, from the line about someone's usual seizure. "A first-ever seizure: get them to a
+  doctor" is now a step, and "Don't continue the trip after a first-ever seizure" a prohibition.
+- **Naming the other way plants it.** While the CPR card's line for a baby read "the heel of one hand, not two
+  fingers" (see the choices below), Qwen answered "place two fingers". A line names only what to do. Where the
+  other way is a number the model will supply anyway, naming it works: see the next point and the 60-second pulse
+  check above.
+- **One run is not a measurement.** "5 breaths first" for someone pulled from water was right in the one run of
+  each model that closed the first rewrite. Run six times, Qwen gave it in 3 and Apple's model in 5. Reworded to
+  "start with 5 breaths, not with compressions", Qwen gave it in 7 of 8 and Apple's model in 4 of 5, and neither
+  added breaths-first to an ordinary collapse (8 answers).
+
+### Checking the answers
+
+`library/first-aid-questions.tsv` holds 64 questions: 39 for the 15 first-aid cards, two or three each, and 25 for
+the other medical cards. They are aimed at those habits:
+a stopped-shivering friend and hot chocolate, a tourniquet on for three hours, nitroglycerin after Viagra, a
+hoarse voice after a flare-up. Each row names its card, what a right answer says, and patterns for the one thing an
+answer must say and what it must not.
+
+```bash
+scout-tools check <library> library/first-aid-questions.tsv --answers [--qwen DIR] --json RUN.json
+python3 -I tools/grade-answers/first_aid_flags.py RUN.json [RUN2.json ...] [--show]
+```
+
+The script needs no model. A flag is a reason to read the answer, not a verdict. Run each model at least twice:
+answers differ from run to run, and one of Qwen's said to give the hot chocolate after another had said not to.
+
+Answers flagged, of 39 (2026-11-18, Essentials library):
+
+| Cards | Apple's model | Qwen |
+|---|---|---|
+| Rewritten in the manual's layout; 8 questions didn't find their card | 16 | 11 |
+| Reshaped as above, with phrases added so all 39 find their card | 10 | 3 |
+| Short sentences and stand-alone prohibitions (two runs each) | 10, 10 | 1, 4 |
+| Last wording | 7 | 2, 0 |
+| With a medicine question answered in the card's own words for Apple's model | 6 | |
+
+What is left for Qwen changes from run to run (a baby's compressions without the card's technique, a 10-second pulse
+check on a cold patient). What is left for Apple's model is the same every run: it gives a baby the adult depth,
+doesn't pack a groin wound, garbles CPR's 30 and 2 into a rate, and leaves out the urgent call for a burned
+airway, blistered hands and a swelling brain, each of which is a step of its own on its card. Wording didn't move
+these. Showing the card itself for every first-aid answer from Apple's model would, as `Retrieval.quoting` already
+does when the question is about a medicine (`docs/answer-quality.md`, "Declining").
+
+The 24 questions for the other medical cards (2026-11-19), answers flagged:
+
+| Cards | Apple's model | Qwen |
+|---|---|---|
+| First wording; 4 questions didn't find their card | 9 | 6 |
+| The baby's line first on the choking card, a first seizure as a step, phrases added so 23 find their card | 6 | 1 |
+| Last wording, and an inhaler counted as a medicine | 4 | 1 |
+
+What is left: one question that finds no card with either model (a badly dehydrated partner, which reads as much
+like heat illness and low blood sugar). For Apple's model, three answers that don't follow their card: no call for
+help or epinephrine in a severe asthma attack, no urgency for an ankle whose pain is far beyond the injury, and
+"leave it alone" for a blister the card says to drain.
+
+The choking card and the baby's line on the CPR card then went back to the manual's technique (see "Choices made
+here", below), and the choking card's steps were reworded three times against five questions. With the last
+wording, two runs of each model, answers that follow the card:
+
+| Question | Apple's model | Qwen |
+|---|---|---|
+| A friend choking on steak: abdominal thrusts alone | 2 of 2 | 2 of 2 |
+| A six-month-old: 5 back slaps, 5 chest thrusts with two fingers | 2 of 2 | 2 of 2 |
+| Passed out after choking: CPR at 100-120 a minute, 2 breaths after every 30 | 2 of 2 | 1 of 2 (the other left out the breaths) |
+| A three-year-old: thrusts, not the baby's steps | 1 of 2 | 2 of 2 |
+| "Back blows or the Heimlich first?" for an adult: thrusts | 2 of 2 | 1 of 2 (the other alternated 5 back blows and 5 thrusts) |
+
+Over all four wordings Apple's model gave the three-year-old the baby's back slaps and two-finger chest thrusts in
+9 of 10 answers, whether the other steps were labelled "Adult or child", "Adult, or child aged 1 or more" or
+"Toddler, child or adult"; Qwen gave thrusts in 9 of 10. Asked outright about back blows, the models answered
+with thrusts in 18 of 20. The card doesn't forbid back blows, because the manual doesn't.
+
+A baby is where both models are weakest. On the CPR card the baby's line is sixth of seven. While it gave both
+thumbs or the heel of one hand, Apple's model gave an eight-month-old the adult depth in every run, and Qwen gave
+the baby's depth or none, with two fingers or no technique. With the manual's two fingers (two runs each), Qwen
+gave two fingers once and the baby's depth with no technique once; Apple's model gave two fingers with both the
+baby's depth and the adult's once, and the baby's depth with no technique once.
+Moved ahead of the adult steps, as on the choking card, the line gave the right depth in 4 of 4 answers. It was
+moved back, because that card's adult and drowning answers were the ones already checked, and a card of its own
+for a baby (CPR, and choking) is the better fix: the model then has nothing else to copy, and a three-year-old's
+question no longer meets the baby's steps.
+
+The 65 graded answers of `docs/answer-quality.md` were rerun once, with the first rewrite: Qwen 2.52 to 2.48 and
+Apple's model 2.17 to 2.02, with most of Apple's drop on answers that use no first-aid card (run-to-run noise).
+Only 12 of the 65 use one of these cards, which is why this set of questions exists. They were not graded again
+with the last wording, nor after the other medical cards changed.
+
+### The other medical cards (2026-11-19)
+
+The Guide shows more than the 15, so the other cards on subjects the manual covers were compared with it the same
+way and rewritten where they differed.
+
+| Card | What now follows the manual (its printed page) |
+|---|---|
+| Choking | Abdominal thrusts alone for an adult or child, 6 to 10 at a time; where the fist goes, and not on the breastbone; a baby gets 5 back slaps and 5 chest thrusts; once unresponsive, no more thrusts: CPR, looking in the throat each time the airway is opened (31) |
+| Sprained ankle | Can't move or use it means unstable, so a rigid splint; cold on and off for the first day or two; pain far beyond what the injury looks like, with numbness or tingling, is urgent (53-54) |
+| Low blood sugar | Pale, cool and sweaty, can seem drunk; 15 g of sugar, then a meal; can't swallow or unresponsive: their glucagon, or on their side with sugar paste between cheek and gum; signs of high sugar and its urgent evacuation; no insulin (76-77) |
+| Seizure | Kept from drops and water and left to run its course; afterwards breathing, a head-to-toe check and a history; a first seizure, or one unusual for them, is evacuated (79-80) |
+| Stroke | When they were last seen normal; the 4.5-hour window; face, arms and speech written down; never aspirin (84-85) |
+| Asthma attack | 2-4 puffs through a spacer; the rescue inhaler only; hot drink, humid air, fluids, rest; the severe signs with their pulse and breathing rates; epinephrine when the inhaler has stopped working, repeated at 5 minutes; 4-12 puffs every 20 minutes without it; evacuated after epinephrine (88-90) |
+| Diarrhea | An illness that passes told from a serious one (10 stools a day, blood, pus or mucus, too weak to walk, 5 days); bismuth for a mild one; bland food; no loperamide in a serious one, and urgent evacuation (101-102) |
+| Dehydration | Mild and severe signs; sips with electrolytes every 15 minutes; urgent when water won't stay down for an hour (139) |
+| Snakebite | No catching or identifying the snake; every bite evacuated, dry or not; cleaned and not bandaged; a comfortable position, raised if wanted; a line and the time at the edge of the swelling every 10-15 minutes; rescue breaths and shock; what not to do (158-161) |
+| Tick removal | Tweezers at the base of the head; 24-48 hours of attachment before disease passes; four weeks of watching (164-165) |
+| Blister | Tape on a hot spot; every blister drained with its roof left on; gel dressing, benzoin and tape (179) |
+| Something in the eye | Contact lens out first; an object stuck in the eyeball left in and the eye kept moist (171) |
+| Knocked-out tooth | Rinsed, not scrubbed; held in with wax or sugarless gum; otherwise in gauze between cheek and gum, or in water; 30-60 minutes (172) |
+| Fell through ice | One minute of gasping, ten of useful strength, an hour to unconsciousness; six hours of watching after breathing in water; 5 breaths first; who is evacuated (166) |
+| Carbon monoxide | 5 breaths before CPR (181) |
+
+Animal bite and rabies (47) already agreed with it. Emergency childbirth is not in the manual.
+
+Choices made here:
+
+- **The manual wins where newer guidelines differ.** The manual is from January 2023; the American Heart
+  Association's guidelines changed in October 2025 in two places these cards touch. The cards first kept the newer
+  guidance. Collin was told the difference on 2026-11-19 and chose the manual, so both follow it.
+  - *Choking.* An adult or child gets abdominal thrusts alone, 6 to 10 at a time. The 2025 guidelines, and the 2026
+    Army manual in the library, alternate 5 back blows with 5 thrusts, as the card did before.
+  - *A baby's chest compressions* are two fingers, one finger-width below the nipple line, on the CPR card and for
+    the choking card's chest thrusts (the manual doesn't say how those are given, so they use its compressions for
+    a baby). The 2025 guidelines dropped two fingers, as not pressing deep enough, for both thumbs with the hands
+    around the chest, or the heel of one hand.
+- **Sugar for someone who can't swallow** is the manual's, written for a place with no ambulance: their glucagon
+  first, otherwise sugar paste between cheek and gum with them on their side. The card used to say to put nothing
+  in the mouth, as town first aid does.
+- **Epinephrine in an asthma attack** is the manual's for a severe attack the inhaler no longer helps. The doses
+  are the auto-injector sizes already on the allergic reaction card.
+- **Loperamide** is no longer offered for mild diarrhea (the manual names bismuth only) and is warned against
+  in a serious one.
+- **Not put on cards:** putting a dislocated shoulder, kneecap or finger back (56-57), which the manual teaches by
+  hand; spider, scorpion and Gila monster bites (162-163); the dental repairs beyond a knocked-out tooth (173).
+
+The manual also covers subjects with no card yet: chest and abdominal injuries, dislocations, drowning, belly pain,
+urinary and reproductive problems, rhabdomyolysis, mental health and psychological first aid, cold injuries without
+freezing, nosebleeds and ears, toothache and lost fillings, sunburn and snow blindness, poison ivy, and poisoning.
+
+## The Guide and Field mode
+
+Both are the app's own content, shown with no model, and on first aid both follow the manual.
+
+**The Guide's shelves** (`Sources/Guide.swift`). The four first-aid shelves are the manual's chapters in its order:
+Wilderness first aid (patient assessment, life support and injuries: chapters 4 to 6), Medical problems (7),
+Weather & environment (8) and Small problems (9). Each topic opens on its field card, or on a list of them when it
+has more than one (bites and stings); patient assessment opens Field mode. A test
+(`everyFirstAidTopicInTheGuideOpensOnItsCards`) fails when a topic on those shelves has no card.
+
+**Field mode** (`Sources/FieldModel.swift`, `Sources/FieldView.swift`) is the manual's patient assessment (pages
+19-26), in its order:
+
+| Step | What it follows |
+|---|---|
+| 1. Scene size-up | Safety for you and the group, protection against infection, what happened (an injury or an illness), how many patients, the help needed |
+| 2. Primary assessment | Airway, breathing, circulation, disability (spine and responsiveness), expose and environment, and glucose; then the transport decision: injury or illness, stable or critical |
+| 3. Vital signs | The seven: pulse, breathing, blood pressure (by the pulse at the wrist when there is no cuff), responsiveness with orientation out of 4, skin, circulation, sensation and movement in hands and feet, pupils. Counted for 15 seconds and multiplied by 4, with the normal ranges |
+| 4. History | SAMPLE, with OPQRST for pain and the six causes to run through when someone isn't acting normally |
+| 5. Physical exam | Head to toe in the manual's order, or focused on the chief complaint when nothing serious happened |
+| 6. Assessment and plan | The problem list, the anticipated worst case, the plan |
+| 7. Reassess | Chief complaint, primary assessment, a new set of vitals and their trend, whether the treatments still work |
+
+The SOAP note adds the anticipated worst case between assessment and plan, as the manual's note does. The
+satellite message now leads with what a rescue team asks first (stable or critical, injury or illness), and the
+SOAP screen has the rescue call to read out, in the manual's order, filled in from the record (`SOAP.rescueCall`).
+A temperature field stays beside the seven vital signs for when there is a thermometer. A record saved by an
+earlier version still opens (`Patient.init(from:)`; `aRecordSavedByAnOlderVersionStillOpens`).
+
+**Should we evacuate?** (`EvacGuideView`) lists, in three tiers, the evacuation lines of the cards above.
+
 ## Adding or changing a card
 
-1. Write the card in `Sources/FieldCardData.swift`: recognize, treat (3 to 6 steps), avoid, evacuateIf, and the
-   library searches that find its sources. Keep the whole card under about 130 words.
+1. Write the card in `Sources/FieldCardData.swift`: recognize, treat, avoid, evacuateIf, and the library searches
+   that find its sources. Its prompt text must stay under 1,400 characters (a test checks). The situation cards run
+   about 130 words; the first-aid cards, which follow the manual above, up to about 230.
 2. Write its asks the way people talk, not as titles: indirect descriptions of what they see, follow-up fragments
    ("now it's spreading up his arm"), dictated run-ons, and a few plain questions. About 40. Add notAsks for the
    questions that share its words, and give its neighbours notAsks for its situation.
@@ -133,6 +384,10 @@ water filter care.
 
 Sources are the titles of the library passages each card was drafted from. Open questions are what the drafter left
 out, was unsure of, or took from general knowledge: start a review there.
+
+For the medical cards among these, the WFR manual now decides wherever it and these sources differ ("The other
+medical cards", above, lists what changed). The notes below describe the library sources as they were weighed
+when each card was first written.
 
 ### Lost or off the trail (`lost`)
 
@@ -153,8 +408,8 @@ National Forest); Backcountry Safety (U.S. Forest Service).
 **Open questions:** NWS stresses that no outdoor spot is safe and these steps only lower the risk. Forest Service
 pages also say to drop metal objects (poles, framed packs). I left that out: current NWS/NOLS guidance says metal
 doesn't attract lightning, and dropping gear can slow your descent. The crouch is offered by Shoshone NF and USFS. NWS
-calls it a last resort, and some current guidance downplays it, so it's the last step. The 15 ft spacing is from
-Shoshone NF and USFS. The prevention tip to be below treeline by noon is in the know line's spirit but left off to
+calls it a last resort, and some current guidance downplays it, so it's the last step. The 25 ft spacing is from
+the WFR manual the first-aid cards follow (Shoshone NF and USFS say 15 ft). The prevention tip to be below treeline by noon is in the know line's spirit but left off to
 save space; consider adding it.
 
 ### Flash flood in a canyon or wash (`flashflood`)
@@ -222,7 +477,10 @@ about wildlife viewing, not encounters.
 **Sources:** Venomous Snakes: Prevention and First Aid (CDC NIOSH); Poisonings, Envenomations, and Toxic Exposures |
 CDC Yellow Book 2024; US Army ATP 4-02.11: Casualty Response, Tactical Combat Casualty Care and First Aid (2026).
 
-**Open questions:** Limb position varies by source. CDC NIOSH says 'neutral position of comfort'. Army ATP 4-02.11
+**Manual:** since 2026-11-19 the card follows the WFR manual (158-161): a comfortable position with raising allowed,
+cleaned and not bandaged, and a line with the time at the edge of the swelling every 10-15 minutes.
+
+**Open questions (before the manual decided):** Limb position varies by source. CDC NIOSH says 'neutral position of comfort'. Army ATP 4-02.11
 says 'slightly below the level of the heart'. The CDC Yellow Book says 'elevated and extended position with a splint'.
 The older Army ATP 3-50.21 says keep it lower than the heart and also says to 'break open the large blisters', which
 is outdated and I didn't use. I went with NIOSH (about heart level, position of comfort), which matches my
@@ -243,7 +501,10 @@ Left out how long a tick must be attached to spread disease (it varies by diseas
 
 **Sources:** Chapter 2 - Survival Medicine — US Army ATP 3-50.21; Unit Field Sanitation Team (FM 4-25.12); Blisters.
 
-**Open questions:** The nickel-size rule and the moleskin doughnut are from Army ATP 3-50.21. Draining large blisters
+**Manual:** since 2026-11-19 the card follows the WFR manual (179): every blister is drained with its roof left on
+and covered with a gel dressing, so the nickel-size rule and the moleskin doughnut are gone.
+
+**Open questions (before the manual decided):** The nickel-size rule and the moleskin doughnut are from Army ATP 3-50.21. Draining large blisters
 is the Army's advice; some WMS guidance prefers leaving intact blisters alone unless they're likely to tear, so check
 whether 'drain' should be 'drain if it's tense or likely to burst'. Left out blister-specific products such as
 hydrocolloid dressings, since I didn't want to make product claims.
@@ -457,12 +718,16 @@ exact number. I also left out the source's antibiotic and analgesic doses.
 **Sources:** US Army ATP 4-02.11: Casualty Response, Tactical Combat Casualty Care and First Aid (2026); Choking |
 Heimlich Maneuver | CPR.
 
-**Open questions:** Army ATP 4-02.11 (2026) gives back blows before abdominal thrusts, the hand position, chest
-thrusts for pregnancy or obesity, and what to do if they become unresponsive. Alternating 5 back blows with 5 thrusts
-matches my understanding of current Red Cross/AHA guidance, which I'm not sure the library fully states. No blind
-finger sweep and seeing a doctor afterward are general knowledge. Infants (under 1) need a different technique; this
-card is for adults and older children only. Consider adding an infant line or a separate card. Self-rescue when alone
-is also left out.
+**Manual:** the card follows the WFR manual (31): abdominal thrusts alone for an adult or child, the fist position,
+the baby's back slaps and chest thrusts, and the unresponsive steps. Until 2026-11-19 it alternated 5 back blows
+with 5 thrusts, as the Army manual and the American Heart Association's 2025 guidelines do; Collin chose the manual
+("The other medical cards", above).
+
+**Open questions:** Army ATP 4-02.11 (2026) gives back blows before abdominal thrusts, which the card no longer
+does, and chest thrusts for pregnancy or obesity, which it keeps (the WFR manual doesn't cover them). The library
+still holds the Army manual, so its back blows can turn up among an answer's sources. No blind finger sweep and
+seeing a doctor afterward are general knowledge. Infants (under 1) need a different technique; this card has one
+line for a baby. Self-rescue when alone is left out.
 
 ### Seizure (`seizure`)
 

@@ -85,6 +85,11 @@ protocol LLMEngine: Sendable {
     var name: String { get }
     /// How this model writes steps, which decides how its instructions ask for them.
     var stepHabit: StepHabit { get }
+    /// Whether the model carries a field card's warnings into an answer about a medicine. Apple's doesn't: asked
+    /// whether someone who took Viagra last night can take his nitroglycerin, it said to take it in 8 answers of
+    /// 8, wherever the chest pain card put "never after Viagra"; Qwen said no in 5 of 5. With a model that
+    /// doesn't, a question about a dose is not answered even from a card (`Stakes.isCovered`).
+    var keepsWarnings: Bool { get }
     var isLoaded: Bool { get async }
     /// The most tokens the engine can hold for one answer under `config`.
     func contextTokens(for config: GenerationConfig) async -> Int
@@ -102,6 +107,7 @@ protocol LLMEngine: Sendable {
 
 extension LLMEngine {
     var stepHabit: StepHabit { .runsLong }
+    var keepsWarnings: Bool { true }
 
     /// Runs one answer to the end, calling `onText` with the whole answer so far.
     @discardableResult

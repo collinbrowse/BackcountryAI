@@ -320,6 +320,7 @@ struct InstructionsTests {
 
     @Test func enginesSayHowTheyWrite() {
         #expect(MockEngine(pieces: []).stepHabit == .runsLong)
+        #expect(MockEngine(pieces: []).keepsWarnings)
     }
 }
 

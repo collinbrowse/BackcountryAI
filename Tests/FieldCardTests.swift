@@ -20,7 +20,19 @@ struct FieldCardTests {
     @Test func fieldModeStillListsTheFirstAidCards() {
         #expect(FieldCard.firstAid.count == 15)
         #expect(FieldCard.firstAid.allSatisfy { $0.area == .medical })
-        #expect(FieldCard.forTopic("hypo")?.id == "hypothermia")
+        #expect(FieldCard.forTopic("hypo").map(\.id) == ["hypothermia"])
+    }
+
+    @Test func everyFirstAidTopicInTheGuideOpensOnItsCards() {
+        let shelves = [GuideCollection.firstAid, .medical, .environment, .small]
+        for topic in shelves.flatMap(\.topics) where topic.id != "assess" {
+            #expect(!FieldCard.forTopic(topic.id).isEmpty, "\(topic.id) has no card")
+        }
+        #expect(FieldCard.forTopic("assess").isEmpty)
+        #expect(FieldCard.forTopic("bites").map(\.id) == ["snakebite", "tick", "animalbite"])
+        // A topic sits on one shelf only, so its page knows which shelf it came from.
+        let ids = GuideCollection.all.flatMap(\.topics).map(\.id)
+        #expect(Set(ids).count == ids.count)
     }
 
     @Test func aCardReadsAsStepsForTheModel() throws {

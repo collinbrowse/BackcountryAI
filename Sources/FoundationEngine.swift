@@ -6,6 +6,7 @@ import FoundationModels
 actor FoundationEngine: LLMEngine {
     nonisolated let name = "Apple"
     nonisolated let stepHabit = StepHabit.stopsEarly
+    nonisolated let keepsWarnings = false
     nonisolated let model: SystemLanguageModel
     private var generation: Task<Void, Never>?
 

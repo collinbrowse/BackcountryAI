@@ -180,6 +180,15 @@ final class Assistant {
                 // Whether the answer says to call for help is decided here, not by the model (see Urgency).
                 let emergency = Urgency.needsHelpNow(q), followUp = Retrieval.carriesOn(q, history: history)
                 let stakes = Stakes.of(q, earlier: Retrieval.earlier(in: history))
+                // Apple's model drops a card's warnings from an answer about a medicine, so with it a dose isn't
+                // answered even from a card: the fixed reply, with the card under it (LLMEngine.keepsWarnings).
+                if library != nil, let reply = Retrieval.declines(question: q, history: history, sources: sources,
+                                                                  keepsWarnings: engine.keepsWarnings) {
+                    log.notice("declined: \(stakes.rawValue), a card is not enough for \(engine.name)")
+                    messages[index].status = nil
+                    messages[index].text = reply
+                    return
+                }
                 let fitted = await PromptFit.fit(sources, engine: engine, config: config) { [kind] kept in
                     [.system(Retrieval.instructions(for: engine.stepHabit, emergency: emergency, followUp: followUp,
                                                      stakes: stakes)),
@@ -206,6 +215,12 @@ final class Assistant {
                     // The larger model was unloaded mid-answer (low memory, or the app left the screen) or
                     // couldn't take the prompt. The person didn't press Stop, so Apple's model writes it instead.
                     LLMLog.note("better answers gave up (\(error.localizedDescription)); Apple's model answers")
+                    if library != nil, let reply = Retrieval.declines(question: q, history: history, sources: sources,
+                                                                      keepsWarnings: apple.keepsWarnings) {
+                        messages[index].status = nil
+                        messages[index].text = reply
+                        return
+                    }
                     messages[index].text = ""
                     messages[index].status = "Writing an answer on this phone…"
                     // The same question and excerpts, with the instructions written for Apple's model.
