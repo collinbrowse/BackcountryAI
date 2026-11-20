@@ -79,6 +79,8 @@ struct BetterAnswersCard: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 4)
                     }
+                    Text(DownloadCopy.text(continues: better.downloadContinuesInBackground))
+                        .font(.caption).foregroundStyle(Theme.inkSoft)
                     Button("Cancel", role: .cancel) { better.cancelDownload() }.font(.subheadline.weight(.semibold))
                 }
                 .tint(Theme.accent)
@@ -389,11 +391,11 @@ final class LabBenchmark {
         summaries = []
         isRunning = true
         UIDevice.current.isBatteryMonitoringEnabled = true
-        UIApplication.shared.isIdleTimerDisabled = true  // keep the screen on so iOS doesn't suspend the run
+        ScreenAwake.hold("benchmark")  // keep the screen on so iOS doesn't suspend the run
         task = Task {
             defer {
                 isRunning = false
-                UIApplication.shared.isIdleTimerDisabled = false
+                ScreenAwake.release("benchmark")
             }
             let apple = SystemLanguageModel(useCase: .general, guardrails: .permissiveContentTransformations)
             // 1. Retrieval once per question, with Apple's model, so both models get the same prompts.

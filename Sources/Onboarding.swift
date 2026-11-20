@@ -270,6 +270,8 @@ private struct PackPage: View {
                             .font(.subheadline.weight(.semibold).monospacedDigit())
                     }
                     .tint(Theme.accent)
+                    Text(DownloadCopy.text(continues: better.downloadContinuesInBackground))
+                        .font(.caption).foregroundStyle(Theme.inkSoft)
                     Button("Cancel", role: .cancel) { better.cancelDownload() }.font(.subheadline.weight(.semibold))
                 case .failed(let message) where !better.isDownloaded:
                     Text(message).font(.subheadline).foregroundStyle(Theme.danger)

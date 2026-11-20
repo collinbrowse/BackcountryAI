@@ -12,6 +12,7 @@ struct BackcountryAIApp: App {
         let chats = ChatStore()
         chats.importLegacySavedAnswers()
         ScreenshotMode.seed(chats: chats, library: store.library)
+        DownloadActivity.shared.observe(store: store, better: BetterModel.shared)
         _store = State(initialValue: store)
         _chats = State(initialValue: chats)
         _assistant = State(initialValue: Assistant(chats: chats))

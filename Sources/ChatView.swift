@@ -431,25 +431,35 @@ struct DownloadRing: View {
     /// Another download stopped: a red "!" in the middle.
     var alert = false
     var lineWidth: CGFloat = 2.5
-    @State private var spin = false
 
     var body: some View {
         ZStack {
             Circle().stroke(Theme.accent.opacity(0.25), lineWidth: lineWidth)
-            Circle()
-                .trim(from: 0, to: fraction.map { max($0, 0.03) } ?? 0.25)
-                .stroke(Theme.accent, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                .rotationEffect(.degrees(fraction == nil && spin ? 270 : -90))
-                .animation(fraction == nil ? .linear(duration: 1).repeatForever(autoreverses: false) : .easeOut,
-                           value: spin)
-                .animation(.easeOut, value: fraction)
+            if let fraction {
+                arc(to: max(fraction, 0.03))
+                    .rotationEffect(.degrees(-90))
+                    .animation(.easeOut, value: fraction)
+            } else {
+                // Still starting: a quarter arc going round once a second. The angle comes from the clock rather than
+                // a repeating animation, which would also animate the ring's position as the top bar lays out and
+                // leave the arc wobbling off its track for good.
+                TimelineView(.animation) { context in
+                    let turn = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1)
+                    arc(to: 0.25).rotationEffect(.degrees(-90 + turn * 360))
+                }
+            }
             if alert {
                 Image(systemName: "exclamationmark")
                     .font(.system(size: 10, weight: .black))
                     .foregroundStyle(Theme.danger)
             }
         }
-        .onAppear { spin = true }
+    }
+
+    private func arc(to end: Double) -> some View {
+        Circle()
+            .trim(from: 0, to: end)
+            .stroke(Theme.accent, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
     }
 }
 
