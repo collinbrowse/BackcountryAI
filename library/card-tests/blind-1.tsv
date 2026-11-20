@@ -1,0 +1,385 @@
+expected	kind	message
+cpr	plain	My friend collapsed and isn't breathing, how do I do chest compressions?
+cpr	plain	How fast and how deep should I push on someone's chest if their heart has stopped?
+cpr	messy	guy just dropped on the trail not breathing no pulse i think what do i do
+cpr	messy	hes not responding at all chest isnt moving lips gone gray we're 6 miles in please help
+cpr	followup	my dad slumped over at the campsite and won't wake up || I can't feel a pulse and he's not breathing
+cpr	followup	we pulled a swimmer out of the lake and laid him on the dock || he's still not breathing, do I start pushing on his chest
+bleeding	plain	How do I stop heavy bleeding from a deep cut on my leg?
+bleeding	plain	When should I use a tourniquet on an arm wound that won't stop bleeding?
+bleeding	messy	chainsaw kicked back into his thigh blood soaking through everything we have
+bleeding	messy	blood spurting out of her forearm wont stop, pressing with a tshirt and its dripping off my hands
+bleeding	followup	my buddy slipped onto a sharp rock by the river || the blood is pooling under his leg and it's not slowing down even with pressure
+bleeding	followup	I sliced my hand open gutting a fish || it's been ten minutes and the bandana is completely soaked through red
+shock	plain	What are the signs someone is going into shock after a bad injury?
+shock	plain	How should I position a person who might be in shock while we wait for the helicopter?
+shock	messy	after the fall shes pale clammy breathing fast heart racing and kinda out of it
+shock	messy	hes sweaty, cold gray skin, keeps saying he feels like hes gonna pass out since the crash
+shock	followup	my brother crashed his mountain bike and his leg is badly hurt || now he's really pale and sweaty and his pulse feels weak and fast
+shock	followup	we got her out of the car after it rolled down the embankment || she's getting confused and her skin is cold and clammy, what do we do while we wait
+anaphylaxis	plain	My friend got stung by a bee and his throat is swelling up, what do I do?
+anaphylaxis	plain	How do I use an EpiPen on someone having a severe allergic reaction?
+anaphylaxis	messy	she ate a trail bar that had nuts in it now her face is puffy and she's wheezing, lips swelling
+anaphylaxis	messy	got stung by a wasp hives all over and his voice sounds weird says its hard to swallow
+anaphylaxis	followup	my son is allergic to peanuts and we're camping at the state park || he just ate a cookie from another family and now he's coughing and covered in red welts
+anaphylaxis	followup	I used her epinephrine pen about 15 minutes ago || she's getting worse again and wheezing, can I give the second one
+hypothermia	plain	How do I warm up someone who is shivering uncontrollably and getting confused?
+hypothermia	plain	What should I do if my hiking partner seems dangerously cold after a rainy day?
+hypothermia	messy	hes shaking like crazy slurring words fumbling with his zipper, been soaked from rain all day
+hypothermia	messy	she stopped shivering but now shes real sleepy and acting drunk, weve been out in the sleet for hours
+hypothermia	followup	we got caught in a cold rain above treeline and everyone is wet || my wife is stumbling and can't work her fingers anymore
+hypothermia	followup	the temperature dropped fast while we waited out the storm under a tarp || my friend is mumbling and his shaking is violent, how do we warm him
+frostbite	plain	How do I treat fingers that have turned white and numb from the cold?
+frostbite	plain	Should I rewarm frozen toes if we still have to hike out on them tomorrow?
+frostbite	messy	my toes are hard and waxy looking cant feel them at all after ski touring
+frostbite	messy	his nose tip and cheeks went white kinda grey, been out in the wind all day at minus 20
+frostbite	followup	we've been ice fishing since dawn and my gloves got wet || now two fingers are pale and stiff and won't bend
+frostbite	followup	my daughter's boots filled with snow on the sled hill || her toes look blotchy and she says they burn and feel like wood
+heat	plain	What do I do if someone collapses from the heat on a desert hike?
+heat	plain	How do I cool down a person with heat stroke when there's no shade?
+heat	messy	hes not sweating anymore red hot skin and confused, its like 105 out here in the canyon
+heat	messy	she got dizzy and threw up after hiking at midday in full sun, face flushed bad headache
+heat	followup	we were roofing all afternoon with no breaks || my coworker is now talking nonsense and his skin is burning hot to the touch
+heat	followup	we're doing a long trail run through the badlands in July || my running partner started weaving and her skin is hot and dry
+altitude	plain	What are the signs of altitude sickness and when should we go down?
+altitude	plain	My head is pounding at 12,000 feet, should I keep climbing?
+altitude	messy	pounding headache cant eat throwing up and we went from 9000 to 13000 today
+altitude	messy	hes gurgling when he breathes and cant walk straight at high camp, coughing up pinkish stuff
+altitude	followup	we flew into La Paz yesterday and started trekking this morning || my sister is nauseous and dizzy and can't sleep, is this from the elevation
+altitude	followup	we made camp at 14,200 on the mountain tonight || my partner can't walk heel to toe and is super confused
+head	plain	My friend hit his head on a rock, what signs mean it's serious?
+head	plain	Is it okay to let someone sleep after a hard blow to the head?
+head	messy	she fell off the bike no helmet threw up twice and keeps asking the same question over and over
+head	messy	branch fell and knocked him out for like a minute now hes groggy and his pupils look different sizes
+head	followup	my kid fell off a boulder at the crag and bonked his head || he's really sleepy now and says his vision is blurry
+head	followup	I smacked my forehead on a low beam in the hut last night || this morning I have a terrible headache and keep feeling sick
+spine	plain	Someone fell from a ledge and their neck hurts, should we move them?
+spine	plain	How do I keep someone still if I think they hurt their back badly in a fall?
+spine	messy	dove into the shallow end of the swimming hole and now says he cant feel his legs, tingling in his hands
+spine	messy	fell like 20 ft off the boulder landed flat on her back says her neck hurts and doesnt want to move
+spine	followup	my friend got thrown from his horse onto the rocks || he says there's a sharp pain in the middle of his back and his feet feel numb
+spine	followup	the ATV flipped on top of him and we got it off || he's lying there saying his neck really hurts, do we roll him over
+fracture	plain	How do I splint a suspected broken arm in the backcountry?
+fracture	plain	How can you tell if a bone is broken versus just badly bruised?
+fracture	messy	his shin is bent the wrong way after the fall and theres a bump under the skin
+fracture	messy	heard a crack when she landed on her wrist its swollen and crooked and she cant move it
+fracture	followup	I wiped out skiing and landed on my forearm || it's at a weird angle and hurts like crazy when anything touches it, how do I immobilize it
+fracture	followup	my friend's leg got wedged between boulders when he slipped || there's bone poking out through the skin on his shin
+wounds	plain	How do I clean and close a cut while camping?
+wounds	plain	What's the best way to dress a scrape so it doesn't get infected on a long trip?
+wounds	messy	gashed my knee on granite, dirt and gravel stuck in it, only got a little first aid kit
+wounds	messy	cut my thumb with my pocket knife whittling, its gaping a bit but barely bleeding now
+wounds	followup	I got a cut on my shin two days ago on the trail || now it's red, puffy and warm around the edges
+wounds	followup	my son scraped his whole palm sliding on gravel || it stopped bleeding but there's grit ground into it, how should I clean it
+burns	plain	How do I treat a burn from boiling water at camp?
+burns	plain	What should I put on my hand after I grabbed a hot pot handle?
+burns	messy	knocked the pot over and boiling water went all over her foot, skin blistering already
+burns	messy	fell against the campfire ring hand is red and peeling with some white patches really hurts
+burns	followup	we were cooking pasta for dinner at the site || my kid grabbed the pot with his bare hand and now his palm is blistered
+burns	followup	my friend splashed lighter fluid on the fire and it flared up || his forearm skin is red and bubbling, what do we do
+lightning	plain	What first aid does someone need after being struck by lightning?
+lightning	plain	Is it safe to touch a person who just got hit by lightning?
+lightning	messy	bolt hit right near us and my husband is on the ground not moving, weird fern marks on his arm
+lightning	messy	lightning hit the tree he was standing under, hes awake but cant hear and his legs wont work
+lightning	followup	a storm rolled over the ridge while we were hiking || my friend got knocked down by a strike and now he's confused with burns on his feet
+lightning	followup	we were fishing from the boat when a strike hit the water close by || my dad's arm is numb and there's a burn mark on his shoulder
+chest	plain	My dad is having chest pain on the hike, what should I do?
+chest	plain	Should I give aspirin to someone with crushing pressure in their chest?
+chest	messy	pressure in my chest going down my left arm, sweaty and short of breath halfway up the switchbacks
+chest	messy	hes 60 clutching his chest says it feels like an elephant sitting on him and hes nauseous
+chest	followup	my uncle has been slow all day carrying his heavy pack || now he says there's a tight squeezing in his chest and his jaw aches
+chest	followup	we're shoveling out the truck after the storm || my husband just sat down gray faced holding his chest
+lost	plain	What should I do if I realize I'm lost in the woods?
+lost	plain	I lost the trail under the snow, how do I find it again?
+lost	messy	no idea where the trail went everything looks the same, phone has no signal and its getting dark soon
+lost	messy	took a side path down to a lake and now cant find our way back, been wandering about an hour
+lost	followup	we went off trail to follow some elk tracks || now none of us knows which way the car is
+lost	followup	I've been bushwhacking toward the ridge hoping to hit the path || I think I'm going in circles, I passed this same stump twice
+thunderstorm	plain	A thunderstorm is coming and we're above treeline, what do we do?
+thunderstorm	plain	Where is the safest place to be when lightning is getting close and there's no building?
+thunderstorm	messy	thunder getting closer were on an exposed ridge with trekking poles and nowhere to hide
+thunderstorm	messy	dark clouds building fast, like 10 seconds between flash and boom, we're out in an open meadow
+thunderstorm	followup	we're halfway across the lake in canoes || we just heard thunder behind us, should we paddle for shore
+thunderstorm	followup	we're on the summit of a fourteener and it's past noon || the sky to the west is black and my hair is standing up
+flashflood	plain	What should we do if it starts raining while we're in a slot canyon?
+flashflood	plain	How do I know if a flash flood is coming down a dry wash?
+flashflood	messy	water in the canyon going muddy and rising and theres a roar upstream, we're deep in the narrows
+flashflood	messy	camped in a dry riverbed and theres lightning over the mountains upstream should we move
+flashflood	followup	we're hiking down a narrow slot in southern Utah || suddenly there are twigs and foam floating by and the water turned brown
+flashflood	followup	our jeep is parked down in the arroyo || storm clouds are dumping on the hills and water is starting to trickle across the road
+water	plain	How long do I need to boil stream water before it's safe?
+water	plain	Can I use household bleach to purify water from a lake?
+water	messy	filter cracked and all we got is this murky pond water, how do we make it drinkable
+water	messy	out of clean water only a cow tank nearby is it ok if i just drop the iodine tabs in
+water	followup	our water filter froze overnight and stopped working || what else can we do to treat the creek water
+water	followup	we only have snow, a pot and a stove up here || do we need to do anything to the meltwater before drinking it
+bear	plain	What should I do if a bear charges at me?
+bear	plain	Do I play dead or fight back if a black bear attacks?
+bear	messy	grizzly 50 yards out on the trail standing up sniffing the air what do i do
+bear	messy	theres a sow and two cubs right next to our camp and she just huffed at us
+bear	followup	I'm hiking alone in Glacier with spray on my belt || a big brown bear just walked out onto the trail in front of me
+bear	followup	we heard something big crashing in the brush || it's a black bear and it's coming toward us slowly
+foodstorage	plain	How do I hang a food bag properly so bears can't reach it?
+foodstorage	plain	Where should I keep my food and toothpaste overnight in grizzly country?
+foodstorage	messy	no trees big enough at this campsite how do we keep the food safe from bears tonight
+foodstorage	messy	can i keep snacks in the tent if theyre sealed in ziplocks, black bears are around here
+foodstorage	followup	we're camping in the Sierra with a hard canister || how far from the tent should we put it and where
+foodstorage	followup	rangers said a bear has been raiding campsites this week || what do we do with our cooler and trash tonight
+lion	plain	What should I do if I see a mountain lion on the trail?
+lion	plain	How do you fight off a cougar that's stalking you?
+lion	messy	big cat crouched on the rocks above us staring, long tail, my kid is with me
+lion	messy	puma been following us the last half mile and keeps getting closer
+lion	followup	we're mountain biking in the foothills outside Boulder || there's a tawny cat sitting right in the trail ahead
+lion	followup	I'm walking my dog at dusk on the ranch road || a cougar just stepped out and is watching us, should I run
+snakebite	plain	What do I do if a rattlesnake bites me?
+snakebite	plain	Should I try to suck the venom out of a snake bite?
+snakebite	messy	got bit on the ankle by something in the rocks two fang marks swelling fast and burning
+snakebite	messy	my sons hand got bit reaching under a log, saw it slither off, its puffing up and turning purple
+snakebite	followup	heard a rattle while scrambling up a desert wash || felt a sharp sting on my calf and now there are two small holes
+snakebite	followup	I got bit by a copperhead walking the levee || the swelling is creeping up my shin, should I tie something above it
+tick	plain	How do I get a tick out without leaving the head in?
+tick	plain	What's the right way to pull a tick off my kid?
+tick	messy	theres a bug burrowed in my armpit, little black thing with legs and it wont come off
+tick	messy	found one of those blood sucking things stuck behind my ear after walking through tall grass
+tick	followup	we did a long hike through the meadows yesterday || I just found a tiny thing latched onto my waistband, how do I get it off
+tick	followup	I tried to pull it off with my fingers || its head is still stuck in my skin
+blister	plain	How do I treat a blister on my heel in the middle of a hike?
+blister	plain	Should I pop a blister when I still have miles to walk?
+blister	messy	new boots rubbing my heel raw feels like its on fire, day 2 of 5
+blister	messy	big bubble on the ball of my foot full of fluid and i still got 12 miles to go
+blister	followup	my socks got soaked crossing the stream this morning || now there's a hot sore spot on my little toe
+blister	followup	I put moleskin on it yesterday || today the bubble ripped open and the skin underneath is raw
+rivercrossing	plain	What's the safest way to wade across a river on foot?
+rivercrossing	plain	How deep is too deep to walk across a fast stream?
+rivercrossing	messy	creek is knee deep and fast from snowmelt, trail goes straight through it, should we unbuckle our packs
+rivercrossing	messy	bridge washed out and we gotta get across this river to get back to the car, 4 of us
+rivercrossing	followup	we reached the ford at 3pm and the water is raging || is it better to wait until morning or try now
+rivercrossing	followup	we're scouting along the bank for a spot to get across || should we link arms or go one at a time
+coldwater	plain	What do I do if I fall through the ice on a frozen lake?
+coldwater	plain	How do I get myself out of freezing water if I capsize?
+coldwater	messy	ice cracked and my buddy went in up to his chest, hes grabbing the edge and it keeps breaking
+coldwater	messy	fell off the paddleboard into the snowmelt lake gasping cant catch my breath
+coldwater	followup	we were walking across the frozen pond to go fishing || my leg just broke through and I'm in up to my waist
+coldwater	followup	our snowmobile went through the ice on the river || I'm hanging on to the edge, how do I climb out
+wildfire	plain	What should I do if there's a wildfire near where I'm camping?
+wildfire	plain	How do I escape a forest fire while hiking?
+wildfire	messy	smoke getting thick and we can see an orange glow over the ridge, ash falling on the tent
+wildfire	messy	fire jumped the road ahead of us on the forest service road what do we do
+wildfire	followup	we smelled smoke this morning at the lake || now there are flames on the hillside across the valley and the wind is pushing it our way
+wildfire	followup	we're backpacking deep in the wilderness and the sky turned brown || we can hear crackling and see flames down the drainage
+signaling	plain	How do I signal a rescue helicopter?
+signaling	plain	What's the distress signal with a whistle?
+signaling	messy	plane flying over cant tell if they see us we got a little mirror and an orange tarp
+signaling	messy	need search and rescue to find us, what do we stomp out in the snow so they can see it from the air
+signaling	followup	my friend broke his leg and we can't walk out || how do we get the attention of searchers when they come
+signaling	followup	we hit SOS on the inReach an hour ago || we can hear a chopper now, how do we make sure they spot us
+nightout	plain	We won't make it back before dark, how do we get through the night?
+nightout	plain	How do I stay warm overnight without a tent or sleeping bag?
+nightout	messy	day hike went way long its dark now only have a light jacket and some granola, gotta stay put
+nightout	messy	stuck on the mountain no overnight gear temps dropping need to make some kind of shelter
+nightout	followup	we took a wrong turn and now it's past sunset || we're going to have to sleep out here tonight, how should we set up
+nightout	followup	my headlamp died and the trail down is too steep to keep going || we only have daypacks, what do we do until morning
+wetfire	plain	How do I start a fire when all the wood is wet?
+wetfire	plain	What burns well for kindling after days of rain?
+wetfire	messy	everything soaked from the downpour, matches keep fizzling out, need a fire to warm up
+wetfire	messy	tried 3 times to get the fire going but the sticks just smoke, its been drizzling all day
+wetfire	followup	we've been out on the coast in the rain for three days || we really need a fire tonight but every stick is soaked
+wetfire	followup	I found some birch bark and a few dead spruce twigs || what else can I do to get the damp wood to catch
+carbonmonoxide	plain	Is it safe to run a heater inside my tent?
+carbonmonoxide	plain	What are the signs of carbon monoxide poisoning for campers?
+carbonmonoxide	messy	cooking in the vestibule cause its raining and now we both have headaches and feel woozy
+carbonmonoxide	messy	running the propane buddy heater in the van with the windows shut and the kids are dizzy and nauseous
+carbonmonoxide	followup	we're snowed in at the cabin with the generator running in the garage || everyone has a headache and feels sleepy
+carbonmonoxide	followup	our car is stuck in a snowbank and we've been idling the engine for heat || my wife says she feels sick and lightheaded
+vehiclestart	plain	My car won't start at the trailhead, what can I check?
+vehiclestart	plain	How do I jump start a truck using another vehicle?
+vehiclestart	messy	turn the key and its just clicking, dash lights flicker, we're at a remote campground
+vehiclestart	messy	truck cranks but wont catch, cold night at 9000 ft and nobody around
+vehiclestart	followup	we left the dome light on overnight at the lake || now the engine won't turn over at all
+vehiclestart	followup	I have jumper cables and a guy at the next site offered his car || which clamp goes on first
+vehiclestuck	plain	How do I get my car out of deep mud?
+vehiclestuck	plain	My truck is stuck in snow, how do I get traction?
+vehiclestuck	messy	tires spinning sunk to the axles on a muddy logging road and no shovel
+vehiclestuck	messy	slid off into the ditch in the snow wheels just spin, have floor mats and kitty litter
+vehiclestuck	followup	the two track turned to clay after the rain || the rear wheels are buried and just digging deeper
+vehiclestuck	followup	I tried rocking it back and forth like you said || it's still stuck in the snowbank, what next
+stove	plain	My camp stove won't light, what's wrong with it?
+stove	plain	Why is my backpacking stove flame so weak?
+stove	messy	jetboil clicks but no flame, freezing out here and the canister feels full
+stove	messy	whisperlite sputtering yellow flame and smoking, takes forever to boil anything
+stove	followup	we're at 11,000 feet and it's well below freezing || the canister stove is barely putting out a flame
+stove	followup	I cleaned the jet on my white gas stove || it still flares up and then dies after a minute
+dehydration	plain	How can I tell if I'm dehydrated on a hike?
+dehydration	plain	How much should I drink to recover after not drinking enough all day?
+dehydration	messy	pee is dark brown havent drunk much all day bad headache and dizzy when i stand up
+dehydration	messy	ran out of water at mile 8, mouth is sticky and i feel totally wiped
+dehydration	followup	we rationed water on the trail all afternoon || now my son hasn't peed since morning and is really tired
+dehydration	followup	I only brought one liter for the whole climb || I'm lightheaded and my mouth is dry, how do I catch up
+avalanche	plain	What are the warning signs of avalanche danger?
+avalanche	plain	How do I know if a slope is safe to ski in the backcountry?
+avalanche	messy	snow making whumpf sounds under our skis and cracks shooting out, should we turn back
+avalanche	messy	loaded slope after big snowfall and wind last night, saw some fresh slides on the next ridge over
+avalanche	followup	we're skinning up toward the bowl || the snowpack just collapsed under us with a loud whoomp
+avalanche	followup	it's been warming up all afternoon on the south face || we're seeing little snowballs rolling down, is that a bad sign
+phonebattery	plain	How do I make my phone battery last longer on a multi-day trip?
+phonebattery	plain	My phone is at 15% and I need it for the map, how do I stretch it?
+phonebattery	messy	battery dying fast in the cold, 20% left and i need it for gps tomorrow
+phonebattery	messy	no charger no power bank phone at 8% how do i make it last
+phonebattery	followup	we've been out 4 days and the power bank is dead || what settings should I turn off on my phone
+phonebattery	followup	my phone keeps searching for signal down in the canyon || it dropped 30% in an hour, how do I stop that
+dog	plain	My dog cut his paw on the trail, how do I treat it?
+dog	plain	How do I carry an injured dog out of the backcountry?
+dog	messy	pup is limping bad holding up her back leg wont put weight on it 4 miles from the car
+dog	messy	my lab got into a porcupine quills all in his face and hes freaking out
+dog	followup	we're crossing a big scree field with our husky || she's leaving bloody paw prints now
+dog	followup	we've been hiking the desert loop with our border collie || he lay down in the shade, won't get up and his gums look dark red
+sprain	plain	I rolled my ankle hiking, can I still walk out on it?
+sprain	plain	How do I tape a twisted ankle so I can hike back to the car?
+sprain	messy	stepped on a rock wrong, ankle swelling up, can kinda limp, 7 miles to the trailhead
+sprain	messy	turned my foot on a root and felt a pop, its puffy but i can put some weight on it
+sprain	followup	I came down hard off a log onto the side of my foot || it's swollen and sore but I can still hobble, should I keep my boot on
+sprain	followup	my wife twisted her ankle on the talus this morning || we're two days from the road, how do we get her out
+eye	plain	How do I get sand out of my eye?
+eye	plain	Something is stuck under my eyelid, how do I flush it out?
+eye	messy	wind blew grit in my eye feels like sandpaper every time i blink cant stop tearing up
+eye	messy	piece of bark flew in my kids eye while splitting wood, red and watering
+eye	followup	I was chopping kindling and a chip went flying || now my eye won't stop watering and it hurts to open
+eye	followup	I rinsed it with my water bottle twice || it still feels like there's a speck under the top lid
+diarrhea	plain	I drank from a stream and now I have diarrhea, what should I do?
+diarrhea	plain	How do I treat a stomach bug from bad water in the backcountry?
+diarrhea	messy	running to the bushes every hour since yesterday, drank straight from the creek two days ago
+diarrhea	messy	guts cramping, watery poop, nasty eggy burps, we skipped filtering at the spring
+diarrhea	followup	we ran out of tablets and drank lake water last week || now my husband has the runs and can't keep anything down
+diarrhea	followup	my stomach has been churning since we drank from the cattle trough || that's 8 trips to the cathole today, how do I stop losing fluid
+tooth	plain	My tooth got knocked out, how do I save it?
+tooth	plain	What do I do if a kid's adult tooth comes out after a hit to the face?
+tooth	messy	took a fall mountain biking and my front tooth came clean out, have it in my hand
+tooth	messy	hockey stick to the mouth on the pond, tooth popped out roots and all
+tooth	followup	my son face planted on the rocks at the creek || one of his front teeth is lying in the dirt, what do I put it in
+tooth	followup	I picked up the tooth and rinsed it off || can I just push it back into the socket
+choking	plain	How do I help someone who is choking on food?
+choking	plain	How do I do back blows on a toddler who is choking?
+choking	messy	hes grabbing his throat cant talk or cough after a bite of jerky
+choking	messy	my daughter swallowed a hard candy and cant breathe shes turning red
+choking	followup	we were eating dinner around the fire || my friend suddenly can't make a sound and is clutching his neck
+choking	followup	I'm alone at camp and something is stuck in my throat || I can't cough it up, how do I do it on myself
+none	near	Which water filter is lightest for a thru-hike?
+none	near	Where do rattlesnakes usually live in Arizona?
+none	near	What should go in a basic first-aid kit for a weekend backpacking trip?
+none	near	How do I tie a bowline?
+none	near	How can I practice taking a compass bearing in my backyard before my trip?
+none	near	What's a good three-day backpacking loop in Yosemite for beginners?
+none	near	Do I need a permit to camp in the Boundary Waters?
+none	near	How does the pressure regulator on a canister stove actually work?
+none	near	My nose has been bleeding on and off from the dry air, how do I stop it?
+none	near	brushed against poison ivy on the trail yesterday and now its itchy blisters on my arm, what helps
+none	near	How do I treat a sunburn after a long day on the lake?
+none	near	I have a throbbing toothache on day three of the trip, what can I do for the pain?
+none	near	my lower back is killing me from carrying a heavy pack, any stretches I can do at camp
+none	near	Got stung by a jellyfish wading at the beach, what helps the sting?
+none	near	How do I get a splinter out of my finger with what's in a pocket knife?
+none	near	I keep getting calf cramps at night in my sleeping bag, why?
+none	near	How do I patch a tear in my tent fly?
+none	near	The zipper on my sleeping bag split open, can I fix it in the field?
+none	near	How do I fix a flat on my mountain bike out on the trail?
+none	near	My sleeping pad keeps going flat overnight, how do I find the leak?
+none	near	How do I sharpen a chainsaw chain with a file?
+none	near	How do I program a repeater channel into my Baofeng radio?
+none	near	What's the best tasting dehydrated meal for backpacking?
+none	near	How long can raw chicken stay in a cooler on a car camping trip?
+none	near	How do I make bannock bread over a campfire?
+none	near	How can you tell black bear tracks from grizzly tracks?
+none	near	When do bears usually come out of hibernation in Montana?
+none	near	What's the best four season tent for winter camping above treeline?
+none	near	How do I waterproof leather hiking boots?
+none	near	How much should my pack weigh for a five day trip?
+none	near	What's a good lightweight rain jacket under 200 dollars?
+none	near	Down or synthetic insulation for a puffy jacket in the Pacific Northwest?
+none	near	How do I read contour lines on a topo map?
+none	near	What's the best time of year to hike the Grand Canyon rim to rim?
+none	near	Do I need a campfire permit for national forests in California?
+none	near	How many miles a day should a beginner plan when backpacking?
+none	near	What fishing license do I need for lakes in Colorado?
+none	near	How do I change a flat tire on my car with the spare?
+none	near	how often should i change the oil in my truck if i drive a lot of dirt roads
+none	near	What tire pressure should I run on washboard gravel roads?
+none	near	How do I level my camper trailer at an uneven campsite?
+none	near	How do I keep mosquitoes away from camp at the lake?
+none	near	What's a good way to layer clothes for a fall day hike?
+none	near	What should I pack for a short desert day hike in spring?
+none	near	What workouts should I do to get ready for a two week trek in Nepal next year?
+none	near	How do I backflush and clean my water filter after a trip?
+none	near	How do I hang a hammock between two trees without damaging them?
+none	near	What's the difference between a prusik and a klemheist knot?
+none	near	How can I tell chanterelles from look-alike mushrooms?
+none	near	What birds are common around alpine lakes in the Rockies?
+none	near	How old do bristlecone pines get?
+none	near	What's the leave no trace rule for digging a cathole?
+none	near	How do I wash dishes at camp without polluting the creek?
+none	near	What sleeping bag temperature rating do I need for 30 degree nights?
+none	near	How should I store leftover fuel canisters at home between trips?
+none	near	How do I sleep better on a sleeping pad as a side sleeper?
+none	near	My knees ache on long descents, would trekking poles help?
+none	near	I have a canker sore inside my cheek, what can I put on it?
+none	near	my big toenail is ingrown and getting tender, how do I deal with it on a long hike
+none	near	What's the best way to prevent seasickness on a fishing boat?
+none	near	How do I learn to identify animal tracks in the snow?
+none	near	Are there mountain lions in Florida?
+none	near	How do I teach my kids to use a compass?
+none	near	How do I adjust the hip belt and load lifters on my backpack?
+none	near	My headlamp flickers when I bump it, how do I fix the contacts?
+none	near	How do I reseal the seams on an old tent?
+none	near	What's the best way to dry wet hiking boots overnight?
+none	near	How do I replace a broken tip on a trekking pole?
+none	near	What's the best dog backpack for carrying his own water on day hikes?
+none	near	How do I back a trailer into a tight campsite?
+none	far	How do I fix a leaky kitchen faucet?
+none	far	What's a good recipe for banana bread?
+none	far	When should I plant tomatoes in zone 6?
+none	far	How often should I feed my cat?
+none	far	How do I unclog a bathroom sink without chemicals?
+none	far	How do I patch a small hole in drywall?
+none	far	What's the capital of Australia?
+none	far	How do I make a sourdough starter from scratch?
+none	far	How do I reset a tripped circuit breaker?
+none	far	How much concrete do I need for a 10 by 10 foot slab four inches thick?
+none	far	How do I calculate board feet for a stack of lumber?
+none	far	When and how should I prune a rose bush?
+none	far	What's the best way to cook rice on the stovetop?
+none	far	my parrot keeps biting me when I reach into the cage, how do I get him to stop
+none	far	How do I stop my toilet from running all the time?
+none	far	How do I install a ceiling fan where there's already a light fixture?
+none	far	Why are my cucumber leaves turning yellow?
+none	far	How often do I change a furnace filter?
+none	far	How many tablespoons are in a cup?
+none	far	How do I grout new bathroom tile?
+none	far	How long do I boil eggs for soft yolks?
+none	far	How do I potty train a puppy in an apartment?
+none	far	How do I square a deck frame using the 3-4-5 method?
+none	far	What's the difference between a crosscut saw and a rip saw?
+none	far	How do I sharpen kitchen knives on a whetstone?
+none	far	Why did the Western Roman Empire fall?
+none	far	How do I start composting kitchen scraps?
+none	far	How do I get out a stripped screw?
+none	far	How do I wire a three-way light switch?
+none	far	How long should I let a steak rest after grilling?
+none	far	How do I get rid of aphids on my pepper plants?
+none	far	How do I clean a fish tank filter without killing the good bacteria?
+none	far	How many miles is a marathon?
+none	far	How do I hang a picture straight without a level?
+none	far	What's the best way to keep fresh basil from wilting?
+none	far	How do I recaulk around a bathtub?
+none	far	How do I keep my hens laying eggs through the winter?
+none	far	how do you read the little sixteenth marks on a tape measure
+none	far	How do I make a simple vinaigrette?
+none	far	How far apart should wood fence posts be?
+none	far	What year did humans first land on the moon?
+none	far	What do I need to set up a new hamster cage?
+none	far	How do I paint kitchen cabinets without leaving brush marks?
+none	far	When is the best time to divide hostas?
+none	far	How do I calculate the pitch of a roof?
+none	far	How do I get candle wax out of a tablecloth?
+none	far	How many ounces are in a pound?
+none	far	How do I clean mold off the bathroom ceiling?
+none	far	How do I teach my dog to sit and stay?
+none	far	What's a good beginner workout I can do at home with no equipment?

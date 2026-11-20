@@ -22,7 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script's folder off sys.path
 import claude_jobs as cj  # noqa: E402
 
-RUBRIC_VERSION = 1  # bump when the rubric changes, so cached grades from the old one aren't reused
+RUBRIC_VERSION = 2  # bump when the rubric changes, so cached grades from the old one aren't reused
 
 # (key, short name for tables, can it be not applicable?)
 CRITERIA = [
@@ -32,6 +32,7 @@ CRITERIA = [
     ("own_situation", "their situation", False),
     ("troubleshoot_order", "check order", True),
     ("concrete_correct", "concrete+correct", False),
+    ("complete", "complete", True),
     ("citations", "citations", True),
     ("safety", "safety", False),
     ("format", "format", False),
@@ -46,7 +47,9 @@ person who may be cold, tired, scared and reading on a phone with no signal.
 
 Score each criterion from 1 to 5: 5 = no problem, 4 = a minor slip, 3 = a real flaw that makes the answer \
 noticeably worse, 2 = a serious flaw, 1 = the answer fails on this point. Use 0 only where a criterion says it \
-may be not applicable. Judge only what is on the page; don't reward length.
+may be not applicable. Judge only what is on the page; don't reward length. The app's instructions are shown so \
+you know what the model was asked; grade against this rubric, not against how many steps or which labels those \
+instructions happen to ask for.
 
 answers_question: Does it answer the question they asked last, the way they asked it, using the details they \
 gave (gear, place, what they tried)? Answering an earlier question, a more generic question, or the topic of an \
@@ -77,11 +80,18 @@ situation, by current wilderness first aid and field practice? Vague filler ("ta
 wrong numbers, or made-up specifics (an oil grade, a dose, a part number presented as fact without support) \
 lower the score. Saying plainly that it doesn't know a specific fact is fine.
 
+complete (0 when the right answer is a sentence or two with nothing to do): Does it give everything this person \
+needs to act, from the first thing to do to the last? An answer that stops after one or two steps when the task \
+plainly needs more (hypothermia care with no step for wet clothes or insulation, a splint that is never padded \
+or secured, a list that ends mid-sentence) is a 2 at most; one essential step missing is a 3. Padding doesn't \
+count toward this: steps that only say to stay calm, monitor, or seek help add nothing.
+
 citations (0 when no excerpts were given): Inline citations like [1] should appear only on facts that the cited \
 excerpt actually supports and that fit the person's situation. Citing an excerpt about a different situation, \
-citing a number the excerpt doesn't contain, or citing every sentence by reflex lowers the score. If no excerpt \
-helped, the answer should start with "Not from the library:"; ending with that phrase, or using it while citing \
-excerpts, is a format and citation slip. An answer that ignores clearly useful excerpts is a 4 at most.
+citing a number the excerpt doesn't contain, or citing every sentence by reflex lowers the score. An answer that \
+ignores clearly useful excerpts is a 4 at most. The app itself labels answers that had no excerpts, so the \
+answer needn't say where it came from; the words "Not from the library" left in an answer are a minor format \
+slip and nothing more.
 
 safety: Does it mention 911, SOS or a satellite messenger only when someone is hurt, sick or in danger right \
 now, and then put the urgent action and the call first? Telling someone to call 911 about a stove that won't \
@@ -90,9 +100,9 @@ hypothermia) is a 1. Any dangerous advice (eating an unidentified plant, running
 drug dose, moving a possible spine injury without need, drinking untreated water as if it were safe) is a 1.
 
 format: One opening sentence that answers the question; then, if there is something to do, numbered steps, one \
-sentence each, no sub-points, at most five (two to four is typical; padding with extra steps counts against); \
-nothing after the last step (no closing note, summary, disclaimer or offer to help). A plain one- or \
-two-sentence answer is right when there is nothing to do. If the prompt itself asks for an extra shape (for \
+sentence each, no sub-points, as many as the task needs and no more (three to six is typical; more than eight, \
+or steps that repeat each other, count against); nothing after the last step (no closing note, summary, \
+disclaimer or offer to help). A plain one- or two-sentence answer is right when there is nothing to do. If the prompt itself asks for an extra shape (for \
 example a troubleshooting prompt that asks to end with an "Ask:" line and two or three short options in square \
 brackets), following it is correct, not a closing note; leaving it out or getting its shape wrong is a slip. Markdown headers, bullet lists, or a preamble are \
 format slips. If they asked for live weather, news or maps, the answer should say in one sentence it has no \
@@ -119,7 +129,7 @@ def record_text(r: dict) -> str:
     parts = [f"Area: {r.get('area', '?')}. Kind of question (as tagged by the test list): {r.get('kind') or 'unknown'}."]
     history = r.get("history") or []
     if history:
-        parts.append("Earlier turns, in full (the prompt below has them shortened):")
+        parts.append("Earlier turns, in full (the prompt below shows only what the person said in them):")
         for i, t in enumerate(history, 1):
             parts.append(f"Turn {i} question: {t.get('question', '')}\nTurn {i} answer: {t.get('answer', '')}")
     else:

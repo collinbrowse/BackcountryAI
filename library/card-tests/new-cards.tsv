@@ -1,0 +1,151 @@
+expected	kind	message
+seizure	plain	My friend just collapsed and her whole body is jerking, what do I do
+seizure	plain	How long can someone be convulsing before it becomes a real emergency?
+seizure	plain	He had a fit in the tent and now he's breathing but won't wake up. How should I lay him?
+seizure	plain	Should I put something in his mouth while he's seizing so he doesn't bite his tongue?
+seizure	messy	guy fell over by the fire and is shaking all over eyes rolled back foaming a bit help
+seizure	messy	my brother has epilepsy and hes doing the thing again stiff arms twitching were 10 miles in
+seizure	messy	she went totally rigid then started jerkin and her lips r kinda blue whats happening
+seizure	messy	kid was staring blank then his arms started going and he wet himself now hes really out of it
+seizure	followup	My cousin dropped to the ground and started convulsing next to the lake || it stopped after maybe two minutes but now he's confused and doesn't know where he is
+seizure	followup	Hiking partner just had a seizure on the switchbacks || she's having another one already and never woke up in between
+seizure	followup	My son has a seizure disorder and forgot his meds on this trip || what do I do if it happens out here
+seizure	followup	friend started twitching all over and smacked his head on a rock while it was happening || how long do i wait before moving him
+stroke	plain	My dad's face is drooping on one side and his words are slurred
+stroke	plain	What are the warning signs of a stroke I should check for?
+stroke	plain	Her left arm suddenly went weak and she can't lift it above her shoulder
+stroke	plain	My husband suddenly can't find his words and seems confused. Do we need to leave right now?
+stroke	messy	grandpas mouth went all crooked and hes talkin like hes drunk but he hasnt had anything
+stroke	messy	my wife cant feel her right side all of a sudden and her speech is garbled were at the campsite
+stroke	messy	friend said worst headache of his life then couldnt see outta one eye and started stumbling
+stroke	messy	moms smile is lopsided and her hand keeps droppin the cup what is this
+stroke	followup	My uncle suddenly sat down and said his arm felt heavy || now the corner of his mouth is sagging and he's mumbling
+stroke	followup	I think my mother might be having a stroke at the cabin || should I give her aspirin or not
+stroke	followup	His speech went weird for about ten minutes and then came back to normal || can we ignore that or do we still need to get out
+stroke	followup	My father-in-law's right leg buckled and one side of his face looks uneven || does the exact time it started matter? I didn't check
+lowbloodsugar	plain	My diabetic friend is shaking and sweating after a long hike. What should I give him?
+lowbloodsugar	plain	How much sugar should a type 1 diabetic take if their level crashes on the trail?
+lowbloodsugar	plain	My daughter uses insulin and she's pale, clammy and acting confused
+lowbloodsugar	plain	What do I do if someone with diabetes passes out and can't swallow?
+lowbloodsugar	messy	buddy took his insulin then we hiked all day and now hes sweaty shaky and kinda drunk acting
+lowbloodsugar	messy	my wife is type 1 her monitor keeps beeping LOW and shes not making sense
+lowbloodsugar	messy	dude skipped lunch hes diabetic and now hes cranky trembling and slurring
+lowbloodsugar	messy	kids sugar dropped hes cold and sweaty and wont answer me we got juice boxes
+lowbloodsugar	followup	My hiking partner has type 1 diabetes and is acting strange || I gave him glucose tabs, how long before he should improve
+lowbloodsugar	followup	My dad is diabetic and fell asleep on the drive in || now we can't wake him and he's drenched in sweat
+lowbloodsugar	followup	Friend checked her meter and it said 48 || she's starting to shake and get foggy
+lowbloodsugar	followup	My son injected insulin before dinner and then threw the whole meal up || he's getting shaky and grey now
+asthma	plain	My friend is having an asthma attack and left her inhaler in the car
+asthma	plain	How many puffs of albuterol can someone take during an attack?
+asthma	plain	My son is wheezing and can't finish a sentence after running up the trail
+asthma	plain	What position helps someone with asthma who is struggling to breathe?
+asthma	messy	cant catch my breath chest tight wheezy forgot my puffer
+asthma	messy	shes got asthma and the campfire smoke set her off shes sucking air and her lips look grey
+asthma	messy	my kid is whistling when he breathes out and his ribs pull in every breath
+asthma	messy	used inhaler 3 times still cant breathe right what now
+asthma	followup	My girlfriend has asthma and the cold air is getting to her || the inhaler isn't helping and she's getting really quiet
+asthma	followup	My nephew started coughing and wheezing on the climb || he has a spacer but I don't know how to use it
+asthma	followup	Partner is breathing hard and tight after the dust storm, she's asthmatic || it's worse now and she's too tired to talk
+asthma	followup	My son's rescue inhaler is empty || his breathing is getting tight again
+childbirth	plain	My wife's water just broke and we're snowed in at the cabin
+childbirth	plain	Contractions are two minutes apart and the hospital is four hours away
+childbirth	plain	How do I deliver a baby if I have to do it myself?
+childbirth	plain	The baby is out but the cord is still attached. Do I cut it?
+childbirth	messy	shes pushin i can see the head we cant get out the road is washed out
+childbirth	messy	my sister is pregnant and in labor in the back of the truck no service
+childbirth	messy	contractions comin hard and fast and she says she has to push now wat do i do
+childbirth	messy	baby just came out at the trailhead and the afterbirth hasnt come yet is that ok
+childbirth	followup	My partner is 38 weeks pregnant and we got stuck on a forest road || I think it's starting, she's having pains every few minutes
+childbirth	followup	She's in labor and the head is crowning || how do I support it as it comes out
+childbirth	followup	The baby just arrived in the tent || how do I keep it warm and what about the placenta
+childbirth	followup	We're at a remote ranch and my wife's water broke an hour ago || the pains are getting closer and nobody can get to us
+animalbite	plain	A stray dog bit my hand on the trail and broke the skin
+animalbite	plain	I woke up with a bat in the tent. Do I need a rabies shot?
+animalbite	plain	A raccoon scratched my son when he tried to feed it
+animalbite	plain	How should I clean a deep animal bite before I can see a doctor?
+animalbite	messy	squirrel bit my finger when i was feedin it is that a rabies thing
+animalbite	messy	some farm dog chomped my calf bleeding a lil owner nowhere around
+animalbite	messy	fox was acting weird walked right up to camp and nipped my ankle
+animalbite	messy	coyote went after my boot and got my leg thru the sock theres a little puncture
+animalbite	followup	A dog I didn't know grabbed my forearm at the campground || the owner left and I don't know if it's vaccinated
+animalbite	followup	My daughter got bitten by a chipmunk at the picnic area || do we need to worry about rabies
+animalbite	followup	A cat at the hostel bit me pretty hard yesterday || now the area is red and swollen
+animalbite	followup	There was a skunk wandering around camp in broad daylight || it just bit my friend on the hand
+tornado	plain	There's a funnel cloud heading toward our campground. Where do we go?
+tornado	plain	What should I do if a tornado comes while I'm driving?
+tornado	plain	The tornado sirens are going off and we're in tents
+tornado	plain	If I'm caught in the open during a tornado, is a ditch safer than staying in the car?
+tornado	messy	sky turned green and theres a roar like a freight train were in an rv
+tornado	messy	twister on the ground maybe a mile out were on the highway in the car help
+tornado	messy	big rotating wall cloud right over the lake and were on open prairie no buildings
+tornado	messy	warning just came over the radio for our county and were camped out in the open
+tornado	followup	There's a tornado warning for the area and we're on the trail || there's no building anywhere nearby, just trees
+tornado	followup	We're in a car and can see a twister behind us || traffic is stopped and we can't move
+tornado	followup	Weather alert says rotation spotted near our campsite || should we stay in the camper or get out
+tornado	followup	The wind is screaming and debris is flying past the tent || is lying flat in the low spot by the creek better
+smallengine	plain	My generator won't start after sitting all winter
+smallengine	plain	The outboard motor keeps dying when I give it throttle
+smallengine	plain	How do I clear a flooded chainsaw that won't start?
+smallengine	plain	My snowmobile cranks but won't fire and we're 15 miles from the trailhead
+smallengine	messy	quad died in the mud and wont turn over just clicks
+smallengine	messy	pulled the cord on the chainsaw like 50 times nothin
+smallengine	messy	boat motor sputtered and quit halfway across the lake smells like gas
+smallengine	messy	sled bogs out and stalls every time i hit the throttle
+smallengine	followup	Our generator at the cabin quit in the middle of the night || I refilled it but it just sputters for a second and dies
+smallengine	followup	My ATV stalled at the creek crossing || now it won't restart at all
+smallengine	followup	Trying to get the outboard going on our fishing trip || the pull cord is stuck and won't budge
+smallengine	followup	The snowmobile engine cut out on the ridge || could it be the spark plug and how do I check it
+hypothermia	boundary	My buddy fell in the river an hour ago and now he's shivering uncontrollably and confused
+lightning	boundary	lightning hit the tree we were under and my friend is on the ground not responding
+coldwater	boundary	He just went through the ice on the pond || he's out now but gasping and shaking hard
+chest	boundary	My dad has crushing pressure in his chest spreading into his left arm and jaw
+head	boundary	took a hard fall and hit the back of his head now one pupil is bigger and hes slurring
+altitude	boundary	We're at high camp and my partner is stumbling and confused || she can't walk a straight line and has a pounding headache
+heat	boundary	My friend stopped sweating, she's confused and her skin is hot and red after hiking in the desert
+hypothermia	boundary	shes shaky pale and mumbling after being out in the sleet all day no diabetes or anything
+dehydration	boundary	Hiked all day and ran out of water by noon || now I'm dizzy, my pee is dark and my head is pounding
+anaphylaxis	boundary	got stung by a bee and now im wheezing with hives everywhere
+altitude	boundary	At 14,000 feet my friend is breathless even resting and coughing up pink frothy stuff
+choking	boundary	My kid was eating a hot dog || now he suddenly can't breathe or make any sound
+bleeding	boundary	My pregnant wife slipped and cut her leg on a sharp rock and it's spurting blood
+heat	boundary	im 7 months pregnant and feel faint and overheated hiking in the sun
+sprain	boundary	My wife is pregnant and rolled her ankle on the trail || it's swelling fast and she can't put weight on it
+snakebite	boundary	A rattlesnake bit my leg on the trail
+dog	boundary	my dog got bit by another dog at the trailhead and his ear is bleeding
+tick	boundary	Found something tiny latched on and burrowed into my leg after the hike || how do I get it out
+thunderstorm	boundary	Lightning and hail are moving in fast and we're above treeline
+flashflood	boundary	heavy rain upstream and were camped in a dry wash the water sounds louder
+wildfire	boundary	The wind is howling || now there's smoke and glowing embers blowing toward camp
+vehiclestart	boundary	My truck cranks but won't start
+stove	boundary	camp stove sputters and the flame is tiny even with a full canister
+vehiclestuck	boundary	Jeep is buried to the axles in snow on the pass || wheels just spin
+none	near	Is epilepsy hereditary?
+none	near	Why do I get lightheaded and almost black out when I stand up too fast?
+none	near	How long after a seizure can someone legally drive again?
+none	near	What usually triggers seizures in people with epilepsy?
+none	near	How can I lower my risk of having a stroke?
+none	near	My grandma had a stroke last year, how can I help her with physical therapy at home
+none	near	I get migraines with zigzag lights in my vision before the headache, is that dangerous
+none	near	Is a TIA the same thing as a mini stroke?
+none	near	What's a normal blood sugar reading?
+none	near	How do I keep insulin from going bad in a hot car on a road trip?
+none	near	What does an A1C number actually measure
+none	near	how do i know if im prediabetic
+none	near	I've had a wet cough and chest congestion for a week, could it be bronchitis
+none	near	Which rescue inhaler brand is best?
+none	near	Can kids outgrow asthma as they get older?
+none	near	im hyperventilating my hands are tingling and my heart is racing i think im panicking
+none	near	How far along in pregnancy is it still okay to go backpacking?
+none	near	Is it safe to fly at 34 weeks pregnant?
+none	near	how do they figure out the due date for a baby
+none	near	When is the rabies vaccine due for my dog?
+none	near	How do bats find insects in the dark?
+none	near	How much does a pre-exposure rabies vaccine cost before an overseas trip
+none	near	Can my cat get rabies if she never goes outside?
+none	near	How do tornadoes form?
+none	near	A hurricane is forecast to make landfall near our beach rental, when should we evacuate
+none	near	what do you do if an earthquake hits while youre camping
+none	near	What was the strongest tornado ever recorded?
+none	near	What size generator do I need to run a fridge?
+none	near	my chainsaw chain wont cut straight it keeps pulling to one side
+none	near	How do I sharpen a lawn mower blade?

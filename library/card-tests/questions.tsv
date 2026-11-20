@@ -1,0 +1,90 @@
+expected	kind	message
+none	home	The power just went out. How long will the food in my fridge and freezer stay safe?
+carbonmonoxide	home	Can I run my gas generator in the garage if I leave the big door open?
+water	water	The tap water might be contaminated. How many drops of household bleach per gallon make it safe?
+water	water	How long do I need to boil water to make it safe to drink?
+carbonmonoxide	home	What are the signs of carbon monoxide poisoning and what should I do?
+hypothermia	medical	Someone is shivering hard and acting confused after being out in the cold. What do I do?
+bleeding	medical	Someone cut their arm badly and it is bleeding a lot. What do I do?
+burns	medical	I burned my hand on the stove. How should I treat it?
+none	medical	The power is out. How long can my insulin stay unrefrigerated?
+none	home	Is it safe to use candles for light during a blackout?
+phonebattery	home	My phone is at 15% and the power is out. How do I make the battery last?
+carbonmonoxide	home	Can I charge my phone in my car with the engine running inside the garage?
+none	home	A power line is down in my front yard. What should I do?
+none	home	The water is off and the toilet won't flush. What can I do for a toilet?
+none	home	How do I keep warm in my house in winter if the power and heat are out?
+none	disaster	There has been a nuclear explosion nearby. What should I do?
+none	food	Is canned food still safe to eat after it sat in floodwater?
+none	medical	Is it safe to take ibuprofen that expired two years ago?
+dehydration	medical	How do I make oral rehydration solution at home?
+heat	medical	Someone working in the heat is confused, very hot and has stopped sweating. What do I do?
+none	food	How can I tell if home-canned food might have botulism?
+none	disaster	How much water should I store per person for an emergency?
+frostbite	medical	How do I treat early frostbite on my toes?
+vehiclestart	vehicle	My truck won't start and just clicks. What do I check?
+wetfire	survival	How do I start a fire with wet wood?
+snakebite	medical	A rattlesnake bit my friend's ankle on the trail. What should we do?
+altitude	medical	My head is pounding and I feel sick after climbing to 11,000 feet. What is happening?
+bear	wildlife	What should I do if I meet a grizzly bear on the trail?
+avalanche	weather	How do I know if a slope is likely to avalanche?
+thunderstorm	weather	A thunderstorm is coming and we are above treeline. What do we do?
+water	water	Is stream water safe to drink if it looks clear, or do I need to filter it?
+sprain	medical	I think I sprained my ankle hiking. How do I tell if it is broken and how do I splint it?
+blister	medical	How do I treat a blister on my heel so I can keep hiking?
+none	bike	How do I patch a flat bike tire on the trail?
+lost	survival	I am lost in the woods. Should I stay put or try to walk out?
+nightout	survival	How do I build an emergency shelter for one night in the snow?
+none	vehicle	How do I add oil on my snowmobile?
+none	vehicle	How do I replace the spark plug on my chainsaw?
+vehiclestart	vehicle	How do I jump start a car with jumper cables?
+vehiclestuck	vehicle	My truck is stuck in deep snow. How do I get it out?
+none	vehicle	How do I change a flat tire on my truck?
+vehiclestart	vehicle	My diesel truck won't start in the cold. Could the fuel have gelled?
+smallengine	vehicle	My ATV won't start. What should I check?
+smallengine	vehicle	My boat's outboard motor won't start. What should I check?
+stove	gear	My camp stove won't light. How do I fix it?
+none	gear	How do I repair a broken tent pole in the field?
+none	gear	How do I fix a leak in my inflatable sleeping pad?
+smallengine	gear	My generator won't start. What should I check?
+none	home	How do I thaw a frozen water pipe safely?
+anaphylaxis	medical	Someone is having a severe allergic reaction to a bee sting. What do I do?
+cpr	medical	How do I do CPR on an adult?
+choking	medical	Someone is choking and can't breathe. What do I do?
+fracture	medical	How do I splint a broken leg in the backcountry?
+fracture	medical	I think my friend dislocated his shoulder. What should we do?
+head	medical	My friend hit his head skiing and seems confused. What should I watch for?
+tick	medical	How do I remove a tick and when should I worry about Lyme disease?
+none	medical	I have an itchy rash after walking through plants. Is it poison ivy and how do I treat it?
+lowbloodsugar	medical	A diabetic hiker is shaky and confused. What do I do?
+asthma	medical	Someone is having an asthma attack and has no inhaler. What can we do?
+diarrhea	medical	I have diarrhea a week after drinking from a stream. Could it be giardia?
+carbonmonoxide	medical	Is it safe to run a stove inside my tent?
+eye	medical	I got something in my eye and it won't come out. What do I do?
+tooth	medical	A tooth got knocked out in a fall. Can it be saved?
+childbirth	medical	A woman is going into labor and we can't get to a hospital. What do I do?
+stroke	medical	What are the signs of a stroke?
+chest	medical	What are the signs of a heart attack and what should I do?
+seizure	medical	Someone is having a seizure. What do I do?
+animalbite	medical	A dog bit me. Do I need to worry about rabies?
+none	survival	How do I find north without a compass?
+signaling	survival	How do I signal a rescue helicopter?
+water	water	How can I purify water if I don't have a filter?
+none	survival	How do I start a fire with a ferro rod?
+none	survival	How do I build a snow cave?
+coldwater	survival	What do I do if I fall through ice on a lake?
+rivercrossing	survival	How do I cross a river safely on foot?
+flashflood	weather	What should I do if a flash flood comes while I'm in a canyon?
+wildfire	disaster	A wildfire is getting close to our campsite. What should we do?
+tornado	disaster	What should I do if a tornado hits while I'm camping?
+bear	wildlife	How do I use bear spray?
+lion	wildlife	What should I do if a mountain lion follows me?
+foodstorage	wildlife	How do I store food so bears can't get it?
+none	food	Which wild plants are safe to eat in North America?
+none	food	How do I tell if a wild mushroom is poisonous?
+none	food	How do I set a snare to catch small game?
+thunderstorm	weather	How can I tell from the clouds that a storm is coming?
+none	radio	What frequency should I use to call for help on a ham radio?
+none	radio	What is the difference between GMRS and FRS radios?
+dog	pets	My dog cut his paw pad on the trail. How do I treat it?
+water	water	Is the water from this standing pond safe to filter with my Kathryn be free filter?

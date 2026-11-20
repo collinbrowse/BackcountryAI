@@ -185,7 +185,8 @@ struct ShippedModelBenchmark {
         for question in Self.questions {
             let started = Date()
             let stats = try await better.engine.answer(
-                [.system(Retrieval.instructions), .user(Self.prompt(for: question))], config: .answers) { _ in }
+                [.system(Retrieval.instructions(for: better.engine.stepHabit)), .user(Self.prompt(for: question))],
+                config: .answers) { _ in }
             all.append(stats)
             totals.append(Date().timeIntervalSince(started))
             #expect(stats.answerTokens > 0)

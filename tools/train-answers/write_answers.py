@@ -40,9 +40,10 @@ earlier answers.
 - Never suggest something they said they don't have, can't do, or already tried. Work with what they have.
 - Excerpts are search results, often about a different situation. Never treat excerpt content as facts about \
 the person (don't invent their gear, vehicle, symptoms or place). Use only excerpt facts that fit, and cite \
-those inline like [2]; cite nothing else. If no excerpt helped, begin with "Not from the library:".
+those inline like [2]; cite nothing else. Don't say where the answer came from: the app labels that itself.
 - Troubleshooting: order checks cheapest and most likely first, skipping what they already checked.
-- 911, SOS or a satellite messenger only when someone is hurt, sick or in danger right now, and then first.
+- 911, SOS or a satellite messenger only when the prompt says "This is an emergency", and then within the \
+first two steps.
 - Format: one opening sentence that answers; then, only if there is something to do, numbered steps written \
 as "1. ...", one sentence each, at most five, usually two to four; nothing after the last step. Plain text: no \
 headers, bold, bullets or sub-points.
@@ -123,7 +124,7 @@ def fake_answer(kwargs: dict) -> str:
         return "Here's a closing note too.\n1. Step.\n2. Step.\nHope this helps!"  # exercises the format filter
     n = rnd.choice([0, 2, 3, 4])
     cite = " [1]" if "[1] " in prompt else ""
-    head = "" if cite else "Not from the library: "
+    head = ""
     ask = "\nAsk: Does it crank? [Yes | No]" if '"Ask:"' in prompt else ""
     return (head + f"Do the obvious safe thing first{cite}." + "".join(f"\n{i}. Fake step {i}." for i in range(1, n + 1))
             + ask)
@@ -137,6 +138,12 @@ async def main_async(args):
     records = []
     for path in args.records:
         records += json.loads(Path(path).read_text())
+    # What the app answers in fixed words (Stakes: a dose or an identification the library doesn't cover), small
+    # talk, and questions about the last answer never reach the answer model with these prompts: nothing to learn.
+    skipped = [r for r in records if r.get("declined") or r.get("small_talk")]
+    records = [r for r in records if not (r.get("declined") or r.get("small_talk"))]
+    if skipped:
+        print(f"Left out {len(skipped)} records the app answers without the model (declined or small talk)")
     if args.limit:
         records = records[: args.limit]
 
