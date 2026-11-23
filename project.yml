@@ -57,6 +57,9 @@ targets:
         BAHasManagedAssetPacks: true
         BAUsesAppleHosting: true
         NSSupportsLiveActivities: true   # download progress on the Lock Screen (DownloadActivity.swift)
+        # XcodeGen writes 1.0 / 1 here unless told otherwise, which overrides the build settings below.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UIFileSharingEnabled: true   # shows the app in Finder › iPhone › Files, so a library can be copied in
         # "Open in BackcountryAI" from Files and other apps adds the file to the person's documents (MyDocuments).
         CFBundleDocumentTypes:
@@ -175,6 +178,8 @@ targets:
       path: DownloaderExtension/Info.plist
       properties:
         CFBundleDisplayName: BackcountryAI Downloader
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         EXAppExtensionAttributes:
           EXExtensionPointIdentifier: com.apple.background-asset-downloader-extension
     entitlements:
@@ -205,6 +210,8 @@ targets:
       path: Widgets/Info.plist
       properties:
         CFBundleDisplayName: BackcountryAI
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

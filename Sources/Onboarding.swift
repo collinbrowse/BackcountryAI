@@ -151,7 +151,7 @@ private struct GoodToKnowPage: View {
     var body: some View {
         OnboardingPage(mood: .alert, title: "A few honest things") {
             point("checkmark.shield.fill", Theme.accent, "I can be wrong",
-                  "Each step shows the article it came from, like [1]. Tap a step to read the source before you act.")
+                  "I'm a reference, not medical advice, and no substitute for a doctor or first-aid training. Each step shows the article it came from, like [1]. Tap it to read the source before you act.")
             point("sos", Theme.danger, "Emergencies: call 911 first",
                   "No signal? On iPhone 14 or later, calling 911 offers Emergency SOS via satellite. The red SOS button is always on the home screen.")
             point("battery.25percent", Theme.sun, "Answers use real battery",
