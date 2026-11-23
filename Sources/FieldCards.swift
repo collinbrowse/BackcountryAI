@@ -117,7 +117,7 @@ struct FieldCardBody: View {
                     } else {
                         Circle().fill(color.opacity(0.7)).frame(width: 6, height: 6).offset(y: -2)
                     }
-                    Text(item).font(.callout).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    Text(Emergency.localized(item)).font(.callout).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -164,7 +164,7 @@ struct FieldCardView: View {
 struct FieldDisclaimer: View {
     var body: some View {
         Label("General wilderness first-aid guidance. It is not a substitute for training such as a WFR "
-              + "course. If you can reach help (911, or SOS by satellite), do.", systemImage: "info.circle")
+              + "course. If you can reach help (\(Emergency.number), or SOS by satellite), do.", systemImage: "info.circle")
             .font(.footnote).foregroundStyle(Theme.inkSoft)
     }
 }

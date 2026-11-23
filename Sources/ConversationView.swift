@@ -87,7 +87,7 @@ struct AssistantTurn: View {
             }
             if message.urgent { SOSBanner() }
             if !message.text.isEmpty {
-                AnswerBody(text: message.text, failed: message.failed) { n in
+                AnswerBody(text: Emergency.localized(message.text), failed: message.failed) { n in
                     if message.sources.indices.contains(n - 1) { open(message.sources[n - 1]) }
                 }
             }
@@ -134,19 +134,20 @@ struct SOSBanner: View {
         VStack(alignment: .leading, spacing: 10) {
             Label("If a life may be at risk, get help first", systemImage: "sos")
                 .font(.subheadline.weight(.bold))
-            Text("No cell signal? On iPhone 14 or later, call 911 anyway to start Emergency SOS via satellite.")
+            Text("No cell signal? On iPhone 14 or later, call \(Emergency.number) anyway to start Emergency SOS via satellite.")
                 .font(.footnote)
                 .opacity(0.9)
             // Two confirmations before a real emergency call: this one, then iOS's own "Call 911?".
+            // The number is the one for the phone's region (Emergency.swift).
             Button { confirmCall = true } label: {
-                Label("Call 911", systemImage: "phone.fill")
+                Label("Call \(Emergency.number)", systemImage: "phone.fill")
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(Theme.danger)
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(.white, in: .capsule)
             }
-            .alert("Call 911 now?", isPresented: $confirmCall) {
-                Button("Call 911", role: .destructive) { openURL(URL(string: "tel://911")!) }
+            .alert("Call \(Emergency.number) now?", isPresented: $confirmCall) {
+                Button("Call \(Emergency.number)", role: .destructive) { openURL(Emergency.callURL) }
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This places a real emergency call. Use it when someone needs help now.")

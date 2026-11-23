@@ -637,7 +637,8 @@ enum Retrieval {
         let text = template.replacing("{steps}", with: whole ? completeProcedure : onlyWhatIsNeeded)
             .replacing("{help}", with: emergency ? callForHelp : neverMentionHelp)
             .replacing("{care}", with: stakes.care.map { " " + $0 } ?? "")
-        return whole ? text + "\n" + example : text
+        // The prompts say 911; the model is told the number for the phone's region (Emergency.swift).
+        return Emergency.localized(whole ? text + "\n" + example : text)
     }
 
     private static let neverMentionHelp = """
@@ -804,7 +805,7 @@ enum Retrieval {
             }
         }
         if Urgency.needsHelpNow(question) {
-            p += emergencyShape + "\n\n"
+            p += Emergency.localized(emergencyShape) + "\n\n"
         } else if kind == .troubleshoot {
             p += troubleshootShape + "\n\n"
         }

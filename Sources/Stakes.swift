@@ -54,7 +54,7 @@ enum Stakes: String, Sendable {
     /// words: a small model told to decline writes a dose anyway about as often as not.
     /// - Parameter hasArticles: the library's closest articles are shown under the reply, for the person to read.
     func declining(emergency: Bool, hasArticles: Bool = false) -> String? {
-        let help = emergency ? " If this is an emergency, call or text 911 or use SOS on a satellite messenger now." : ""
+        let help = emergency ? " If this is an emergency, call or text \(Emergency.number) or use SOS on a satellite messenger now." : ""
         let read = hasArticles ? "\nThe library's closest articles are below. Read what they say before you rely on them." : ""
         switch self {
         case .ordinary:
@@ -66,7 +66,7 @@ enum Stakes: String, Sendable {
             1. Read the label on the package: it gives the dose by age or weight and the most to take in a day.
             2. If the label doesn't cover this person, this animal or this mix of medicines, don't give it until \
             you can ask a pharmacist, a doctor or a vet.
-            3. If too much may already have been taken, call Poison Control (1-800-222-1222 in the U.S.) or 911 \
+            3. If too much may already have been taken, call Poison Control (1-800-222-1222 in the U.S.) or \(Emergency.number) \
             as soon as you have signal.\(read)
             """
         case .identify:
@@ -75,7 +75,7 @@ enum Stakes: String, Sendable {
             1. Don't eat it, drink it or handle it unless someone who knows the species or the source has \
             identified it for certain.
             2. If someone has already eaten it or been bitten, note the time, keep a photo or a sample, and get \
-            help: Poison Control (1-800-222-1222 in the U.S.) or 911.\(read)
+            help: Poison Control (1-800-222-1222 in the U.S.) or \(Emergency.number).\(read)
             """
         case .medical:
             return """
@@ -153,7 +153,7 @@ extension Retrieval {
 
     /// A field card's steps and warnings word for word, in place of an answer written from them.
     static func quoting(_ card: FieldCard, emergency: Bool) -> String {
-        let help = emergency ? "If this is an emergency, call or text 911 or use SOS on a satellite messenger now.\n" : ""
+        let help = emergency ? "If this is an emergency, call or text \(Emergency.number) or use SOS on a satellite messenger now.\n" : ""
         let steps = card.treat.enumerated().map { "\($0.offset + 1). \($0.element)" }
         return help + "This is the \(card.title) field card, word for word. About a medicine I won't add to it.\n"
             + (steps + card.avoid).joined(separator: "\n") + "\nThe whole card is below."

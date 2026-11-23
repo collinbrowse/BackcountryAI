@@ -60,7 +60,7 @@ other our ours ourselves out over own same she should so some such than that the
 there these they this those through to too under until up very was we were what when where which while who whom why
 will with would you your yours yourself yourselves
 """.split())
-OFFICIAL = {"ready-gov", "cdc-travel", "medlineplus", "nhs-medicines", "military-medicine", "wikem", "medical-library",
+OFFICIAL = {"ready-gov", "cdc-travel", "medlineplus", "military-medicine", "wikem", "medical-library",
             "water", "post-disaster", "food-prep", "survival-manuals", "first-aid-guides", "usda-canning", "risk"}
 
 

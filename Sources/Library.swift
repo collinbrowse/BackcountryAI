@@ -49,13 +49,13 @@ final class Library: @unchecked Sendable {
         return pack
     }
 
-    static let official: Set<String> = ["ready-gov", "cdc-travel", "medlineplus", "nhs-medicines",
+    static let official: Set<String> = ["ready-gov", "cdc-travel", "medlineplus",
         "military-medicine", "wikem", "medical-library", "water", "post-disaster", "food-prep",
         "survival-manuals", "first-aid-guides", "usda-canning", "risk"]
     /// Sources by how close they are to what Scout is for (Retrieval.Signals): guidance for the field and for
     /// emergencies, and forums about houses, kitchens and gardens.
     static let field: Set<String> = ["survival-manuals", "military-medicine", "gov-guides", "ready-gov", "cdc-travel",
-                                     "medlineplus", "risk", "se-outdoors", "usda-canning", "nhs-medicines"]
+                                     "medlineplus", "risk", "se-outdoors", "usda-canning"]
     static let household: Set<String> = ["se-diy", "se-cooking", "se-gardening", "se-lifehacks", "se-sustainability",
                                          "se-pets"]
     static let officialLabel: Set<String> = ["ready-gov", "cdc-travel", "medlineplus", "military-medicine",

@@ -51,8 +51,6 @@ ZIM_SOURCES = {
     "wikem_en_all_nopic": ("wikem", "WikEM emergency medicine", "medical", "wiki", "https://wikem.org/wiki/"),
     "appropedia_en_all_maxi": ("appropedia", "Appropedia", "howto", "wiki", "https://www.appropedia.org/"),
     "medlineplus.gov_en_all": ("medlineplus", "MedlinePlus (NIH)", "medical", "web", "https://"),
-    "nhs.uk_en_medicines": ("nhs-medicines", "UK Medicines A to Z (public sector information)", "medical", "web",
-                            "https://"),
     "wwwnc.cdc.gov_en_all": ("cdc-travel", "CDC Travelers' Health", "medical", "web", "https://"),
     "ready.gov_en_all": ("ready-gov", "Ready.gov (FEMA)", "emergency", "web", "https://"),
     "irp.fas.org_en_military-medicine": ("military-medicine", "Military medicine manuals", "medical", "pdf",
@@ -101,8 +99,6 @@ LICENSES = {
     "energypedia": f"CC BY-SA 3.0 or 4.0 (per page), Energypedia contributors {CC_BY_SA}",
     "wikiciv": f"CC BY-SA 4.0, WikiCiv contributors {CC_BY_SA}",
     "medlineplus": f"{US_GOV}, U.S. National Library of Medicine",
-    "nhs-medicines": "Contains public sector information licensed under the Open Government Licence v3.0 "
-                     "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
     "cdc-travel": f"{US_GOV}, CDC (the printed Yellow Book is published by Oxford University Press)",
     "ready-gov": f"{US_GOV}, FEMA",
     "military-medicine": US_GOV,

@@ -3170,11 +3170,13 @@ extension FieldCard {
         section(headings.avoid, avoid)
         section(headings.evacuate, evacuateIf)
         parts.append(Self.disclaimer)
-        return parts.joined(separator: "\n\n")
+        return Emergency.localized(parts.joined(separator: "\n\n"))
     }
 
-    static let disclaimer = "General guidance written for this app. It is not a substitute for training such as a "
-        + "WFR course. If you can reach help (911, or SOS by satellite), do."
+    static var disclaimer: String {
+        "General guidance written for this app. It is not a substitute for training such as a "
+            + "WFR course. If you can reach help (\(Emergency.number), or SOS by satellite), do."
+    }
 
     /// What cards are called as a source, in the prompt and under an answer.
     static let sourceLabel = "Scout field card"

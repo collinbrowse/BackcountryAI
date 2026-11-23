@@ -14,7 +14,6 @@ import urllib.request
 # (Kiwix name, flavour). Small, high-value sources first so conversion can start early.
 SOURCES = [
     ("irp.fas.org_en_military-medicine", ""),
-    ("nhs.uk_en_medicines", ""),
     ("wwwnc.cdc.gov_en_all", ""),
     ("outdoors.stackexchange.com_en_all", ""),
     ("cooking.stackexchange.com_en_all", ""),

@@ -152,8 +152,8 @@ private struct GoodToKnowPage: View {
         OnboardingPage(mood: .alert, title: "A few honest things") {
             point("checkmark.shield.fill", Theme.accent, "I can be wrong",
                   "I'm a reference, not medical advice, and no substitute for a doctor or first-aid training. Each step shows the article it came from, like [1]. Tap it to read the source before you act.")
-            point("sos", Theme.danger, "Emergencies: call 911 first",
-                  "No signal? On iPhone 14 or later, calling 911 offers Emergency SOS via satellite. The red SOS button is always on the home screen.")
+            point("sos", Theme.danger, "Emergencies: call \(Emergency.number) first",
+                  "No signal? On iPhone 14 or later, calling \(Emergency.number) offers Emergency SOS via satellite. The red SOS button is always on the home screen.")
             point("battery.25percent", Theme.sun, "Answers use real battery",
                   "I think on this iPhone's chip, which works hard while I write. Searching and reading the library is instant and nearly free, and so is rereading a saved chat. Carry a battery pack.")
         }

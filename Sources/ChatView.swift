@@ -289,7 +289,7 @@ struct ChatView: View {
         let choices = (m.choices ?? []).map { ($0, "arrowshape.turn.up.left") }
         let replies: [(String, String)] = !choices.isEmpty ? choices : m.urgent
             ? [("What if it gets worse?", "exclamationmark.triangle"), ("Should we evacuate?", "figure.walk.motion"),
-               ("What do I tell 911?", "phone")]
+               ("What do I tell \(Emergency.number)?", "phone")]
             : AnswerBlock.parse(m.text).contains(where: { if case .step = $0 { true } else { false } })
             ? [("Explain step 1 more", "text.magnifyingglass"), ("What if that doesn't work?", "arrow.triangle.branch"),
                ("What gear helps?", "backpack")]

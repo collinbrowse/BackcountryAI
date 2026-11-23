@@ -29,7 +29,7 @@ import judge_passages as jp  # noqa: E402
 
 # Sources by how close they are to what Scout is for: field and emergency guidance first, forums about houses last.
 FIELD = {"survival-manuals", "military-medicine", "gov-guides", "ready-gov", "cdc-travel", "medlineplus", "risk",
-         "se-outdoors", "usda-canning", "nhs-medicines"}
+         "se-outdoors", "usda-canning"}
 HOUSEHOLD = {"se-diy", "se-cooking", "se-gardening", "se-lifehacks", "se-sustainability", "se-pets"}
 
 # name: (description, settings). Settings not given keep DEFAULT's, which are Retrieval.candidates' own.

@@ -13,7 +13,6 @@ The build scripts in `library/` are adapted from [Survival LLM](https://github.c
 |---|---|
 | WikiMed, Wikipedia's medical articles (Kiwix `wikipedia_en_medicine`) | CC BY-SA 4.0, Wikipedia contributors |
 | MedlinePlus, NLM-written pages only (Kiwix `medlineplus.gov_en_all`) | Public domain (U.S. National Library of Medicine) |
-| UK Medicines A to Z (Kiwix `nhs.uk_en_medicines`) | Contains public sector information licensed under the Open Government Licence v3.0. Not presented as the NHS website. |
 | CDC Travelers' Health, including the online Yellow Book (Kiwix `wwwnc.cdc.gov_en_all`) | Public domain (CDC) |
 | Ready.gov (Kiwix `ready.gov_en_all`) | Public domain (FEMA) |
 | Military medicine manuals (Kiwix `irp.fas.org_en_military-medicine`) | Public domain (U.S. government) |
@@ -35,11 +34,12 @@ The build scripts in `library/` are adapted from [Survival LLM](https://github.c
 - **Military volumes that reprint copyrighted material:** Military Dermatology, War Psychiatry, FM 21-11.
 - **Mixed or unknown rights:** Kiwix "zimgit" collections and Gardenology.
 - **No longer published:** WikEM. Kiwix dropped it; the only copies left are from 2018.
+- **No charging for access:** the NHS UK Medicines A to Z. The Open Government Licence allows commercial use, but
+  the nhs.uk terms forbid charging people specifically for access to the content, which a paid app would do.
+  MedlinePlus covers most of the same medicines.
 - **All rights reserved:** Hesperian books, MSF guidelines, Red Cross manuals and commercial survival books.
 
 ## Still to confirm before release
 
-- **NHS medicines:** the Open Government Licence allows commercial use. The nhs.uk terms also say not to
-  imply NHS endorsement or use its logo. The app doesn't do either, but read the current terms once.
-- **CDC Yellow Book:** the online text is a CDC work, while Oxford University Press publishes the print
-  edition. Check that the online chapters carry no separate copyright notice.
+- **CDC Yellow Book (checked November 2026):** the online edition says CDC material is in the public domain; only
+  the Yellow Book wordmark and logo are HHS trademarks, which the app doesn't use.

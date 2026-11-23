@@ -142,6 +142,7 @@ targets:
       - Sources/Retrieval.swift
       - Sources/Urgency.swift
       - Sources/Stakes.swift
+      - Sources/Emergency.swift
       # The field cards' words and how a question is matched to one (their views stay in the app).
       - Sources/FieldCardData.swift
       - Sources/CardMatcher.swift

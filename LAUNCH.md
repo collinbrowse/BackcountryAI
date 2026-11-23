@@ -13,15 +13,20 @@ tracks the work. Ask Claude to add, move or check off items and it edits this fi
       (`project.yml` → `info.properties`).
 - [x] Privacy manifest: `Sources/PrivacyInfo.xcprivacy` declares no tracking, no collected data, and the
       required-reason APIs (UserDefaults `CA92.1`, disk space `E174.1` / `85F4.1`).
-- [ ] After the first archive, run Xcode's **Product › Archive › Generate Privacy Report** and check that the MLX and
-      Hugging Face packages don't add required-reason APIs the manifest doesn't cover.
-- [ ] Source licenses: settle the open NHS and CDC Yellow Book questions in
-      [`docs/library-hosting.md`](docs/library-hosting.md), or drop those sources from the `lite` pack.
+- [x] Privacy report: a Release archive scanned with `scripts/privacy-scan.sh` showed MLXLMCommon reading file
+      modification dates and mlx-swift carrying the `systemUptime` selector, with no manifests of their own. Both
+      are now declared in the app's manifest (`C617.1`, `35F9.1`). Rerun the scan after a package update.
+- [x] CDC Yellow Book: the online edition says CDC material is public domain; only the Yellow Book name and logo
+      are HHS trademarks, and the app uses neither.
+- [x] NHS medicines: dropped from the library, because nhs.uk's terms forbid charging for access to the content.
+      MedlinePlus covers most of the same medicines. Rebuild and re-upload the `lite` pack before the first build
+      if an older one is already in App Store Connect.
 - [x] Medical disclaimer beyond Field cards: onboarding ("I'm a reference, not medical advice…") and a footer on
       every answer ("Reference, not medical advice"). App Review 1.4.1.
-- [ ] Emergency number: the app says and dials 911 everywhere. Either limit availability to the US (and
-      Canada) for 1.0, or pick the number from the region (112 in the EU and much of the world, 999 in the UK, 000 in
-      Australia).
+- [x] Emergency number: the SOS banner, onboarding, field cards, fixed replies, the model's instructions and its
+      answers use the number for the phone's region (`Sources/Emergency.swift`): 911 in North America, 999 in the UK,
+      000 in Australia, 112 where no other number is certain. The region is the phone's setting, not its location.
+      Poison Control stays the U.S. number, labeled as such.
 
 ### App Store Connect (manual, once; steps in `docs/release.md`)
 

@@ -227,8 +227,8 @@ These were filled in from reading the code. Change the file if any is wrong:
 - `fastlane/metadata/copyright.txt`: `2026 Collin Browse`.
 - The app icon is `Sources/Assets.xcassets/AppIcon.appiconset`: `AppIcon.png` (green) and `AppIcon-Dark.png`
   (navy, shown in Dark Mode), each 1024×1024 with square corners and no transparency. iOS rounds the corners.
-- `docs/library-hosting.md` still lists two open questions before a first release: the NHS and CDC Yellow Book
-  terms.
+- `SOURCES.md` › Still to confirm before release: the CDC Yellow Book is checked. NHS medicines were dropped
+  (see `SOURCES.md` › Left out).
 
 ### 12. First run
 

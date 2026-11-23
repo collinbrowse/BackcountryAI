@@ -111,7 +111,7 @@ struct StakesTests {
     }
 
     @Test func aDoseNeedsACardAndAnInjuryNeedsSomething() throws {
-        let forum = Self.passage("se-outdoors"), leaflet = Self.passage("nhs-medicines")
+        let forum = Self.passage("se-outdoors"), leaflet = Self.passage("medlineplus")
         let card = try #require(FieldCard.card(id: "water")).passage
         // A leaflet that search found is not a dose that the leaflet states.
         #expect(!Stakes.dose.isCovered(by: []) && !Stakes.dose.isCovered(by: [forum, leaflet]))
