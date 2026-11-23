@@ -43,7 +43,7 @@ struct GuideView: View {
                         ForEach(Array(GuideCollection.all.enumerated()), id: \.element.id) { i, c in
                             shelf(c).riseIn(i + 1)
                         }
-                        bySource.riseIn(6)
+                        bySource.riseIn(GuideCollection.all.count + 1)
                     }
                 }
                 .padding(.vertical, 12)
@@ -57,6 +57,9 @@ struct GuideView: View {
             .navigationDestination(for: Topic.self) { TopicView(topic: $0) }
             .navigationDestination(for: Library.SourceInfo.self) { SourceView(info: $0) }
             .navigationDestination(for: GuideCollection.self) { CollectionView(collection: $0) }
+            .navigationDestination(for: FieldCard.self) { card in
+                FieldCardView(card: card) { q in query = q }
+            }
             .navigationDestination(isPresented: Binding(get: { router.openField }, set: { router.openField = $0 })) {
                 FieldView()
             }
@@ -92,7 +95,7 @@ struct GuideView: View {
             }
             .buttonStyle(.plain)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-                ForEach(FieldCard.all.prefix(6)) { c in
+                ForEach(FieldCard.firstAid.prefix(6)) { c in
                     NavigationLink(value: c) { MiniTile(title: c.title, symbol: c.icon) }
                         .buttonStyle(SquishyButtonStyle(scale: 0.94))
                 }
@@ -102,9 +105,6 @@ struct GuideView: View {
         .background(LinearGradient(colors: [Theme.pine, Color(hex: 0x13786A)], startPoint: .topLeading,
                                    endPoint: .bottomTrailing), in: .rect(cornerRadius: 26, style: .continuous))
         .padding(.horizontal, 16)
-        .navigationDestination(for: FieldCard.self) { card in
-            FieldCardView(card: card) { q in query = q }
-        }
     }
 
     private func shelf(_ c: GuideCollection) -> some View {
@@ -290,7 +290,7 @@ struct CollectionView: View {
     }
 }
 
-/// One topic: ask Scout about it, or read what the library has, filtered by source.
+/// One topic: ask Scout about it, read its field card, or read what the library has, filtered by source.
 struct TopicView: View {
     let topic: Topic
     @Environment(LibraryStore.self) private var store
@@ -301,6 +301,7 @@ struct TopicView: View {
     @State private var openArticle: Passage?
 
     private var collection: GuideCollection? { GuideCollection.all.first { $0.topics.contains(topic) } }
+    private var cards: [FieldCard] { FieldCard.forTopic(topic.id) }
 
     var body: some View {
         ScrollView {
@@ -312,14 +313,40 @@ struct TopicView: View {
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(.horizontal, 16)
 
-                if let card = FieldCard.forTopic(topic.id) {
+                if topic.id == "assess" {
+                    Button { router.openField = true } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "stethoscope").font(.title3).foregroundStyle(.white)
+                                .frame(width: 42, height: 42).background(Theme.pine, in: .circle)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Open Field mode").font(.headline).foregroundStyle(Theme.ink)
+                                Text("Step from scene size-up to plan. No AI needed.")
+                                    .font(.caption).foregroundStyle(Theme.inkSoft)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Theme.inkSoft)
+                        }
+                        .card(padding: 12)
+                    }
+                    .buttonStyle(SquishyButtonStyle(scale: 0.97))
+                    .padding(.horizontal, 16)
+                }
+
+                if !cards.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
-                            Text("Quick card").sectionLabel()
+                            Text(cards.count == 1 ? "Quick card" : "Quick cards").sectionLabel()
                             Spacer()
                             Text("No AI · instant").font(.caption).foregroundStyle(Theme.inkSoft)
                         }
-                        FieldCardBody(card: card)
+                        if cards.count == 1 {
+                            FieldCardBody(card: cards[0])
+                        } else {
+                            ForEach(cards) { card in
+                                NavigationLink(value: card) { CardTile(card: card) }
+                                    .buttonStyle(SquishyButtonStyle(scale: 0.97))
+                            }
+                        }
                     }
                     .padding(.horizontal, 16)
                 }

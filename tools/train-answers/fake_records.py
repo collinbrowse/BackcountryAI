@@ -30,15 +30,24 @@ def swift_string(name: str) -> str:
     return out.rstrip("\n")
 
 
+def instructions_for(engine: str) -> str:
+    """Retrieval.instructions(for:): the shared template with each model's own wording for the steps, and one
+    finished answer for Apple's model."""
+    apple = engine == "apple"
+    text = swift_string("template").replace("{steps}", swift_string("completeProcedure" if apple else "onlyWhatIsNeeded"))
+    text = text.replace("{help}", swift_string("neverMentionHelp"))  # fakes are never emergencies
+    text = text.replace("{care}", "")  # nor doses or identifications (Stakes.care)
+    return text + "\n" + swift_string("example") if apple else text
+
+
 def prompt(question: str, sources: list, history: list, kind: str, troubleshoot_shape: str) -> str:
     """A rough port of Retrieval.prompt as of 2026-11 (only used for fakes; the real prompts come from
     check-answers, so this doesn't need to track every wording change)."""
     p = "WHAT THEY TOLD YOU (only this describes their situation):\n"
     if history:
-        for i, t in enumerate(history):
-            room = 500 if i == len(history) - 1 else 240
-            p += f"Earlier they asked: {t['question']}\nYou answered (shortened): {t['answer'][:room]}\n"
-        p += "This is a follow-up. Answer the new question; don't repeat what you already said.\n"
+        for t in history:
+            p += f"Earlier they said: {t['question']}\n"
+        p += "This is a follow-up in the same situation. Answer the new question.\n"
     p += f"Their question: {question}\n\n"
     if not sources:
         p += "LIBRARY ARTICLES: none matched this question.\n\n"
@@ -46,7 +55,7 @@ def prompt(question: str, sources: list, history: list, kind: str, troubleshoot_
         p += "LIBRARY ARTICLES (about other people's situations; use only what fits theirs):\n"
         for i, s in enumerate(sources, 1):
             p += f"[{i}] {s['title']} ({s['source']})\n{s['text']}\n\n"
-    if kind == "troubleshoot" and troubleshoot_shape:
+    if kind == "troubleshoot" and troubleshoot_shape:  # the app's emergency line is left out: fakes never need it
         p += troubleshoot_shape + "\n\n"
     return p + f"Now answer their question: {question}"
 
@@ -74,7 +83,7 @@ def main():
         sys.exit(__doc__)
     answers = "--answers" in sys.argv
     engine = "qwen" if "--qwen" in sys.argv else "apple"
-    instructions = swift_string("instructions")
+    instructions = instructions_for(engine)
     try:
         shape = swift_string("troubleshootShape")
     except SystemExit:

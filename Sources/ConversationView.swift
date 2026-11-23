@@ -197,6 +197,7 @@ struct SourceCard: View {
                     .frame(width: 22, height: 22)
                     .background(Theme.accent.opacity(0.16), in: .circle)
                 if passage.official { OfficialBadge() } else if passage.isMine { MineBadge() }
+                else if passage.isCard { CardBadge() }
                 Spacer(minLength: 0)
             }
             Text(passage.title)
@@ -215,6 +216,17 @@ struct SourceCard: View {
 struct MineBadge: View {
     var body: some View {
         Label("Yours", systemImage: "person.crop.square.filled.and.at.rectangle")
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(Theme.accentDeep)
+            .padding(.horizontal, 7).padding(.vertical, 3)
+            .background(Theme.accent.opacity(0.14), in: .capsule)
+    }
+}
+
+/// On one of the app's own field cards.
+struct CardBadge: View {
+    var body: some View {
+        Label("Field card", systemImage: "rectangle.stack.fill")
             .font(.caption2.weight(.bold))
             .foregroundStyle(Theme.accentDeep)
             .padding(.horizontal, 7).padding(.vertical, 3)

@@ -11,7 +11,7 @@ import os
 /// - an embedder (bge-small-en-v1.5, 33M parameters) that turns text into a vector, so "my snowmobile isn't
 ///   starting" finds "engine cranks but won't fire" even with no words in common, and
 /// - a reranker (Qwen3-Reranker-0.6B), a model trained only to judge whether a passage answers a question.
-///   It scores every candidate before the answer is written, and weak ones are dropped (Retrieval.pick).
+///   It scores every candidate before the answer is written, and weak ones are dropped (Retrieval.rerank).
 ///   Full precision, about 1.2 GB: the 4-bit copy scored a good passage 0.09 where this one says 0.92.
 /// Without them (the simulator, a library built before them, or too little free memory) search falls back to
 /// keywords and Apple's model.
@@ -31,6 +31,8 @@ final class SearchModels {
     static let queryPrefix = "Represent this sentence for searching relevant passages: "
 
     private var embedder: EmbedderModelContainer?
+    /// The embedder's fingerprint (see `fingerprint`), once it has loaded: vectors made by it are only good with it.
+    private(set) var embedderName: String?
     private var reranker: RerankerContainer?
     private var vectors: VectorIndex?
     private var loadedFor: ObjectIdentifier?
@@ -46,21 +48,41 @@ final class SearchModels {
     }
 
     /// The library's passages closest in meaning to the query, best first. Empty when the library has no vectors.
-    func denseSearch(_ query: String, library: Library, limit: Int = 8) async -> [Passage] {
+    /// `perArticle`, `whole` and `maxChars` are Library.search's.
+    func denseSearch(_ query: String, library: Library, limit: Int = 8, perArticle: Int = 1, whole: Bool = false,
+                     maxChars: Int = 700) async -> [Passage] {
         await load(for: library)
         guard let embedder, let vectors else { return [] }
         do {
             guard let q = try await Self.embed([Self.queryPrefix + query], with: embedder).first else { return [] }
             let hits = await Task.detached(priority: .userInitiated) { vectors.search(q, limit: limit * 3) }.value
             let words = Library.queryWords(query)
-            return library.passages(ids: hits.map(\.id), words: words, maxChars: 700).prefix(limit).map { $0 }
+            return library.passages(ids: hits.map(\.id), words: words, maxChars: maxChars, perArticle: perArticle,
+                                    whole: whole).prefix(limit).map { $0 }
         } catch {
             log.error("dense search failed: \(error.localizedDescription)")
             return []
         }
     }
 
-    /// Scores for Retrieval.pick, or nil when there's no reranker (it then asks Apple's model instead).
+    /// The passage ids nearest in meaning to the query with their scores, before the one-per-article rule
+    /// (scout-tools pool). Empty when the library has no vectors.
+    func denseHits(_ query: String, library: Library, limit: Int) async -> [(id: Int64, score: Float)] {
+        await load(for: library)
+        guard let embedder, let vectors,
+              let q = try? await Self.embed([Self.queryPrefix + query], with: embedder).first else { return [] }
+        return await Task.detached(priority: .userInitiated) { vectors.search(q, limit: limit) }.value
+    }
+
+    /// Unit vectors for short texts that are compared with each other, not with library passages (so without
+    /// the query prefix): CardMatcher's questions and phrases. Nil without the embedder; `load(for:)` brings it in.
+    func embedPlain(_ texts: [String]) async -> [[Float]]? {
+        await loading?.value
+        guard let embedder, !texts.isEmpty else { return nil }
+        return try? await Self.embed(texts, with: embedder, maxTokens: 64)
+    }
+
+    /// Scores for Retrieval.rerank, or nil when the library has no reranker (Retrieval.Ranker then chooses).
     var scorer: Retrieval.Scorer? {
         guard Self.isSupported else { return nil }
         return { query, excerpts in
@@ -95,8 +117,8 @@ final class SearchModels {
             if embedder == nil { embedder = await Self.loadEmbedder(library) }
             if reranker == nil { reranker = await Self.loadReranker(library, reserveBytes: reserveBytes) }
             // Vectors only mean something next to the embedder that made them.
-            if let v = vectors, let e = embedder {
-                let name = await Self.modelName(e)
+            if let e = embedder, embedderName == nil { embedderName = await Self.modelName(e) }
+            if let v = vectors, let name = embedderName {
                 if v.modelID != name {
                     log.error("vectors were made by \(v.modelID), not \(name); meaning search is off")
                     vectors = nil
@@ -112,6 +134,7 @@ final class SearchModels {
     func unload() {
         guard loading == nil else { return }
         embedder = nil
+        embedderName = nil
         reranker = nil
         vectors = nil
         loadedFor = nil
