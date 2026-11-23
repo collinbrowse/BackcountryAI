@@ -72,6 +72,7 @@
 		C1EDD3F5500F355EAD28FCAD /* RetrievalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B46E817F7EBB6A434F3610 /* RetrievalTests.swift */; };
 		C67780EEBF439ACF811960AF /* Check.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4562282DE9D7DA183AD0A16 /* Check.swift */; };
 		C97554B6375C853F495C0569 /* DownloadLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18521F24A7F1CB182E382408 /* DownloadLiveActivity.swift */; };
+		C9DA578BDBDFA52181C32483 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 64AC7F314D77AB57FC4994D1 /* PrivacyInfo.xcprivacy */; };
 		CB50A73E77DC9C4B94144517 /* LLMEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DB1D2D176A084C1FCB89D25 /* LLMEngine.swift */; };
 		CB52E6FED628755987B3788E /* FieldModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3ABD1A6AA84BAC16BF8AE8B /* FieldModel.swift */; };
 		CD83D1530D09E2CB6CF26806 /* FieldCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1F5E1A60D2FF802D01E85F /* FieldCards.swift */; };
@@ -179,6 +180,7 @@
 		548DE6B9FE8E7C373C2B8A9D /* ScreenshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		5F077B8D8244B95DE7FEC499 /* ScreenshotMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotMode.swift; sourceTree = "<group>"; };
 		63DC928DB6689422E3B6E182 /* ChatTopic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTopic.swift; sourceTree = "<group>"; };
+		64AC7F314D77AB57FC4994D1 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6ABBE1F3C02C35A8F3BF9B14 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		6B7CCB8958B0742472D64165 /* LLMEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMEngineTests.swift; sourceTree = "<group>"; };
 		6E5D54D191FEE300EF864077 /* RerankTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RerankTest.swift; sourceTree = "<group>"; };
@@ -383,6 +385,7 @@
 				434F920B077D092A3A98BFA6 /* ModelCatalog.swift */,
 				E1670D0781CA9A4F75D81CBE /* MyDocuments.swift */,
 				AAF4905B9A3EBCF719428534 /* Onboarding.swift */,
+				64AC7F314D77AB57FC4994D1 /* PrivacyInfo.xcprivacy */,
 				A7C38A1055E1D6375CFDA5D1 /* Readiness.swift */,
 				88AD4D7689E5BF0291897070 /* Retrieval.swift */,
 				F2E2FCEB63DA5A32DF75AC4C /* RootView.swift */,
@@ -598,6 +601,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9FE7C4A8DAFD5DCE64A8B771 /* Assets.xcassets in Resources */,
+				C9DA578BDBDFA52181C32483 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

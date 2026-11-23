@@ -101,9 +101,12 @@ struct AssistantTurn: View {
         .animation(.bouncy, value: message.isFinished)
     }
 
-    /// How long the answer took. Saving and sharing are for the whole chat, from the top bar's menu.
+    /// A reminder that answers are reference, not medical advice (App Review 1.4.1), and how long the answer took.
+    /// Saving and sharing are for the whole chat, from the top bar's menu.
     private var footer: some View {
         HStack(spacing: 8) {
+            Text("Reference, not medical advice")
+                .font(.caption2)
             Spacer()
             if message.engine != nil {
                 Image(systemName: "sparkles").foregroundStyle(Theme.accent)
