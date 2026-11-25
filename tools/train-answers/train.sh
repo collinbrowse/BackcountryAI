@@ -13,7 +13,10 @@
 # pushed everything else into swap.
 # Needs mlx-lm in the project venv (.venv/bin/pip install -r tools/requirements.txt) and an Apple-silicon Mac with
 # about 16 GB of free memory. --dry-run only checks the data and the pack layout code, without mlx-lm.
+# A real run is an MLX job in this Mac's queue (scripts/queue.sh): it waits while another MLX job runs, and holds the
+# queue's "mlx" lock from the first check to the last step.
 set -euo pipefail
+ARGS=("$@")
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 PY="${PY:-$ROOT/.venv/bin/python}"
 MODEL="mlx-community/Qwen3.5-4B-MLX-4bit"                # must match BetterModel.modelID
@@ -38,6 +41,11 @@ while [ $# -gt 0 ]; do
   shift
 done
 step() { printf '\n== %s\n' "$*"; }
+
+if [ "$DRY" != 1 ] && [ -z "${TRAIN_ANSWERS_QUEUED:-}" ]; then
+  exec "$ROOT/scripts/queue.sh" --credits 4 --lock mlx --label "BackcountryAI train answers" -- \
+    env TRAIN_ANSWERS_QUEUED=1 "$0" ${ARGS[@]+"${ARGS[@]}"}
+fi
 
 step "Checking the training data in $DATA"
 "$PY" -I "$ROOT/tools/train-answers/check_data.py" "$DATA" --max-seq "$MAX_SEQ"

@@ -5,6 +5,7 @@
 # Re-run any time: downloads resume and finished sources are skipped.
 #
 # Usage: BACKCOUNTRY_DATA=/path/with/40GB/free scripts/build-library.sh
+# The conversion steps run in this Mac's job queue (scripts/queue.sh) with LIBRARY_WORKERS processes (default 4).
 # Needs: python3.12 venv at .venv with libzim lxml trafilatura pypdf (see docs/library-hosting.md), and poppler (pdftotext).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -18,9 +19,12 @@ LITE="$BACKCOUNTRY_DATA/library-lite"
 "$PY" "$ROOT/library/fetch_guides.py"
 "$PY" "$ROOT/library/fetch_risk.py"   # needs the Wikipedia ZIM for Essentials' risk articles
 
+export LIBRARY_WORKERS="${LIBRARY_WORKERS:-4}"
+queued() { "$ROOT/scripts/queue.sh" --credits "$LIBRARY_WORKERS" --label "BackcountryAI build library" -- "$@"; }
+
 mkdir -p "$FULL" "$LITE"
-LIBRARY_OUT="$FULL" "$PY" "$ROOT/library/build_library.py"
-LIBRARY_OUT="$LITE" REUSE_FROM="$FULL" "$PY" "$ROOT/library/build_library.py" --lite
+LIBRARY_OUT="$FULL" queued "$PY" "$ROOT/library/build_library.py"
+LIBRARY_OUT="$LITE" REUSE_FROM="$FULL" queued "$PY" "$ROOT/library/build_library.py" --lite
 
 for LIB in "$FULL" "$LITE"; do
   rm -f "$LIB/.build.lock"

@@ -166,14 +166,27 @@ struct LLMEngineContractTests {
         #expect(stats.stopReason == .stopSequence)
     }
 
+    /// Waits for `condition` instead of sleeping a fixed time: on a busy Mac the first word can take far longer than
+    /// the mock's 5 ms.
+    private func waitUntil(_ condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now + .seconds(30)
+        while !condition() {
+            try #require(ContinuousClock.now < deadline, "Timed out waiting for the answer to start")
+            try await Task.sleep(for: .milliseconds(5))
+        }
+    }
+
+    /// Long enough (50 s at 5 ms a word) that the answer is still streaming whenever the test gets to stop it.
+    private let longAnswer = Array(repeating: "word ", count: 10_000)
+
     @Test func cancellingTheReaderStopsTheEngine() async throws {
-        let engine = MockEngine(pieces: Array(repeating: "word ", count: 500), delay: .milliseconds(5))
+        let engine = MockEngine(pieces: longAnswer, delay: .milliseconds(5))
         try await engine.load()
         var text = ""
         let reader = Task { @MainActor in
-            try await engine.answer([.user("q")], config: GenerationConfig(maxTokens: 500)) { text = $0 }
+            try await engine.answer([.user("q")], config: GenerationConfig(maxTokens: longAnswer.count)) { text = $0 }
         }
-        try await Task.sleep(for: .milliseconds(60))
+        try await waitUntil { !text.isEmpty }
         reader.cancel()
         await #expect(throws: CancellationError.self) { try await reader.value }
         await engine.cancel()
@@ -182,12 +195,13 @@ struct LLMEngineContractTests {
     }
 
     @Test func unloadStopsAnAnswerInProgress() async throws {
-        let engine = MockEngine(pieces: Array(repeating: "word ", count: 500), delay: .milliseconds(5))
+        let engine = MockEngine(pieces: longAnswer, delay: .milliseconds(5))
         try await engine.load()
+        var text = ""
         let reader = Task { @MainActor in
-            try await engine.answer([.user("q")], config: GenerationConfig(maxTokens: 500)) { _ in }
+            try await engine.answer([.user("q")], config: GenerationConfig(maxTokens: longAnswer.count)) { text = $0 }
         }
-        try await Task.sleep(for: .milliseconds(60))
+        try await waitUntil { !text.isEmpty }
         await engine.unload()
         await #expect(throws: CancellationError.self) { try await reader.value }
         #expect(await !engine.isLoaded)

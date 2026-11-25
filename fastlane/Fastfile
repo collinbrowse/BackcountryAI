@@ -1,7 +1,7 @@
 # The BackcountryAI release pipeline. docs/release.md explains the whole process; `bundle exec fastlane lanes`
 # lists these.
 #
-#   test         unit tests
+#   test         unit tests (only:BackcountryAITests/LLMEngineContractTests runs one suite; commas for several)
 #   screenshots  App Store screenshots from the current code  → fastlane/screenshots/en-US
 #   previews     App Preview video from the current code      → fastlane/app_previews/en-US
 #   beta         build, sign, upload to TestFlight
@@ -20,12 +20,59 @@ PROJECT = "BackcountryAI.xcodeproj"
 APP_ID = "com.collinbrowse.backcountryai"
 TEAM_ID = "84XX2W7G34"
 ROOT = File.expand_path("..", __dir__)
-DEVICE = ENV.fetch("SCREENSHOT_DEVICE", "iPhone 18 Pro Max")   # a 6.9" iPhone: 1320×2868 screenshots
-XCFLAGS = "-skipMacroValidation -skipPackagePluginValidation"
 LOCALE = "en-US"
+
+# This Mac's job queue (CLAUDE.md): builds and tests from every checkout, Claude sessions and the self-hosted CI
+# runner alike, take turns for CPU instead of all running at once. Where it isn't installed, nothing changes.
+SLOT = File.expand_path("~/.claude/bin/slot")
+QUEUE = File.executable?(SLOT)
+XCJOBS = QUEUE ? "-jobs #{ENV.fetch('SLOT_XCODE_JOBS', '4')}" : ""   # as many compile jobs as the credits held
+XCFLAGS = "-skipMacroValidation -skipPackagePluginValidation #{XCJOBS}".strip
 
 def in_root(command)
   Dir.chdir(ROOT) { sh(command) }
+end
+
+# Runs the block while holding `credits` of the queue's CPU credits (waiting for them first: slot prints
+# "slot: queued ..." meanwhile, which is normal). A placeholder job holds them, so fastlane's own actions (build_app)
+# are covered as well as `sh`. SLOT_HELD tells the xcodebuild shim and nested `slot run`s not to queue again.
+def with_slot(label, credits: 4)
+  return yield if !QUEUE || ENV["SLOT_HELD"]
+  io = IO.popen([SLOT, "run", "--credits", credits.to_s, "--label", "BackcountryAI #{label}", "--kind", "fastlane #{label}",
+                 "--", "/bin/sh", "-c", 'echo "$SLOT_HELD"; read _'], "r+")
+  held = io.gets.to_s.strip   # printed once the job has started
+  UI.user_error!("The job queue (#{SLOT}) didn't start the job") if held.empty?
+  begin
+    ENV["SLOT_HELD"] = held
+    yield
+  ensure
+    ENV.delete("SLOT_HELD")
+    io.close   # the placeholder reads end-of-file and exits, giving the credits back
+  end
+end
+
+# The simulator this checkout runs on: its own "BackcountryAI <worktree>" on this Mac, the shared SCREENSHOT_DEVICE
+# (default "iPhone 18 Pro Max", a 6.9" iPhone: 1320×2868 screenshots) on CI or when that's set. scripts/simulator.sh.
+def simulator
+  @simulator ||= begin
+    id = `"#{ROOT}/scripts/simulator.sh"`.strip
+    UI.user_error!("scripts/simulator.sh couldn't find or create the simulator") unless $?.success? && !id.empty?
+    id
+  end
+end
+
+def destination
+  %("platform=iOS Simulator,id=#{simulator}")
+end
+
+# Swift package checkouts shared across worktrees on this Mac (scripts/spm-cache.sh); empty on CI, which caches
+# build/DerivedData/SourcePackages instead.
+def spm_flags
+  @spm_flags ||= begin
+    flags = `"#{ROOT}/scripts/spm-cache.sh" --xcode-flags`.strip
+    UI.user_error!("scripts/spm-cache.sh couldn't resolve the Swift packages") unless $?.success?
+    flags
+  end
 end
 
 def need(*names)
@@ -117,30 +164,36 @@ platform :ios do
   end
 
   def boot_simulator
-    in_root(%Q[xcrun simctl list devices available | grep -q "#{DEVICE} (" || xcrun simctl create "#{DEVICE}" "#{DEVICE}"])
-    in_root(%(xcrun simctl bootstatus "#{DEVICE}" -b))
+    in_root(%(xcrun simctl bootstatus #{simulator} -b))
     # The classic clean status bar: 9:41, full battery.
-    in_root(%(xcrun simctl status_bar "#{DEVICE}" override --time "9:41" --batteryState discharging ) +
+    in_root(%(xcrun simctl status_bar #{simulator} override --time "9:41" --batteryState discharging ) +
             %(--batteryLevel 100 --cellularBars 4 --wifiBars 3 --dataNetwork wifi))
-    in_root(%(xcrun simctl ui "#{DEVICE}" appearance light))
+    in_root(%(xcrun simctl ui #{simulator} appearance light))
   end
 
-  desc "Run the unit tests"
-  lane :test do
-    in_root(%(mkdir -p build && set -o pipefail && xcodebuild -project #{PROJECT} -scheme BackcountryAI ) +
-            %(-destination "platform=iOS Simulator,name=#{DEVICE}" -derivedDataPath build/DerivedData #{XCFLAGS} ) +
-            %(test 2>&1 | tee build/test.log | grep -E "^(✔|✘|Test |\\*\\*)|error:" || (tail -40 build/test.log; exit 1)))
+  desc "Run the unit tests. only:BackcountryAITests/SomeTests runs just those (commas for several)"
+  lane :test do |options|
+    only = options[:only].to_s.split(",").map(&:strip).reject(&:empty?).map { |t| "-only-testing:#{t} " }.join
+    flags = spm_flags
+    with_slot("test") do
+      in_root(%(mkdir -p build && set -o pipefail && xcodebuild -project #{PROJECT} -scheme BackcountryAI ) +
+              %(-destination #{destination} -derivedDataPath build/DerivedData #{flags} #{XCFLAGS} #{only}) +
+              %(test 2>&1 | tee build/test.log | grep -E "^(✔|✘|Test |\\*\\*)|error:" || (tail -40 build/test.log; exit 1)))
+    end
   end
 
   desc "Take the App Store screenshots from the current code"
   lane :screenshots do
     boot_simulator
     in_root("rm -rf build/screenshots fastlane/screenshots/#{LOCALE} && mkdir -p build/screenshots")
-    in_root(%(set -o pipefail && xcodebuild -project #{PROJECT} -scheme BackcountryAIScreenshots ) +
-            %(-destination "platform=iOS Simulator,name=#{DEVICE}" -derivedDataPath build/DerivedData #{XCFLAGS} ) +
-            %(-resultBundlePath build/screenshots/run.xcresult ) +
-            %(-only-testing:BackcountryAIUITests/ScreenshotTests/testScreenshots test > build/screenshots/run.log 2>&1 ) +
-            %(|| (grep -E "error|failed" build/screenshots/run.log | tail -20; exit 1)))
+    flags = spm_flags
+    with_slot("screenshots") do
+      in_root(%(set -o pipefail && xcodebuild -project #{PROJECT} -scheme BackcountryAIScreenshots ) +
+              %(-destination #{destination} -derivedDataPath build/DerivedData #{flags} #{XCFLAGS} ) +
+              %(-resultBundlePath build/screenshots/run.xcresult ) +
+              %(-only-testing:BackcountryAIUITests/ScreenshotTests/testScreenshots test > build/screenshots/run.log 2>&1 ) +
+              %(|| (grep -E "error|failed" build/screenshots/run.log | tail -20; exit 1)))
+    end
     in_root("scripts/export-screenshots.sh build/screenshots/run.xcresult build/screenshots/raw")
     in_root("swift scripts/compose-screenshots.swift build/screenshots/raw " \
             "fastlane/screenshot-fixtures/captions.json fastlane/screenshots/#{LOCALE}")
@@ -149,8 +202,11 @@ platform :ios do
   desc "Record the App Preview video from the current code"
   lane :previews do
     boot_simulator
-    in_root(%(scripts/record-preview.sh "#{DEVICE}" fastlane/app_previews/#{LOCALE}/01_IPHONE_67_walkthrough.mp4 ) +
-            %(-derivedDataPath build/DerivedData))
+    flags = spm_flags
+    with_slot("previews") do
+      in_root(%(scripts/record-preview.sh #{simulator} fastlane/app_previews/#{LOCALE}/01_IPHONE_67_walkthrough.mp4 ) +
+              %(-derivedDataPath build/DerivedData #{flags} #{XCJOBS}))
+    end
   end
 
   desc "Screenshots and the preview video"
@@ -164,11 +220,13 @@ platform :ios do
     key = asc_key
     number = latest_testflight_build_number(api_key: key, app_identifier: APP_ID, initial_build_number: 0) + 1
     with_ci_keychain do |codesign_flags|
-      build_app(project: PROJECT, scheme: "BackcountryAI", configuration: "Release", clean: true,
-                output_directory: "build/release", output_name: "BackcountryAI.ipa",
-                xcargs: "#{XCFLAGS} #{signing_flags} CURRENT_PROJECT_VERSION=#{number} #{codesign_flags}".strip,
-                export_options: { method: "app-store", signingStyle: "automatic", teamID: TEAM_ID,
-                                  manageAppVersionAndBuildNumber: false })
+      with_slot("archive") do
+        build_app(project: PROJECT, scheme: "BackcountryAI", configuration: "Release", clean: true,
+                  output_directory: "build/release", output_name: "BackcountryAI.ipa",
+                  xcargs: "#{XCFLAGS} #{signing_flags} CURRENT_PROJECT_VERSION=#{number} #{codesign_flags}".strip,
+                  export_options: { method: "app-store", signingStyle: "automatic", teamID: TEAM_ID,
+                                    manageAppVersionAndBuildNumber: false })
+      end
     end
     number
   end

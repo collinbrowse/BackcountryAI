@@ -8,9 +8,23 @@ import json
 import sys
 import time
 
-import mlx.core as mx
-from mlx_lm import load, stream_generate
-from mlx_lm.sample_utils import make_sampler
+
+def queue_mlx(label):
+    """Re-runs this script as an MLX job in this Mac's queue (~/.claude/bin/slot, as scripts/queue.sh) when it's
+    installed: it waits while another MLX job runs, since two at once swap, or starve Apple's model of memory."""
+    import os
+    slot = os.environ.get("SLOT_BIN") or os.path.expanduser("~/.claude/bin/slot")
+    if os.environ.get("SLOT_HELD") or not os.access(slot, os.X_OK):
+        return
+    os.execv(slot, [slot, "run", "--credits", "4", "--lock", "mlx", "--label", label, "--",
+                    sys.executable, *sys.orig_argv[1:]])
+
+
+queue_mlx("BackcountryAI run_mlx")
+
+import mlx.core as mx  # noqa: E402
+from mlx_lm import load, stream_generate  # noqa: E402
+from mlx_lm.sample_utils import make_sampler  # noqa: E402
 
 model_id, src, out = sys.argv[1:4]
 no_library = "--no-library" in sys.argv

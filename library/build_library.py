@@ -4,7 +4,8 @@ Usage: .venv/bin/python library/build_library.py [--lite] [--rebuild KEY ...]
 Re-run any time: sources already indexed are skipped, so new downloads just get added.
 --rebuild drops the named sources (e.g. wikem) first so they are converted again.
 Every build holds only sources a paid app may redistribute; --lite also leaves out Wikipedia and Wikivoyage.
-Set BACKCOUNTRY_DATA=DIR for where downloads live, LIBRARY_OUT=DIR to build somewhere else (e.g. the lite pack).
+Set BACKCOUNTRY_DATA=DIR for where downloads live, LIBRARY_OUT=DIR to build somewhere else (e.g. the lite pack),
+LIBRARY_WORKERS=N for how many processes convert ZIM pages (default 4, so other work on the Mac keeps some cores).
 Writes library.noindex/text/<source>/NNNN.md (plain-text Markdown shards of about 16 MB)
 and library.noindex/index.sqlite (SQLite FTS5 over ~1,500-character passages).
 """
@@ -42,6 +43,7 @@ LITE = "--lite" in ARGS      # public, minus the big general-reference sources
 NOT_PUBLIC = {"post-disaster", "water", "food-prep", "medical-library", "knots"}
 NOT_LITE = {"wikipedia", "wikivoyage"}
 SHARD_BYTES = 16 * 1024 * 1024
+WORKERS = max(1, int(os.environ.get("LIBRARY_WORKERS") or 4))
 MIN_CHARS = 300
 
 # ZIM file name (minus the date) -> (key, label shown to the model, topic, kind, URL prefix)
@@ -548,7 +550,7 @@ def zim_docs(path, kind, skip=None):
     count = Archive(path).entry_count
     step = 50 if kind == "pdf" else 1000
     ranges = [(s, min(s + step, count)) for s in range(0, count, step)]
-    with mp.Pool(10, initializer=_init_worker, initargs=(path, kind, skip)) as pool:
+    with mp.Pool(WORKERS, initializer=_init_worker, initargs=(path, kind, skip)) as pool:
         for batch in pool.imap(_convert_range, ranges):
             yield from batch
 

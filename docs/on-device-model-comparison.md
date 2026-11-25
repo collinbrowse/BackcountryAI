@@ -111,7 +111,7 @@ memory) does not fit. 12 GB iPhones are untested.
 measures the shipped model. Both need a connected iPhone and are skipped in the simulator and CI:
 
 ```bash
-xcodebuild test -project BackcountryAI.xcodeproj -scheme BackcountryAI -destination "platform=iOS,name=<your iPhone>" -skipMacroValidation -only-testing:BackcountryAITests/MLXEngineDeviceTests -only-testing:BackcountryAITests/ShippedModelBenchmark
+xcodebuild test -project BackcountryAI.xcodeproj -scheme BackcountryAI -destination "platform=iOS,name=<your iPhone>" -derivedDataPath build/DerivedData -skipMacroValidation -only-testing:BackcountryAITests/MLXEngineDeviceTests -only-testing:BackcountryAITests/ShippedModelBenchmark
 ```
 
 Debug builds print the `[llm]` log lines; in other builds they are in Console under the `llm` category.
